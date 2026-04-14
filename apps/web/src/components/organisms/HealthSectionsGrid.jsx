@@ -1,12 +1,12 @@
-import React from 'react';
-import Badge from '../atoms/Badge';
-import SectionHealthCard from '../molecules/SectionHealthCard';
+import React from "react";
+import Badge from "../atoms/Badge";
+import SectionHealthCard from "../molecules/SectionHealthCard";
 
-const HealthSectionsGrid = ({ 
-  dangerSecs, 
-  warningSecs, 
-  okSecs, 
-  nodataSecs 
+const HealthSectionsGrid = ({
+  dangerSecs,
+  warningSecs,
+  okSecs,
+  nodataSecs,
 }) => {
   return (
     <>
@@ -14,11 +14,19 @@ const HealthSectionsGrid = ({
       {dangerSecs.length > 0 && (
         <section className="space-y-8">
           <div className="flex items-center gap-6 px-4">
-            <Badge variant="danger" glow className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full">CRITICAL STATUS</Badge>
+            <Badge
+              variant="danger"
+              glow
+              className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full"
+            >
+              CRITICAL STATUS
+            </Badge>
             <div className="h-px flex-1 bg-linear-to-r from-danger/30 via-danger/10 to-transparent" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {dangerSecs.map(s => <SectionHealthCard key={s.section} sec={s} />)}
+            {dangerSecs.map((s) => (
+              <SectionHealthCard key={s.section} sec={s} />
+            ))}
           </div>
         </section>
       )}
@@ -27,11 +35,19 @@ const HealthSectionsGrid = ({
       {warningSecs.length > 0 && (
         <section className="space-y-8">
           <div className="flex items-center gap-6 px-4">
-            <Badge variant="warning" glow className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full">OBSERVATION MODE</Badge>
+            <Badge
+              variant="warning"
+              glow
+              className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full"
+            >
+              OBSERVATION MODE
+            </Badge>
             <div className="h-px flex-1 bg-linear-to-r from-warning/30 via-warning/10 to-transparent" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {warningSecs.map(s => <SectionHealthCard key={s.section} sec={s} />)}
+            {warningSecs.map((s) => (
+              <SectionHealthCard key={s.section} sec={s} />
+            ))}
           </div>
         </section>
       )}
@@ -40,11 +56,19 @@ const HealthSectionsGrid = ({
       {okSecs.length > 0 && (
         <section className="space-y-8">
           <div className="flex items-center gap-6 px-4">
-            <Badge variant="success" glow className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full">OPTIMIZED ZONE</Badge>
+            <Badge
+              variant="success"
+              glow
+              className="px-5 py-1 tracking-[0.4em] font-black text-[10px] rounded-full"
+            >
+              OPTIMIZED ZONE
+            </Badge>
             <div className="h-px flex-1 bg-linear-to-r from-success/30 via-success/10 to-transparent" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {okSecs.map(s => <SectionHealthCard key={s.section} sec={s} />)}
+            {okSecs.map((s) => (
+              <SectionHealthCard key={s.section} sec={s} />
+            ))}
           </div>
         </section>
       )}
@@ -55,14 +79,29 @@ const HealthSectionsGrid = ({
           <summary className="p-10 cursor-pointer list-none flex items-center justify-between hover:bg-tx-primary/[0.02]">
             <div className="flex items-center gap-6">
               <span className="text-3xl grayscale opacity-40">❄️</span>
-              <span className="text-[12px] font-black text-tx-muted uppercase tracking-[0.4em]">Transactional Inactivity ({nodataSecs.length} Cold Sectors)</span>
+              <span className="text-[12px] font-black text-tx-muted uppercase tracking-[0.4em]">
+                Transactional Inactivity ({nodataSecs.length} Cold Sectors)
+              </span>
             </div>
             <div className="text-tx-muted transition-transform group-open:rotate-180">
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
             </div>
           </summary>
           <div className="p-12 pt-6 grid grid-cols-1 md:grid-cols-3 gap-10 animate-in slide-in-from-top-4">
-            {nodataSecs.map(s => <SectionHealthCard key={s.section} sec={s} />)}
+            {nodataSecs.map((s) => (
+              <SectionHealthCard key={s.section} sec={s} />
+            ))}
           </div>
         </details>
       )}

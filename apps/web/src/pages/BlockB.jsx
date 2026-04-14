@@ -1,128 +1,155 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { expenseService } from '../services'
-import { RECENT_MONTHS } from '../constants/time'
-import { INVENTORY_BLOCK_B_DEFAULT } from '../constants/forms'
-import { fmt } from '../utils/formatters'
-import { useFinance } from '../context/FinanceContext'
-import { useToast } from '../context/ToastContext'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { expenseService } from "../services";
+import { RECENT_MONTHS } from "../constants/time";
+import { INVENTORY_BLOCK_B_DEFAULT } from "../constants/forms";
+import { fmt } from "../utils/formatters";
+import { useFinance } from "../context/FinanceContext";
+import { useToast } from "../context/ToastContext";
 
 // Atoms & Molecules
-import { DashboardTemplate } from '../components/templates'
-import Card from '../components/atoms/Card'
-import Button from '../components/atoms/Button'
-import InventorySummaryCard from '../components/molecules/InventorySummaryCard'
+import { DashboardTemplate } from "../components/templates";
+import Card from "../components/atoms/Card";
+import Button from "../components/atoms/Button";
+import InventorySummaryCard from "../components/molecules/InventorySummaryCard";
 
 // Organisms
-import InventorySection from '../components/organisms/InventorySection'
-import InventoryEditorModal from '../components/organisms/InventoryEditorModal'
+import InventorySection from "../components/organisms/InventorySection";
+import InventoryEditorModal from "../components/organisms/InventoryEditorModal";
 
 export default function BlockB() {
-  const { sections, categories, channels, units } = useFinance()
-  const [month, setMonth] = useState(RECENT_MONTHS[0])
-  const [items, setItems]   = useState([])
-  const [modal, setModal]   = useState(false)
-  const [form, setForm]     = useState(INVENTORY_BLOCK_B_DEFAULT(RECENT_MONTHS[0], ''))
-  const [editing, setEditing] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const { addToast } = useToast()
+  const { sections, categories, channels, units } = useFinance();
+  const [month, setMonth] = useState(RECENT_MONTHS[0]);
+  const [items, setItems] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState(
+    INVENTORY_BLOCK_B_DEFAULT(RECENT_MONTHS[0], ""),
+  );
+  const [editing, setEditing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { addToast } = useToast();
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const data = await expenseService.getInventoryBlock('block-b', { month })
-      setItems(data)
+      const data = await expenseService.getInventoryBlock("block-b", { month });
+      setItems(data);
     } catch (e) {
-      addToast('Error connecting to perishable vault', 'error')
+      addToast("Error connecting to perishable vault", "error");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [month, addToast])
+  }, [month, addToast]);
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const openNew = (catId = null) => {
-    const defaultCatId = catId || categories.find(c => c.name === 'Market/Produce')?.id || categories[0]?.id || ''
-    setForm(INVENTORY_BLOCK_B_DEFAULT(month, defaultCatId))
-    setEditing(null)
-    setModal(true)
-  }
+    const defaultCatId =
+      catId ||
+      categories.find((c) => c.name === "Market/Produce")?.id ||
+      categories[0]?.id ||
+      "";
+    setForm(INVENTORY_BLOCK_B_DEFAULT(month, defaultCatId));
+    setEditing(null);
+    setModal(true);
+  };
 
   const openEdit = (item) => {
-    setForm({ ...item, prev_month_price: item.prev_month_price || '' })
-    setEditing(item.id)
-    setModal(true)
-  }
+    setForm({ ...item, prev_month_price: item.prev_month_price || "" });
+    setEditing(item.id);
+    setModal(true);
+  };
 
-  const handleChange = e => {
-    const { name, value } = e.target
-    setForm(f => ({ ...f, [name]: value }))
-  }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
-  const handleSubmit = async e => {
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     const payload = {
       ...form,
       category_id: parseInt(form.category_id),
       channel_id: parseInt(form.channel_id) || null,
       unit_id: parseInt(form.unit_id) || null,
       price_per_kg: parseFloat(form.price_per_kg) || 0,
-      prev_month_price: form.prev_month_price ? parseFloat(form.prev_month_price) : null
-    }
+      prev_month_price: form.prev_month_price
+        ? parseFloat(form.prev_month_price)
+        : null,
+    };
 
     try {
       if (editing) {
-        await expenseService.updateInventoryItem('block-b', editing, payload)
-        addToast('Registry optimization completed', 'success')
+        await expenseService.updateInventoryItem("block-b", editing, payload);
+        addToast("Registry optimization completed", "success");
       } else {
-        await expenseService.createInventoryItem('block-b', payload)
-        addToast('New perishable asset registered', 'success')
+        await expenseService.createInventoryItem("block-b", payload);
+        addToast("New perishable asset registered", "success");
       }
-      setModal(false)
-      fetchData()
+      setModal(false);
+      fetchData();
     } catch (e) {
-      addToast('Error in Block B persistence', 'error')
+      addToast("Error in Block B persistence", "error");
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('Confirm de-listing of this asset?')) return
+    if (!confirm("Confirm de-listing of this asset?")) return;
     try {
-      await expenseService.deleteInventoryItem('block-b', id)
-      addToast('Asset removed from market matrix', 'warning')
-      fetchData()
+      await expenseService.deleteInventoryItem("block-b", id);
+      addToast("Asset removed from market matrix", "warning");
+      fetchData();
     } catch (e) {
-      addToast('Error processing deletion', 'error')
+      addToast("Error processing deletion", "error");
     }
-  }
+  };
 
-  const totalSubtotal = useMemo(() => items.reduce((s, i) => s + (i.subtotal || 0), 0), [items])
+  const totalSubtotal = useMemo(
+    () => items.reduce((s, i) => s + (i.subtotal || 0), 0),
+    [items],
+  );
 
   const sectionsWithItems = useMemo(() => {
-    const groups = {}
-    items.forEach(item => {
-        const secName = item.section_name || 'Various'
-        if (!groups[secName]) groups[secName] = []
-        groups[secName].push(item)
-    })
-    return groups
-  }, [items])
+    const groups = {};
+    items.forEach((item) => {
+      const secName = item.section_name || "Various";
+      if (!groups[secName]) groups[secName] = [];
+      groups[secName].push(item);
+    });
+    return groups;
+  }, [items]);
 
   const sortedSecNames = useMemo(() => {
-    const names = Object.keys(sectionsWithItems)
+    const names = Object.keys(sectionsWithItems);
     return names.sort((a, b) => {
-        const sa = sections.find(s => s.name === a)?.sort_order || 99
-        const sb = sections.find(s => s.name === b)?.sort_order || 99
-        return sa - sb
-    })
-  }, [sectionsWithItems, sections])
+      const sa = sections.find((s) => s.name === a)?.sort_order || 99;
+      const sb = sections.find((s) => s.name === b)?.sort_order || 99;
+      return sa - sb;
+    });
+  }, [sectionsWithItems, sections]);
 
-  const catOptions = useMemo(() => categories.map(c => ({ value: c.id, label: c.name })), [categories])
-  const canalOptions = useMemo(() => channels.map(c => ({ value: c.id, label: c.name })), [channels])
-  const unitOptions = useMemo(() => units.map(u => ({ value: u.id, label: u.name })), [units])
+  const catOptions = useMemo(
+    () => categories.map((c) => ({ value: c.id, label: c.name })),
+    [categories],
+  );
+  const canalOptions = useMemo(
+    () => channels.map((c) => ({ value: c.id, label: c.name })),
+    [channels],
+  );
+  const unitOptions = useMemo(
+    () => units.map((u) => ({ value: u.id, label: u.name })),
+    [units],
+  );
 
   return (
     <DashboardTemplate
-      title={<>Inventory <span className="text-accent italic font-light">Block B</span></>}
+      title={
+        <>
+          Inventory{" "}
+          <span className="text-accent italic font-light">Block B</span>
+        </>
+      }
       subtitle="Fresh produce, proteins, and weekly market management"
       icon="🍎"
       badge={`Fresh Inventory ${month} Active`}
@@ -131,22 +158,30 @@ export default function BlockB() {
       headerAction={
         <div className="flex items-center gap-3">
           <div className="glass p-1 rounded-xl">
-            <select 
-              value={month} 
-              onChange={e => setMonth(e.target.value)}
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
               className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
             >
-              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+              {RECENT_MONTHS.map((m) => (
+                <option key={m} value={m} className="bg-secondary">
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
-          <Button onClick={() => openNew()} variant="success" size="sm" className="px-6 font-black uppercase tracking-widest h-11 text-primary">
+          <Button
+            onClick={() => openNew()}
+            variant="success"
+            size="sm"
+            className="px-6 font-black uppercase tracking-widest h-11 text-primary"
+          >
             + Add Item
           </Button>
         </div>
       }
     >
-
-      <InventorySummaryCard 
+      <InventorySummaryCard
         totalValue={totalSubtotal}
         itemCount={items.length}
         fmt={fmt}
@@ -156,30 +191,38 @@ export default function BlockB() {
         unitLabel="REG. UNITS"
       />
 
-        <div className="space-y-16">
-          {sortedSecNames.map(secName => (
-            <InventorySection 
-              key={secName}
-              secName={secName}
-              secTotal={sectionsWithItems[secName].reduce((s, i) => s + (i.subtotal || 0), 0)}
-              secIcon={sections.find(s => s.name === secName)?.icon || '🥦'}
-              secItems={sectionsWithItems[secName]}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              fmt={fmt}
-              type="block-b"
-            />
-          ))}
-          
-          {items.length === 0 && (
-             <Card border={false} className="py-40 flex flex-col items-center justify-center text-center opacity-20 bg-tx-primary/[0.01]">
-                <span className="text-6xl mb-6">🥗</span>
-                <p className="text-xs font-black uppercase tracking-[0.5em]">Block B matrix is empty</p>
-             </Card>
-          )}
-        </div>
+      <div className="space-y-16">
+        {sortedSecNames.map((secName) => (
+          <InventorySection
+            key={secName}
+            secName={secName}
+            secTotal={sectionsWithItems[secName].reduce(
+              (s, i) => s + (i.subtotal || 0),
+              0,
+            )}
+            secIcon={sections.find((s) => s.name === secName)?.icon || "🥦"}
+            secItems={sectionsWithItems[secName]}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            fmt={fmt}
+            type="block-b"
+          />
+        ))}
 
-      <InventoryEditorModal 
+        {items.length === 0 && (
+          <Card
+            border={false}
+            className="py-40 flex flex-col items-center justify-center text-center opacity-20 bg-tx-primary/[0.01]"
+          >
+            <span className="text-6xl mb-6">🥗</span>
+            <p className="text-xs font-black uppercase tracking-[0.5em]">
+              Block B matrix is empty
+            </p>
+          </Card>
+        )}
+      </div>
+
+      <InventoryEditorModal
         modal={modal}
         setModal={setModal}
         editing={editing}
@@ -193,5 +236,5 @@ export default function BlockB() {
         type="block-b"
       />
     </DashboardTemplate>
-  )
+  );
 }
