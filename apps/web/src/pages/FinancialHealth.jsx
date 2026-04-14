@@ -107,10 +107,10 @@ export default function FinancialHealth() {
                     Saturation of <span className="text-tx-primary font-black underline decoration-2 decoration-accent/30">{fmt(card.used)}</span> over a total limit of {fmt(card.total_limit)}. Immediate availability: <span className="text-success font-black">{fmt(card.available)}</span>.
                   </p>
                   <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
-                     <div className="w-2.5 h-2.5 rounded-full animate-ping" style={{ backgroundColor: NIVEL_CFG[card.level].color }} />
-                     <p className="text-[12px] font-black uppercase tracking-[0.2em] italic" style={{ color: NIVEL_CFG[card.level].color }}>
-                        {card.advice}
-                     </p>
+                    <div className="w-2.5 h-2.5 rounded-full animate-ping" style={{ backgroundColor: NIVEL_CFG[card.level].color }} />
+                    <p className="text-[12px] font-black uppercase tracking-[0.2em] italic" style={{ color: NIVEL_CFG[card.level].color }}>
+                      {card.advice}
+                    </p>
                   </div>
                 </div>
 
@@ -127,14 +127,12 @@ export default function FinancialHealth() {
               </div>
             </Card>
           )}
-
           <HealthSectionsGrid
             dangerSecs={danger_secs}
             warningSecs={warning_secs}
             okSecs={ok_secs}
             nodataSecs={nodata_secs}
           />
-
           <AuditMatrixTable sections={sections} />
         </>
       )}

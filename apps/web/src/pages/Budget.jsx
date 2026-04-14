@@ -3,6 +3,7 @@ import { financeService, analysisService } from '../services'
 import { RECENT_MONTHS } from '../constants/time'
 import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
+import { useToast } from '../context/ToastContext'
 
 // Atoms & Molecules
 import Card from '../components/atoms/Card'
@@ -13,7 +14,8 @@ import BudgetKpiGrid from '../components/organisms/BudgetKpiGrid'
 import BudgetLimitTable from '../components/organisms/BudgetLimitTable'
 
 export default function Budget() {
-  const { sections, getSection } = useFinance()
+  const { sections, categories, getSection, loaded: taxonomiesLoaded } = useFinance()
+  const { addToast } = useToast()
   const [month, setMonth] = useState(RECENT_MONTHS[0])
   const [rows, setRows]   = useState([])
   const [kpis, setKpis]   = useState({})
@@ -22,6 +24,7 @@ export default function Budget() {
   const [saving, setSaving]   = useState({})
 
   const fetchData = useCallback(async () => {
+    if (!taxonomiesLoaded) return
     setLoading(true)
     try {
         const [presData, anlData] = await Promise.all([
@@ -32,10 +35,19 @@ export default function Budget() {
         const catExpense = {}
         ;(anlData.category_chart || []).forEach(c => { catExpense[c.category] = c.actual })
         
-        const synced = presData.map(row => ({
-            ...row,
-            actual_expense: catExpense[row.category_name] ?? row.actual_expense
-        }))
+        // Deep Sync Fix: Map over all categories to ensure the table is never empty
+        const synced = categories.map(cat => {
+            const existing = presData.find(p => p.category_id === cat.id)
+            return {
+              id: existing?.id || `new-${cat.id}`, // Placeholder ID for new entries
+              category_id: cat.id,
+              category_name: cat.name,
+              section_id: cat.section_id,
+              budget: existing?.budget || 0,
+              actual_spending: catExpense[cat.name] ?? (existing?.actual_spending || 0),
+              isNew: !existing
+            }
+        })
         
         setRows(synced)
         setKpis(anlData.kpis || {})
@@ -43,7 +55,7 @@ export default function Budget() {
     } finally {
         setLoading(false)
     }
-  }, [month])
+  }, [month, categories, taxonomiesLoaded])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -54,14 +66,31 @@ export default function Budget() {
   const handleSave = async (row) => {
     setSaving(s => ({ ...s, [row.id]: true }))
     try {
-        await financeService.updateBudget(row.id, row)
+        const payload = {
+            month,
+            category_id: row.category_id,
+            budget: parseFloat(row.budget) || 0,
+            actual_spending: parseFloat(row.actual_spending) || 0
+        }
+
+        if (row.isNew) {
+           await financeService.createBudget(payload)
+           addToast(`Initialized budget for ${row.category_name}`, 'success')
+        } else {
+           await financeService.updateBudget(row.id, payload)
+           addToast(`Updated ${row.category_name} limit`, 'success')
+        }
+        fetchData() // Refresh to get the real IDs
+    } catch (e) {
+        console.error(e)
+        addToast('Failed to persist budget limit', 'danger')
     } finally {
         setSaving(s => ({ ...s, [row.id]: false }))
     }
   }
 
   const totalBudget    = useMemo(() => rows.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0), [rows])
-  const totalActual    = useMemo(() => rows.reduce((s, r) => s + (parseFloat(r.actual_expense) || 0), 0), [rows])
+  const totalActual    = useMemo(() => rows.reduce((s, r) => s + (parseFloat(r.actual_spending) || 0), 0), [rows])
   const totalRevenue   = kpis.total_revenue || 0
   const balance        = totalRevenue > 0 ? totalRevenue - totalActual : totalBudget - totalActual
   const pct            = (totalRevenue > 0 ? totalRevenue : totalBudget) > 0

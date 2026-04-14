@@ -16,7 +16,7 @@ const BudgetTableRow = ({
   fmt 
 }) => {
   const budgetVal = parseFloat(row.budget) || 0;
-  const actualVal = parseFloat(row.actual_expense) || 0;
+  const actualVal = parseFloat(row.actual_spending) || 0;
   const rowBal    = budgetVal > 0 ? budgetVal - actualVal : 0;
   const rowPct    = budgetVal > 0 ? Math.round(actualVal / budgetVal * 100) : 0;
   const pctRevenue = totalRevenue > 0 ? (actualVal / totalRevenue * 100).toFixed(1) : null;

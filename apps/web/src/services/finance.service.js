@@ -14,5 +14,10 @@ export const financeService = {
   updateBudget: async (id, payload) => {
     const { data } = await api.put(`/budgets/${id}`, payload)
     return data
+  },
+
+  createBudget: async (payload) => {
+    const { data } = await api.post('/budgets/', payload)
+    return data
   }
 }

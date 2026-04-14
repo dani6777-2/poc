@@ -9,9 +9,9 @@
  * @returns {string} Formatted currency string.
  */
 export const fmt = (n, fractionDigits = 0) => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('es-CL', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'CLP',
     maximumFractionDigits: fractionDigits,
   }).format(n || 0);
 };
