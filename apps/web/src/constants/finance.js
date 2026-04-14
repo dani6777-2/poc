@@ -36,3 +36,12 @@ export const NIVEL_CFG = {
   danger: { color: 'var(--color-danger)', bg: 'var(--color-danger-soft)', border: 'var(--color-danger-glow)', label: '🚨 Critical', icon: '🔴' },
   no_data: { color: 'var(--color-tx-muted)', bg: 'var(--color-tx-primary-soft)', border: 'var(--color-border-base)', label: '— No data', icon: '⚪' },
 }
+
+export const NIVEL_COLOR = {
+  ok:      '#10b981',
+  warning: '#f59e0b',
+  danger:  '#ef4444',
+  no_data: '#64748b',
+}
+
+export const NIVEL_ICON = { ok: '🟢', warning: '🟡', danger: '🔴', no_data: '⚪' }

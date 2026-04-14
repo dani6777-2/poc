@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { analysisService } from '../services'
 import { NIVEL_CFG } from '../constants/finance'
-import { recentMonths } from '../constants/time'
+import { RECENT_MONTHS } from '../constants/time'
+import { fmt } from '../utils/formatters'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
-
-const RECENT_MONTHS = recentMonths(12)
-const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 function ScoreGauge({ score, level }) {
   const cfg   = NIVEL_CFG[level] || NIVEL_CFG.ok

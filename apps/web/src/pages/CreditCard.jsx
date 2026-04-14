@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { cardService } from '../services'
-import { recentMonths } from '../constants/time'
+import { RECENT_MONTHS } from '../constants/time'
+import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
@@ -10,9 +11,6 @@ import Button from '../components/atoms/Button'
 import Input from '../components/atoms/Input'
 import Select from '../components/atoms/Select'
 import { useToast } from '../context/ToastContext'
-
-const RECENT_MONTHS = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 export default function CreditCard() {
   const { channels } = useFinance()

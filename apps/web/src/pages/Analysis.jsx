@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { analysisService } from '../services'
-import { recentMonths } from '../constants/time'
+import { RECENT_MONTHS } from '../constants/time'
+import { NIVEL_COLOR, NIVEL_ICON } from '../constants/finance'
+import { fmt } from '../utils/formatters'
 import { useTheme } from '../context/ThemeContext'
 import { useFinance } from '../context/FinanceContext'
 import {
@@ -15,18 +17,6 @@ import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
-
-const RECENT_MONTHS = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
-
-const NIVEL_COLOR = {
-  ok:      '#10b981',
-  warning: '#f59e0b',
-  danger:  '#ef4444',
-  no_data: '#64748b',
-}
-
-const NIVEL_ICON = { ok: '🟢', warning: '🟡', danger: '🔴', no_data: '⚪' }
 
 export default function Analysis() {
   const { getSection } = useFinance()

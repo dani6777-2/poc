@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { financeService, analysisService } from '../services'
+import { RECENT_MONTHS } from '../constants/time'
+import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
-import { recentMonths } from '../constants/time'
-
-const RECENT_MONTHS = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 export default function Budget() {
   const { sections, getSection, loaded: taxonomiesLoaded } = useFinance()

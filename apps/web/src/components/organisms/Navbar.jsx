@@ -1,36 +1,9 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { cardService, analysisService } from '../../services'
+import { NAVBAR_SECTIONS } from '../../constants/navigation'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
-
-const sections = [
-  {
-    title: 'Annual Planning',
-    links: [
-      { to: '/', icon: '📊', label: 'Main Dashboard' },
-      { to: '/revenues', icon: '💵', label: 'Revenues' },
-      { to: '/annual-expenses', icon: '📋', label: 'Annual Expenses' },
-    ]
-  },
-  {
-    title: 'Monthly Control',
-    links: [
-      { to: '/registry', icon: '🛒', label: 'Registry' },
-      { to: '/budget', icon: '💰', label: 'Budget' },
-      { to: '/analysis', icon: '📈', label: 'Analytics' },
-      { to: '/card', icon: '💳', label: 'Credit Card', alertKey: 'card' },
-      { to: '/health', icon: '🏥', label: 'Financial Health', alertKey: 'health' },
-    ]
-  },
-  {
-    title: 'Shopping Lists',
-    links: [
-      { to: '/block-a', icon: '🏪', label: 'Block A — Super' },
-      { to: '/block-b', icon: '🥩', label: 'Block B — Market' },
-    ]
-  },
-]
 
 export default function Navbar() {
   const [alerts, setAlerts] = useState({ card: null, health: null })
@@ -101,7 +74,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex-1 space-y-9 overflow-y-auto no-scrollbar pr-2 custom-scrollbar">
-          {sections.map(sec => (
+          {NAVBAR_SECTIONS.map(sec => (
             <div key={sec.title} className="space-y-2">
               <div className="px-4 text-[10px] font-black text-tx-muted uppercase tracking-[0.25em] mb-4 opacity-40">
                 {sec.title}

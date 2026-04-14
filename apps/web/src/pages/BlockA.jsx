@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { expenseService } from '../services'
-import { recentMonths } from '../constants/time'
+import { RECENT_MONTHS } from '../constants/time'
+import { INVENTORY_BLOCK_A_DEFAULT } from '../constants/forms'
+import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
@@ -10,19 +12,12 @@ import Input from '../components/atoms/Input'
 import Select from '../components/atoms/Select'
 import { useToast } from '../context/ToastContext'
 
-const RECENT_MONTHS = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
-
-const emptyForm = (month, category_id) => ({
-  month, category_id: category_id || '', name: '', unit_id: '', quantity: '', channel_id: '', unit_price: '', prev_month_price: ''
-})
-
 export default function BlockA() {
   const { sections, categories, channels, units, loaded: taxonomiesLoaded } = useFinance()
   const [month, setMonth] = useState(RECENT_MONTHS[0])
   const [items, setItems]   = useState([])
   const [modal, setModal]   = useState(false)
-  const [form, setForm]     = useState(emptyForm(RECENT_MONTHS[0], ''))
+  const [form, setForm]     = useState(INVENTORY_BLOCK_A_DEFAULT(RECENT_MONTHS[0], ''))
   const [editing, setEditing] = useState(null)
   const [loading, setLoading] = useState(true)
   const { addToast } = useToast()
@@ -43,7 +38,7 @@ export default function BlockA() {
 
   const openNew = (catId = null) => {
     const defaultCatId = catId || categories[0]?.id || ''
-    setForm(emptyForm(month, defaultCatId))
+    setForm(INVENTORY_BLOCK_A_DEFAULT(month, defaultCatId))
     setEditing(null)
     setModal(true)
   }

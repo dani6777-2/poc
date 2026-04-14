@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { revenueService } from '../services'
 import { MONTH_KEYS, MONTH_LABELS } from '../constants/finance'
+import { fmt } from '../utils/formatters'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
@@ -8,7 +9,6 @@ import Button from '../components/atoms/Button'
 import Input from '../components/atoms/Input'
 import { useToast } from '../context/ToastContext'
 
-const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 const totalRow = row => MONTH_KEYS.reduce((s, m) => s + (parseFloat(row[m]) || 0), 0)
 
 export default function Revenues() {

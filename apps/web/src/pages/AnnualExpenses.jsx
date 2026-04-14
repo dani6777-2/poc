@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { expenseService, revenueService } from '../services'
 import { MONTH_LABELS, MONTH_KEYS, ACTUAL_MONTH_KEYS, CARD_MONTH_KEYS, YEARS } from '../constants/finance'
+import { fmt } from '../utils/formatters'
+import { isAutoSync } from '../utils/finance'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
@@ -12,12 +14,7 @@ import Select from '../components/atoms/Select'
 import ConfirmModal from '../components/molecules/ConfirmModal'
 import { useToast } from '../context/ToastContext'
 
-const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 const totalPlanned = row => MONTH_KEYS.reduce((s, m) => s + (parseFloat(row[m]) || 0), 0)
-
-const REGISTRY_DESCRIPTION_PREFIX = "📝 Registry: "
-const AUTO_PREFIXES = [REGISTRY_DESCRIPTION_PREFIX, '💳 Card:', '🛒 Supermarket']
-const isAutoSync = (description, is_automatic) => is_automatic || AUTO_PREFIXES.some(p => description?.startsWith(p))
 
 function VarBadge({ plan, actual }) {
   if (!plan && !actual) return <span className="text-tx-muted text-[10px] opacity-20">—</span>

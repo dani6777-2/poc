@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { expenseService, analysisService, ocrService } from '../services'
-import { recentMonths } from '../constants/time'
+import { RECENT_MONTHS } from '../constants/time'
+import { fmt } from '../utils/formatters'
+import { isAutoExpense, getSourceLabel } from '../utils/finance'
+import { REGISTRY_BLANK_STATE, STATUS_OPTIONS, REGISTRY_FILTERS } from '../constants/forms'
 import { useToast } from '../context/ToastContext'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
@@ -13,35 +16,13 @@ import Select from '../components/atoms/Select'
 import ConfirmModal from '../components/molecules/ConfirmModal'
 import OCRScanner from '../components/organisms/OCRScanner'
 
-const RECENT_MONTHS = recentMonths(12)
-const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
-
-const isAuto = (item) => item.source && (item.source.startsWith('BA:') || item.source.startsWith('BB:'))
-const sourceLabel = (source) => {
-  if (!source) return null
-  if (source.startsWith('BA:')) return { label: '🏪 Supermarket', variant: 'info' }
-  if (source.startsWith('BB:')) return { label: '🥩 Market', variant: 'success' }
-  return null
-}
-
-const BLANK = { 
-    name: '', 
-    category_id: '', 
-    channel_id: '', 
-    unit_id: '', 
-    quantity: 1, 
-    unit_price: 0, 
-    prev_month_price: '', 
-    status: 'Planned' 
-}
-
 export default function Registry() {
   const { addToast } = useToast()
   const { categories, channels, units, loaded: taxonomiesLoaded } = useFinance()
   
   const [month, setMonth] = useState(RECENT_MONTHS[0])
   const [items, setItems] = useState([])
-  const [form, setForm] = useState(BLANK)
+  const [form, setForm] = useState(REGISTRY_BLANK_STATE)
   const [editId, setEditId] = useState(null)
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -105,7 +86,7 @@ export default function Registry() {
       const lastChannel = form.channel_id
       const lastUnit = form.unit_id
       setForm({
-          ...BLANK,
+          ...REGISTRY_BLANK_STATE,
           category_id: categories[0]?.id || '',
           channel_id: lastChannel,
           unit_id: lastUnit
@@ -162,8 +143,8 @@ export default function Registry() {
     if (!matchesSearch) return false
     if (filter === 'bought') return i.status === 'Bought'
     if (filter === 'planned') return i.status !== 'Bought'
-    if (filter === 'auto') return isAuto(i)
-    if (filter === 'manual') return !isAuto(i)
+    if (filter === 'auto') return isAutoExpense(i)
+    if (filter === 'manual') return !isAutoExpense(i)
     return true
   }), [items, filter, search])
 
@@ -173,10 +154,6 @@ export default function Registry() {
   const catOptions = useMemo(() => categories.map(c => ({ value: c.id, label: c.name })), [categories])
   const canalOptions = useMemo(() => channels.map(c => ({ value: c.id, label: c.name })), [channels])
   const unitOptions = useMemo(() => units.map(u => ({ value: u.id, label: u.name })), [units])
-  const statusOptions = [
-    { value: 'Planned', label: 'Planned' },
-    { value: 'Bought', label: 'Bought' }
-  ]
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
@@ -286,14 +263,14 @@ export default function Registry() {
             <Select label="Unit" value={form.unit_id} onChange={e => setForm({ ...form, unit_id: e.target.value })} options={unitOptions} />
           </div>
           <Input label="Unit Price ($)" type="number" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} className="text-success font-black" />
-          <Select label="Status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
+          <Select label="Status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={STATUS_OPTIONS} />
 
           <div className="md:col-span-6 mt-4">
             <Button className="w-full py-5" onClick={handleSubmit}>
               {editId ? 'Confirm Changes' : 'Enter into Record'}
             </Button>
             {editId && (
-              <Button variant="ghost" className="w-full mt-2" onClick={() => { setEditId(null); setForm(BLANK); }}>
+              <Button variant="ghost" className="w-full mt-2" onClick={() => { setEditId(null); setForm(REGISTRY_BLANK_STATE); }}>
                 Cancel Edit
               </Button>
             )}
@@ -308,13 +285,7 @@ export default function Registry() {
             <Input placeholder="🔍 Filter records..." value={search} onChange={e => setSearch(e.target.value)} className="py-2.5 px-4 h-auto text-xs w-full lg:w-64" />
           </div>
           <div className="flex bg-tx-primary/5 p-1 rounded-xl gap-1 overflow-x-auto no-scrollbar max-w-full">
-            {[
-              { id: 'all', label: '🌍 View All' },
-              { id: 'bought', label: 'Bought' },
-              { id: 'planned', label: 'Planned' },
-              { id: 'auto', label: 'Auto' },
-              { id: 'manual', label: 'Manual' }
-            ].map(f => (
+            {REGISTRY_FILTERS.map(f => (
               <button
                 key={f.id} onClick={() => setFilter(f.id)}
                 className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${filter === f.id ? 'bg-accent text-white shadow-lg glow-accent' : 'text-tx-secondary hover:bg-tx-primary/5'}`}
@@ -340,8 +311,8 @@ export default function Registry() {
             </thead>
             <tbody className="divide-y divide-border-base">
               {filtered.map(item => {
-                const auto = isAuto(item)
-                const source = sourceLabel(item.source)
+                const auto = isAutoExpense(item)
+                const source = getSourceLabel(item.source)
                 const isBought = item.status === 'Bought'
                 return (
                    <tr key={item.id} className={`hover:bg-tx-primary/[0.02] transition-colors group ${isBought ? '' : 'opacity-60'} ${auto ? 'bg-accent/[0.02]' : ''}`}>

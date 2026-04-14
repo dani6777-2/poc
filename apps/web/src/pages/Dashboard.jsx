@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { analysisService, expenseService } from '../services'
-import { MONTH_LABELS, MONTH_KEYS } from '../constants/finance'
-import { recentMonths } from '../constants/time'
+import { MONTH_LABELS, MONTH_KEYS, YEARS } from '../constants/finance'
+import { RECENT_MONTHS } from '../constants/time'
+import { fmt } from '../utils/formatters'
+import { COMMON_CHART_OPTIONS, CHART_COLORS } from '../constants/ui'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
@@ -14,9 +16,6 @@ import {
 import { Bar, Line } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, Filler)
-
-const RECENT_MONTHS = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 const HealthScore = ({ score }) => {
   const color = score > 80 ? '#10b981' : score > 50 ? '#f59e0b' : '#ef4444';
@@ -76,56 +75,34 @@ export default function Dashboard() {
 
   const kpis = analysis?.kpis || {}
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: true, position: 'top', labels: { color: '#94a3b8', font: { size: 11, weight: '900' }, boxWidth: 10, usePointStyle: true } },
-      tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        padding: 16,
-        titleFont: { size: 14, weight: '900' },
-        bodyFont: { size: 13 },
-        borderColor: 'rgba(148, 163, 184, 0.1)',
-        borderWidth: 1,
-        cornerRadius: 16,
-        callbacks: { label: ctx => ` ${fmt(ctx.raw)}` }
-      }
-    },
-    scales: {
-      x: { ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } }, grid: { display: false } },
-      y: { ticks: { color: '#64748b', callback: v => fmt(v), font: { size: 10 } }, grid: { color: 'rgba(148, 163, 184, 0.05)' } }
-    }
-  }
-
   const lineData = useMemo(() => ({
     labels: netData?.map(n => MONTH_LABELS[MONTH_KEYS.indexOf(n.month)]) || [],
     datasets: [
       {
         label: 'Revenues',
         data: netData?.map(n => n.revenues) || [],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+        borderColor: CHART_COLORS.success,
+        backgroundColor: CHART_COLORS.revenuesSoft,
         borderWidth: 4,
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 8,
-        pointHoverBackgroundColor: '#10b981',
+        pointHoverBackgroundColor: CHART_COLORS.success,
         pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 3,
       },
       {
         label: 'Expenses',
         data: netData?.map(n => n.expenses) || [],
-        borderColor: '#f43f5e',
-        backgroundColor: 'rgba(244, 63, 94, 0.05)',
+        borderColor: CHART_COLORS.expenses,
+        backgroundColor: CHART_COLORS.expensesSoft,
         borderWidth: 4,
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 8,
-        pointHoverBackgroundColor: '#f43f5e',
+        pointHoverBackgroundColor: CHART_COLORS.expenses,
         pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 3,
       }
@@ -155,7 +132,7 @@ export default function Dashboard() {
                 onChange={e => setYear(Number(e.target.value))}
                 className="bg-transparent border-none text-tx-primary font-black px-4 py-2 cursor-pointer outline-none text-xs uppercase tracking-widest"
                 >
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
+                {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
                 </select>
             </div>
             <Link to="/analysis">
@@ -251,7 +228,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="h-[420px] w-full">
-                <Line data={lineData} options={chartOptions} />
+                <Line data={lineData} options={COMMON_CHART_OPTIONS} />
               </div>
             </Card>
 
