@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+  --radius-base: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2.5rem;
+  --radius-3xl: 3.5rem;
+
+  /* Use CSS variables for theme-dependent colors */
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-card: var(--card);
+  --color-border-base: var(--border-base);
+  --color-tx-primary: var(--tx-primary);
+  --color-tx-secondary: var(--tx-secondary);
+  --color-tx-muted: var(--tx-muted);
+
+  --shadow-premium: var(--shadow-base);
+  
+  /* Base Palette with functional variants */
+  --color-accent: #6366f1;
+  --color-accent-soft: rgba(99, 102, 241, 0.12);
+  --color-accent-glow: rgba(99, 102, 241, 0.35);
+
+  --color-success: #10b981;
+  --color-success-soft: rgba(16, 185, 129, 0.12);
+  --color-success-glow: rgba(16, 185, 129, 0.35);
+
+  --color-danger: #f43f5e;
+  --color-danger-soft: rgba(244, 63, 94, 0.12);
+  --color-danger-glow: rgba(244, 63, 94, 0.35);
+
+  --color-warning: #f59e0b;
+  --color-warning-soft: rgba(245, 158, 11, 0.12);
+  --color-warning-glow: rgba(245, 158, 11, 0.35);
+
+  --color-info: #3b82f6;
+  --color-info-soft: rgba(59, 130, 246, 0.12);
+  --color-info-glow: rgba(59, 130, 246, 0.35);
+
+  --color-teal: #14b8a6;
+  --color-teal-soft: rgba(20, 184, 166, 0.12);
+  --color-teal-glow: rgba(20, 184, 166, 0.35);
+
+  --color-purple: #8b5cf6;
+  --color-purple-soft: rgba(139, 92, 246, 0.12);
+  --color-purple-glow: rgba(139, 92, 246, 0.35);
+
+  --color-orange: #fb923c;
+  --color-orange-soft: rgba(251, 146, 60, 0.12);
+  --color-orange-glow: rgba(251, 146, 60, 0.35);
+
+  --color-slate: #9ca3af;
+  --color-slate-soft: rgba(156, 163, 175, 0.12);
+  --color-slate-glow: rgba(156, 163, 175, 0.25);
+
+  --color-tx-primary-soft: rgba(var(--tx-rgb), 0.05);
+}
+
+:root {
+  --primary: #f8fafc;
+  --secondary: #ffffff;
+  --card: rgba(255, 255, 255, 0.8);
+  --border-base: rgba(15, 23, 42, 0.08);
+  --tx-primary: #0f172a;
+  --tx-rgb: 15, 23, 42;
+  --tx-secondary: #475569;
+  --tx-muted: #94a3b8;
+  --shadow-base: 0 10px 40px rgba(15, 23, 42, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='dark'] {
+  --primary: #020617;
+  --secondary: #0f172a;
+  --card: rgba(30, 41, 59, 0.4);
+  --border-base: rgba(255, 255, 255, 0.06);
+  --tx-primary: #f8fafc;
+  --tx-rgb: 248, 250, 252;
+  --tx-secondary: #94a3b8;
+  --tx-muted: #64748b;
+  --shadow-base: 0 20px 50px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(15, 23, 42, 0.6);
+}
+
+@layer base {
+  body {
+    @apply bg-primary text-tx-primary font-sans antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.10) 0px, transparent 40%),
+      radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 40%);
+    min-height: 100vh;
+  }
+
+  /* Use direct CSS variable for global border to avoid @apply issues during init */
+  * {
+    border-color: var(--border-base);
+  }
+
+  a {
+    @apply text-inherit no-underline transition-all duration-200 cursor-pointer;
+  }
+
+  input, select, textarea {
+    background-color: var(--secondary);
+    border: 1px solid var(--border-base);
+    @apply rounded-xl px-4 py-2 transition-all duration-200 outline-none;
+    @apply focus:border-accent/40 focus:ring-4 focus:ring-accent/10;
+  }
+
+  select {
+    @apply cursor-pointer appearance-none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+  }
+
+  button {
+    @apply cursor-pointer transition-all duration-200 active:scale-95;
+  }
+}
+
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-base);
+}
+
+@utility glass-hover {
+  @apply hover:bg-tx-primary/5 hover:shadow-premium hover:-translate-y-1 transition-all duration-300;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-tx-primary/10 rounded-full hover:bg-accent/40 transition-colors;
+  }
+}
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@utility glow-accent {
+  box-shadow: 0 0 20px var(--color-accent-glow);
+}
+
+@utility card-premium {
+  @apply glass rounded-[2rem] shadow-2xl transition-all duration-300;
+}
+
+@utility interactive-card {
+  @apply card-premium hover:bg-tx-primary/[0.02] hover:-translate-y-1;
+}
