@@ -32,7 +32,7 @@ const SectionHealthCard = ({ sec }) => {
       <div className="space-y-6">
         <div className="flex justify-between items-end">
           <div className="text-5xl font-black tabular-nums tracking-tighter transition-transform group-hover:scale-110 origin-left" style={{ color: cfg.color }}>
-            {pct !== null ? `${pct}%` : '—'}
+            {(pct !== undefined && pct !== null) ? `${pct}%` : '—'}
           </div>
           <div className="text-right">
              <div className="text-[9px] font-black text-tx-muted uppercase tracking-widest leading-none opacity-40 mb-1">Market Ref.</div>

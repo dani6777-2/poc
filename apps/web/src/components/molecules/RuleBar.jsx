@@ -18,7 +18,7 @@ const RuleBar = ({ label, icon, pct, meta, level, total }) => {
         </div>
         <div className="flex flex-col items-end gap-1">
            <div className="flex items-center gap-4">
-              <span className="text-2xl font-black tabular-nums tracking-tighter" style={{ color: cfg.color }}>{pct !== null ? `${pct}%` : '—'}</span>
+              <span className="text-2xl font-black tabular-nums tracking-tighter" style={{ color: cfg.color }}>{(pct !== undefined && pct !== null) ? `${pct}%` : '—'}</span>
               <Badge variant={level === 'ok' ? 'success' : level === 'warning' ? 'warning' : 'danger'} size="sm" className="px-3 font-black">{cfg.label.replace('✓ ', '').replace('⚠ ', '').replace('🚨 ', '')}</Badge>
            </div>
            <span className="text-[9px] font-black text-tx-muted uppercase tracking-[0.4em] opacity-30">Reference Pt: {meta}%</span>
