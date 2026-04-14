@@ -1,6 +1,5 @@
 import React from 'react';
-import Card from '../atoms/Card';
-import Badge from '../atoms/Badge';
+import { Card, Badge, Text } from '../atoms';
 
 const KpiCard = ({ 
   label, 
@@ -22,14 +21,14 @@ const KpiCard = ({
       )}
       
       {!badge && label && (
-        <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.4em] block mb-3 opacity-40">
+        <Text variant="caption" className="block mb-3 opacity-40 tracking-[0.4em]">
           {label}
-        </label>
+        </Text>
       )}
       
-      <div className={`text-2xl md:text-3xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-sm`}>
+      <Text variant="h2" className="tabular-nums drop-shadow-sm">
         {value}
-      </div>
+      </Text>
       
       {children}
     </Card>
