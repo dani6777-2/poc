@@ -5,6 +5,8 @@ import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
 import { useToast } from '../context/ToastContext'
 
+import { DashboardTemplate } from '../components/templates'
+
 // Atoms & Molecules
 import Card from '../components/atoms/Card'
 
@@ -102,14 +104,11 @@ export default function Budget() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
-        <div>
-          <h1 className="text-[32px] font-black tracking-tight text-tx-primary mb-1 flex items-center gap-3">
-             <span className="drop-shadow-[0_0_15px_rgba(234,179,8,0.4)]">💰</span> Budget
-          </h1>
-          <p className="text-tx-secondary text-sm font-bold uppercase tracking-[0.15em] opacity-60">Granular Control · Monthly Limits Management</p>
-        </div>
+    <DashboardTemplate
+      title={<><span className="drop-shadow-[0_0_15px_rgba(234,179,8,0.4)]">💰</span> Budget</>}
+      subtitle="Granular Control · Monthly Limits Management"
+      
+      headerAction={
         <div className="glass p-1 rounded-xl">
           <select 
             value={month} 
@@ -119,8 +118,8 @@ export default function Budget() {
             {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
           </select>
         </div>
-      </header>
-
+      }
+    >
       <AnnualPlanningBanner 
         sectionsWithRef={sectionsWithRef}
         refSection={refSection}
@@ -148,7 +147,7 @@ export default function Budget() {
 
       <BudgetLimitTable 
         rows={rows}
-        loading={loading}
+        
         saving={saving}
         totalRevenue={totalRevenue}
         totalBudget={totalBudget}
@@ -161,6 +160,6 @@ export default function Budget() {
         handleSave={handleSave}
         fmt={fmt}
       />
-    </div>
+    </DashboardTemplate>
   )
 }

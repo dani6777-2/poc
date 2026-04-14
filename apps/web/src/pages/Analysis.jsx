@@ -8,10 +8,11 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
   Title, Tooltip, Legend
 } from 'chart.js'
-import PageHeader from '../components/molecules/PageHeader'
+
 import Card from '../components/atoms/Card'
 import Button from '../components/atoms/Button'
 import { Link } from 'react-router-dom'
+import { DashboardTemplate } from '../components/templates'
 
 // Organisms
 import HealthBanner from '../components/organisms/HealthBanner'
@@ -125,68 +126,59 @@ export default function Analysis() {
   }
 
   return (
-    <div className="page-entry pb-20 space-y-10">
-      <PageHeader 
-        title={<>Financial <span className="text-accent italic font-light">Analytics</span></>}
-        subtitle="Distributed intelligence and advanced consumption patterns"
-        icon="📊"
-        badge={`Analysis Cycle ${month} Active`}
-        actions={
-          <div className="glass p-1 rounded-xl">
-            <select 
-              value={month} 
-              onChange={e => setMonth(e.target.value)}
-              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-            >
-              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-            </select>
+    <DashboardTemplate
+      title={<>Financial <span className="text-accent italic font-light">Analytics</span></>}
+      subtitle="Distributed intelligence and advanced consumption patterns"
+      icon="📊"
+      badge={`Analysis Cycle ${month} Active`}
+      loading={loading}
+      headerAction={
+        <div className="glass p-1 rounded-xl">
+          <select 
+            value={month} 
+            onChange={e => setMonth(e.target.value)}
+            className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+          >
+            {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+          </select>
+        </div>
+      }
+    >
+      <HealthBanner health={health} />
+
+      <AnalysisKpiGrid kpis={kpis} />
+
+      {kpis.has_card && kpis.month_card_expense > 0 && (
+        <Card border={false} className="p-6 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-6">
+          <div className="text-3xl">💳</div>
+          <div className="flex-1">
+            <h5 className="text-[13px] font-black text-warning uppercase tracking-widest leading-none">Projected Deferred Debt: {fmt(kpis.month_card_expense)}</h5>
+            <p className="text-[11px] text-tx-secondary font-medium mt-2 opacity-60">
+               This volume has been diverted to the <span className="text-tx-primary font-bold">{kpis.card_channel}</span> channel. Remaining immediate liquidity: <span className="text-success font-black">{fmt(kpis.cash_balance)}</span>.
+            </p>
           </div>
-        }
+          <Link to="/card">
+            <Button size="sm" variant="warning" className="px-6">View Card Management</Button>
+          </Link>
+        </Card>
+      )}
+
+      <CostVerticalAudit 
+        hasPlanVsActual={hasPlanVsActual}
+        pvr={pvr}
+        healthMap={healthMap}
+        health={health}
+        barPvrData={barPvrData}
+        chartOptions={chartOptions}
       />
 
-      {loading ? (
-        <div className="py-40 flex flex-col items-center gap-4 animate-pulse">
-           <div className="w-10 h-10 border-4 border-accent/10 border-t-accent rounded-full animate-spin" />
-           <p className="text-xs font-black uppercase tracking-[0.3em] text-tx-muted">Processing data vectors...</p>
-        </div>
-      ) : (
-        <>
-          <HealthBanner health={health} />
-
-          <AnalysisKpiGrid kpis={kpis} />
-
-          {kpis.has_card && kpis.month_card_expense > 0 && (
-            <Card border={false} className="p-6 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-6">
-              <div className="text-3xl">💳</div>
-              <div className="flex-1">
-                <h5 className="text-[13px] font-black text-warning uppercase tracking-widest leading-none">Projected Deferred Debt: {fmt(kpis.month_card_expense)}</h5>
-                <p className="text-[11px] text-tx-secondary font-medium mt-2 opacity-60">
-                   This volume has been diverted to the <span className="text-tx-primary font-bold">{kpis.card_channel}</span> channel. Remaining immediate liquidity: <span className="text-success font-black">{fmt(kpis.cash_balance)}</span>.
-                </p>
-              </div>
-              <Link to="/card">
-                <Button size="sm" variant="warning" className="px-6">View Card Management</Button>
-              </Link>
-            </Card>
-          )}
-
-          <CostVerticalAudit 
-            hasPlanVsActual={hasPlanVsActual}
-            pvr={pvr}
-            healthMap={healthMap}
-            health={health}
-            barPvrData={barPvrData}
-            chartOptions={chartOptions}
-          />
-
-          <SegmentationRadarPanel 
-            data={data}
-            channelsChart={channelsChart}
-            chartOptions={chartOptions}
-            fmt={fmt}
-          />
-        </>
-      )}
-    </div>
+      <SegmentationRadarPanel 
+        data={data}
+        channelsChart={channelsChart}
+        chartOptions={chartOptions}
+        fmt={fmt}
+      />
+    </DashboardTemplate>
   )
 }
+

@@ -4,7 +4,7 @@ import { analysisService } from '../services'
 import { NIVEL_CFG } from '../constants/finance'
 import { RECENT_MONTHS } from '../constants/time'
 import { fmt } from '../utils/formatters'
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
@@ -38,25 +38,25 @@ export default function FinancialHealth() {
   const nodata_secs = sections.filter(s => s.level === 'no_data')
 
   return (
-    <div className="page-entry pb-20 space-y-10 group">
-      <PageHeader
-        title={<>Strategic <span className="text-accent italic font-light">Control Panel</span></>}
-        subtitle="Sustainability analytics and capital resilience"
-        icon="🛡️"
-        badge="Health Core Protocol V4.5"
-        actions={
-          <div className="glass p-1 rounded-xl">
-            <select
-              value={month}
-              onChange={e => setMonth(e.target.value)}
-              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-            >
-              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-            </select>
-          </div>
-        }
-      />
-
+    <DashboardTemplate
+      title={<>Strategic <span className="text-accent italic font-light">Control Panel</span></>}
+      subtitle="Sustainability analytics and capital resilience"
+      icon="🛡️"
+      badge="Health Core Protocol V4.5"
+      loading={loading}
+      loadingText="Compiling biometric diagnosis..."
+      headerAction={
+        <div className="glass p-1 rounded-xl">
+          <select
+            value={month}
+            onChange={e => setMonth(e.target.value)}
+            className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+          >
+            {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+          </select>
+        </div>
+      }
+    >
       {data?.no_revenue && (
         <Card border={false} className="p-8 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-top-4 shadow-premium">
           <div className="text-5xl drop-shadow-glow-warning animate-pulse">⚠️</div>
@@ -72,21 +72,14 @@ export default function FinancialHealth() {
         </Card>
       )}
 
-      {loading ? (
-        <div className="py-40 flex flex-col items-center gap-4 animate-pulse">
-          <div className="w-10 h-10 border-4 border-accent/10 border-t-accent rounded-full animate-spin" />
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-tx-muted">Compiling biometric diagnosis...</p>
-        </div>
-      ) : (
-        <>
-          <StrategicAuditDashboard
-            score={score}
-            level={level}
-            rule={rule}
-            activeAlerts={data?.active_alerts}
-            okSecsCount={ok_secs.length}
-            totalActualSpending={data?.cash_expense + data?.card_expense_total}
-          />
+      <StrategicAuditDashboard
+        score={score}
+        level={level}
+        rule={rule}
+        activeAlerts={data?.active_alerts}
+        okSecsCount={ok_secs.length}
+        totalActualSpending={data?.cash_expense + data?.card_expense_total}
+      />
 
           {/* ── CARD Alert ── */}
           {card && (
@@ -134,8 +127,6 @@ export default function FinancialHealth() {
             nodataSecs={nodata_secs}
           />
           <AuditMatrixTable sections={sections} />
-        </>
-      )}
-    </div>
+    </DashboardTemplate>
   )
 }

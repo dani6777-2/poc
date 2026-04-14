@@ -7,7 +7,7 @@ import { isAutoExpense, getSourceLabel } from '../utils/finance'
 import { REGISTRY_BLANK_STATE, STATUS_OPTIONS, REGISTRY_FILTERS } from '../constants/forms'
 import { useToast } from '../context/ToastContext'
 import { useFinance } from '../context/FinanceContext'
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
@@ -198,7 +198,28 @@ export default function Registry() {
   }
 
   return (
-    <div className="page-entry space-y-10 pb-20">
+    <DashboardTemplate
+      title={<>Shopping <span className="text-accent italic font-light">Center</span></>}
+      subtitle="Full control of inventory and consumption flows"
+      icon="🛒"
+      badge="Operational V4.5 Enterprise"
+      loading={loading}
+      headerAction={
+        <div className="flex gap-3">
+          <Button variant="outline" size="md" onClick={() => setScanning(true)}>
+            📸 Scan
+          </Button>
+          <div className="glass p-1 rounded-xl">
+            <select
+              value={month} onChange={e => setMonth(e.target.value)}
+              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+            >
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+            </select>
+          </div>
+        </div>
+      }
+    >
       {confirmData && (
         <ConfirmModal
           message={confirmData.autoBlock
@@ -208,28 +229,6 @@ export default function Registry() {
           onCancel={() => setConfirmData(null)}
         />
       )}
-
-      <PageHeader
-        title={<>Shopping <span className="text-accent italic font-light">Center</span></>}
-        subtitle="Full control of inventory and consumption flows"
-        icon="🛒"
-        badge="Operational V4.5 Enterprise"
-        actions={
-          <div className="flex gap-3">
-            <Button variant="outline" size="md" onClick={() => setScanning(true)}>
-              📸 Scan
-            </Button>
-            <div className="glass p-1 rounded-xl">
-              <select
-                value={month} onChange={e => setMonth(e.target.value)}
-                className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-              >
-                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-              </select>
-            </div>
-          </div>
-        }
-      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <KpiCard 
@@ -292,6 +291,6 @@ export default function Registry() {
           fmt={fmt}
         />
       )}
-    </div>
+    </DashboardTemplate>
   )
 }

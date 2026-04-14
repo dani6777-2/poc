@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { revenueService } from '../services'
 import { MONTH_KEYS, MONTH_LABELS } from '../constants/finance'
 import { fmt } from '../utils/formatters'
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
 import ConfirmModal from '../components/molecules/ConfirmModal'
@@ -105,13 +105,14 @@ export default function Revenues() {
   const totalAnnual = totalsByMonth.reduce((a, b) => a + b, 0)
 
   return (
-    <div className="page-entry pb-20 space-y-10 group">
-      <PageHeader 
+    <DashboardTemplate
         title={<>Revenue <span className="text-success italic font-light">Streams</span></>}
         subtitle={`CFO Management: Annual revenue planning and audit for cycle ${year}`}
         icon="💰"
         badge={`Fiscal Audit ${year} Active`}
-        actions={
+        loading={loading}
+        loadingText="Scanning revenue architecture..."
+        headerAction={
           <div className="flex items-center gap-3">
              <div className="glass p-1 rounded-xl flex items-center">
                 <Button variant="ghost" size="sm" className="w-9 h-9 p-0 rounded-lg hover:bg-tx-primary/5" onClick={() => setYear(year - 1)}>
@@ -127,7 +128,7 @@ export default function Revenues() {
              </Button>
           </div>
         }
-      />
+      >
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <RevenueFlowCard 
@@ -183,6 +184,6 @@ export default function Revenues() {
           onCancel={() => setConfirmId(null)}
         />
       )}
-    </div>
+    </DashboardTemplate>
   )
 }

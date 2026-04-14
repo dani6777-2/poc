@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { DashboardTemplate } from '../components/templates'
 import { analysisService, expenseService } from '../services'
 import { MONTH_LABELS, MONTH_KEYS, YEARS } from '../constants/finance'
 import { RECENT_MONTHS } from '../constants/time'
 import { fmt } from '../utils/formatters'
 import { COMMON_CHART_OPTIONS, CHART_COLORS } from '../constants/ui'
-import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
@@ -86,46 +86,38 @@ export default function Dashboard() {
   }), [netData])
 
   return (
-    <div className="page-entry pb-20 space-y-10">
-      <PageHeader 
-        title={<>Strategic Executive <span className="text-accent italic font-light">Dashboard</span></>}
-        subtitle="Predictive financial analytics and capital management"
-        badge="Enterprise Core Protocol 4.5"
-        icon="🏦"
-        actions={
-          <div className="flex items-center gap-3">
-             <div className="glass flex items-center p-1 rounded-2xl shadow-premium border border-border-base/40 bg-secondary/60">
-                <select
-                value={month}
-                onChange={e => setMonth(e.target.value)}
-                className="bg-transparent border-none text-tx-primary font-black px-4 py-2 cursor-pointer outline-none text-xs uppercase tracking-widest"
-                >
-                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-                </select>
-                <span className="w-px h-6 bg-tx-primary/10 mx-1"></span>
-                <select
-                value={year}
-                onChange={e => setYear(Number(e.target.value))}
-                className="bg-transparent border-none text-tx-primary font-black px-4 py-2 cursor-pointer outline-none text-xs uppercase tracking-widest"
-                >
-                {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
-                </select>
-            </div>
-            <Link to="/analysis">
-                <Button variant="accent" size="sm" className="px-6 font-black uppercase tracking-widest h-12 shadow-glow-accent">AI Panel</Button>
-            </Link>
+    <DashboardTemplate
+      title={<>Strategic Executive <span className="text-accent italic font-light">Dashboard</span></>}
+      subtitle="Predictive financial analytics and capital management"
+      badge="Enterprise Core Protocol 4.5"
+      icon="🏦"
+      loading={loading}
+      headerAction={
+        <div className="flex items-center gap-3">
+           <div className="glass flex items-center p-1 rounded-2xl shadow-premium border border-border-base/40 bg-secondary/60">
+              <select
+              value={month}
+              onChange={e => setMonth(e.target.value)}
+              className="bg-transparent border-none text-tx-primary font-black px-4 py-2 cursor-pointer outline-none text-xs uppercase tracking-widest"
+              >
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+              </select>
+              <span className="w-px h-6 bg-tx-primary/10 mx-1"></span>
+              <select
+              value={year}
+              onChange={e => setYear(Number(e.target.value))}
+              className="bg-transparent border-none text-tx-primary font-black px-4 py-2 cursor-pointer outline-none text-xs uppercase tracking-widest"
+              >
+              {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
+              </select>
           </div>
-        }
-      />
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Skeleton className="h-56 md:col-span-2" />
-          <Skeleton className="h-56" />
-          <Skeleton className="h-[450px] md:col-span-3" />
+          <Link to="/analysis">
+              <Button variant="accent" size="sm" className="px-6 font-black uppercase tracking-widest h-12 shadow-glow-accent">AI Panel</Button>
+          </Link>
         </div>
-      ) : (
-        <div className="space-y-10">
+      }
+    >
+      <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-8">
             <Card interactive className="p-10 flex items-center gap-10 border-none shadow-premium relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-30" />
@@ -263,7 +255,6 @@ export default function Dashboard() {
             </div>
           </Card>
         </div>
-      )}
-    </div>
+    </DashboardTemplate>
   )
 }

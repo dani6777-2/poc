@@ -5,7 +5,7 @@ import { MONTH_LABELS, MONTH_KEYS, ACTUAL_MONTH_KEYS, CARD_MONTH_KEYS, YEARS } f
 import { fmt } from '../utils/formatters'
 import { isAutoSync } from '../utils/finance'
 import { useFinance } from '../context/FinanceContext'
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
@@ -134,7 +134,29 @@ export default function AnnualExpenses() {
   const sectionOptions = useMemo(() => ctxSections.map(s => ({ value: s.id, label: s.name })), [ctxSections])
 
   return (
-    <div className="page-entry pb-20 space-y-10 group">
+    <DashboardTemplate
+      title={<>Annual <span className="text-accent italic font-light">Expenses Manager</span></>}
+      subtitle="Multi-layer control and structural flow management"
+      icon="📋"
+      badge={`Fiscal Year ${year} Operational`}
+      loading={loading || ctxLoading}
+      loadingText="Scanning structural flows..."
+      headerAction={
+        <div className="flex gap-3">
+          <div className="glass p-1 rounded-xl">
+            <select
+              value={year} onChange={e => setYear(Number(e.target.value))}
+              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+            >
+              {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
+            </select>
+          </div>
+          <Button onClick={() => setModal(true)} variant="accent" size="sm" className="px-8 font-black uppercase tracking-[0.2em] h-12 shadow-glow-accent">
+              + Inject Concept
+          </Button>
+        </div>
+      }
+    >
       {confirmId !== null && (
         <ConfirmModal
           mensaje="Delete this concept? All planned and actual linked data will be deleted."
@@ -142,28 +164,6 @@ export default function AnnualExpenses() {
           onCancel={() => setConfirmId(null)}
         />
       )}
-
-      <PageHeader
-        title={<>Annual <span className="text-accent italic font-light">Expenses Manager</span></>}
-        subtitle="Multi-layer control and structural flow management"
-        icon="📋"
-        badge={`Fiscal Year ${year} Operational`}
-        actions={
-          <div className="flex gap-3">
-            <div className="glass p-1 rounded-xl">
-              <select
-                value={year} onChange={e => setYear(Number(e.target.value))}
-                className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-              >
-                {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
-              </select>
-            </div>
-            <Button onClick={() => setModal(true)} variant="accent" size="sm" className="px-8 font-black uppercase tracking-[0.2em] h-12 shadow-glow-accent">
-                + Inject Concept
-            </Button>
-          </div>
-        }
-      />
 
       <div className="flex gap-3 p-1.5 glass w-full sm:w-fit rounded-2xl overflow-x-auto no-scrollbar shadow-premium">
         {[
@@ -316,6 +316,6 @@ export default function AnnualExpenses() {
           </Card>
         </div>
       )}
-    </div>
+    </DashboardTemplate>
   )
 }

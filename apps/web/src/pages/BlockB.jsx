@@ -7,7 +7,7 @@ import { useFinance } from '../context/FinanceContext'
 import { useToast } from '../context/ToastContext'
 
 // Atoms & Molecules
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
 import Button from '../components/atoms/Button'
 import InventorySummaryCard from '../components/molecules/InventorySummaryCard'
@@ -121,29 +121,30 @@ export default function BlockB() {
   const unitOptions = useMemo(() => units.map(u => ({ value: u.id, label: u.name })), [units])
 
   return (
-    <div className="page-entry pb-20 space-y-10">
-      <PageHeader 
-        title={<>Inventory <span className="text-accent italic font-light">Block B</span></>}
-        subtitle="Fresh produce, proteins, and weekly market management"
-        icon="🍎"
-        badge={`Fresh Inventory ${month} Active`}
-        actions={
-          <div className="flex items-center gap-3">
-            <div className="glass p-1 rounded-xl">
-              <select 
-                value={month} 
-                onChange={e => setMonth(e.target.value)}
-                className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-              >
-                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-              </select>
-            </div>
-            <Button onClick={() => openNew()} variant="success" size="sm" className="px-6 font-black uppercase tracking-widest h-11 text-primary">
-              + Add Item
-            </Button>
+    <DashboardTemplate
+      title={<>Inventory <span className="text-accent italic font-light">Block B</span></>}
+      subtitle="Fresh produce, proteins, and weekly market management"
+      icon="🍎"
+      badge={`Fresh Inventory ${month} Active`}
+      loading={loading}
+      loadingText="Analyzing perishable price deltas..."
+      headerAction={
+        <div className="flex items-center gap-3">
+          <div className="glass p-1 rounded-xl">
+            <select 
+              value={month} 
+              onChange={e => setMonth(e.target.value)}
+              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+            >
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+            </select>
           </div>
-        }
-      />
+          <Button onClick={() => openNew()} variant="success" size="sm" className="px-6 font-black uppercase tracking-widest h-11 text-primary">
+            + Add Item
+          </Button>
+        </div>
+      }
+    >
 
       <InventorySummaryCard 
         totalValue={totalSubtotal}
@@ -155,12 +156,6 @@ export default function BlockB() {
         unitLabel="REG. UNITS"
       />
 
-      {loading ? (
-        <div className="py-40 flex flex-col items-center gap-4 animate-pulse">
-           <div className="w-10 h-10 border-4 border-success/10 border-t-success rounded-full animate-spin" />
-           <p className="text-xs font-black uppercase tracking-[0.3em] text-tx-muted">Analyzing perishable price deltas...</p>
-        </div>
-      ) : (
         <div className="space-y-16">
           {sortedSecNames.map(secName => (
             <InventorySection 
@@ -183,7 +178,6 @@ export default function BlockB() {
              </Card>
           )}
         </div>
-      )}
 
       <InventoryEditorModal 
         modal={modal}
@@ -198,6 +192,6 @@ export default function BlockB() {
         fmt={fmt}
         type="block-b"
       />
-    </div>
+    </DashboardTemplate>
   )
 }

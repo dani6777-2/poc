@@ -4,7 +4,7 @@ import { cardService } from '../services'
 import { RECENT_MONTHS } from '../constants/time'
 import { fmt } from '../utils/formatters'
 import { useFinance } from '../context/FinanceContext'
-import PageHeader from '../components/molecules/PageHeader'
+import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
@@ -77,44 +77,35 @@ export default function CreditCard() {
 
   const channelOptions = useMemo(() => channels.map(c => ({ value: c.id, label: c.name })), [channels])
 
-  if (loading && !balance) {
-    return (
-      <div className="py-40 flex flex-col items-center gap-4 animate-pulse">
-        <div className="w-10 h-10 border-4 border-accent/10 border-t-accent rounded-full animate-spin" />
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-tx-muted">Scanning credit architecture...</p>
-      </div>
-    )
-  }
-
   const pct = balance?.used_pct || 0
   const colorVariant = pct > 90 ? 'danger' : pct > 70 ? 'warning' : 'success'
   const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#10b981'
 
   return (
-    <div className="page-entry pb-20 space-y-10">
-      <PageHeader 
-        title={<>Credit Card <span className="text-accent italic font-light">Manager</span></>}
-        subtitle="Operational cycle monitoring and liability management"
-        icon="💳"
-        badge="Financial Protocol v4.5 Active"
-        actions={
-          <div className="flex items-center gap-3">
-            <div className="glass p-1 rounded-xl">
-              <select
-                value={month}
-                onChange={e => setMonth(e.target.value)}
-                className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
-              >
-                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
-              </select>
-            </div>
-            <Button onClick={() => setIsEditing(true)} variant="accent" size="sm" className="px-6 font-black uppercase tracking-widest h-11">
-              Configure
-            </Button>
+    <DashboardTemplate
+      title={<>Credit Card <span className="text-accent italic font-light">Manager</span></>}
+      subtitle="Operational cycle monitoring and liability management"
+      icon="💳"
+      badge="Financial Protocol v4.5 Active"
+      loading={loading && !balance}
+      loadingText="Scanning credit architecture..."
+      headerAction={
+        <div className="flex items-center gap-3">
+          <div className="glass p-1 rounded-xl">
+            <select
+              value={month}
+              onChange={e => setMonth(e.target.value)}
+              className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
+            >
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+            </select>
           </div>
-        }
-      />
-
+          <Button onClick={() => setIsEditing(true)} variant="accent" size="sm" className="px-6 font-black uppercase tracking-widest h-11">
+            Configure
+          </Button>
+        </div>
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-10 items-start">
         {/* PHYSICAL CARD VISUAL */}
         <div className="flex flex-col gap-8">
@@ -328,6 +319,6 @@ export default function CreditCard() {
           </Card>
         </div>
       )}
-    </div>
+    </DashboardTemplate>
   )
 }
