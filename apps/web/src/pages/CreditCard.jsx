@@ -11,12 +11,12 @@ import Input from '../components/atoms/Input'
 import Select from '../components/atoms/Select'
 import { useToast } from '../context/ToastContext'
 
-const MESES = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0)
+const RECENT_MONTHS = recentMonths(12)
+const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
-export default function TarjetaCredito() {
+export default function CreditCard() {
   const { channels } = useFinance()
-  const [month, setMonth] = useState(MESES[0])
+  const [month, setMonth] = useState(RECENT_MONTHS[0])
   const [balance, setBalance] = useState(null)
   const [history, setHistory] = useState([])
   const [isEditing, setIsEditing] = useState(false)
@@ -107,7 +107,7 @@ export default function TarjetaCredito() {
                 onChange={e => setMonth(e.target.value)}
                 className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
               >
-                {MESES.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
               </select>
             </div>
             <Button onClick={() => setIsEditing(true)} variant="accent" size="sm" className="px-6 font-black uppercase tracking-widest h-11">
@@ -271,7 +271,7 @@ export default function TarjetaCredito() {
                     </div>
                   </td>
                   <td className="p-8 text-right pr-12">
-                    <Link to={`/registro?month=${h.month}`}>
+                    <Link to={`/registry?month=${h.month}`}>
                       <Button variant="ghost" size="sm" className="font-black text-[10px] tracking-widest px-8 border border-border-base/40">INSPECT</Button>
                     </Link>
                   </td>

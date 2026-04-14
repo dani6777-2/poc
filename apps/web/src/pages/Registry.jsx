@@ -13,8 +13,8 @@ import Select from '../components/atoms/Select'
 import ConfirmModal from '../components/molecules/ConfirmModal'
 import OCRScanner from '../components/organisms/OCRScanner'
 
-const MESES = recentMonths(12)
-const fmt = n => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0)
+const RECENT_MONTHS = recentMonths(12)
+const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 const isAuto = (item) => item.source && (item.source.startsWith('BA:') || item.source.startsWith('BB:'))
 const sourceLabel = (source) => {
@@ -35,11 +35,11 @@ const BLANK = {
     status: 'Planned' 
 }
 
-export default function Registro() {
+export default function Registry() {
   const { addToast } = useToast()
   const { categories, channels, units, loaded: taxonomiesLoaded } = useFinance()
   
-  const [month, setMonth] = useState(MESES[0])
+  const [month, setMonth] = useState(RECENT_MONTHS[0])
   const [items, setItems] = useState([])
   const [form, setForm] = useState(BLANK)
   const [editId, setEditId] = useState(null)
@@ -225,7 +225,7 @@ export default function Registro() {
     <div className="page-entry space-y-10 pb-20">
       {confirmData && (
         <ConfirmModal
-          mensaje={confirmData.autoBlock
+          message={confirmData.autoBlock
             ? `This item comes from ${sourceLabel(confirmData.item.source)?.label}. You must delete it from its original list.`
             : `Permanently delete "${confirmData.item.name}"?`}
           onConfirm={confirmData.autoBlock ? () => setConfirmData(null) : handleDeleteConfirm}
@@ -248,7 +248,7 @@ export default function Registro() {
                 value={month} onChange={e => setMonth(e.target.value)}
                 className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
               >
-                {MESES.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+                {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
               </select>
             </div>
           </div>
@@ -371,7 +371,7 @@ export default function Registro() {
                       <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
                         {!auto && <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>✏️</Button>}
                         {!auto && <Button variant="outline" size="sm" className="hover:!text-danger" onClick={() => setConfirmData({ item })}>🗑️</Button>}
-                        {auto && <Link to={item.source?.startsWith('BA:') ? '/bloque-a' : '/bloque-b'}><Button variant="outline" size="sm">🔗</Button></Link>}
+                        {auto && <Link to={item.source?.startsWith('BA:') ? '/block-a' : '/block-b'}><Button variant="outline" size="sm">🔗</Button></Link>}
                       </div>
                     </td>
                   </tr>
