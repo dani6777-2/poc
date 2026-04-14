@@ -12,17 +12,17 @@ export const expenseService = {
     return data
   },
 
-  createAnnualExpense: async (payload) => {
+  createExpenseDetail: async (payload) => {
     const { data } = await api.post('/expense-details/', payload)
     return data
   },
 
-  updateAnnualExpense: async (id, payload) => {
+  updateExpenseDetail: async (id, payload) => {
     const { data } = await api.put(`/expense-details/${id}`, payload)
     return data
   },
 
-  deleteAnnualExpense: async (id) => {
+  deleteExpenseDetail: async (id) => {
     const { data } = await api.delete(`/expense-details/${id}`)
     return data
   },
@@ -45,6 +45,27 @@ export const expenseService = {
 
   deleteExpense: async (id) => {
     const { data } = await api.delete(`/expenses/${id}`)
+    return data
+  },
+
+  // Inventory Management (Block A & B combined)
+  getInventoryBlock: async (block, { month }) => {
+    const { data } = await api.get(`/inventory/${block}/?month=${month}`)
+    return data
+  },
+
+  createInventoryItem: async (block, payload) => {
+    const { data } = await api.post(`/inventory/${block}/`, payload)
+    return data
+  },
+
+  updateInventoryItem: async (block, id, payload) => {
+    const { data } = await api.put(`/inventory/${block}/${id}`, payload)
+    return data
+  },
+
+  deleteInventoryItem: async (block, id) => {
+    const { data } = await api.delete(`/inventory/${block}/${id}`)
     return data
   }
 }

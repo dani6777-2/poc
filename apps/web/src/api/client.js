@@ -41,12 +41,4 @@ api.interceptors.response.use(
   }
 )
 
-export async function safeRequest(requestPromise, fallbackData) {
-  try {
-    return await requestPromise
-  } catch {
-    return { data: fallbackData }
-  }
-}
-
 export default api

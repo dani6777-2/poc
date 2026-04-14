@@ -49,11 +49,6 @@ export const FinanceProvider = ({ children }) => {
 
   const value = {
     ...taxonomies,
-    // Add legacy getters for backward compatibility during migration if needed
-    secciones: taxonomies.sections,
-    categorias: taxonomies.categories,
-    canales: taxonomies.channels,
-    unidades: taxonomies.units,
     fetchTaxonomies,
     getSection,
     getCategory,
