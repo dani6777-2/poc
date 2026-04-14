@@ -88,6 +88,112 @@ erDiagram
         string name
     }
 
+    TAXONOMY_CHANNELS {
+        int id PK
+        int tenant_id FK
+        string name
+    }
+
+    TAXONOMY_UNITS {
+        int id PK
+        string name "Unique"
+    }
+
+    ITEMS {
+        int id PK
+        int tenant_id FK
+        string month "YYYY-MM"
+        string name
+        int category_id FK
+        int channel_id FK
+        int unit_id FK
+        float quantity
+        float unit_price
+        float subtotal
+        string status
+    }
+
+    BUDGETS {
+        int id PK
+        int tenant_id FK
+        string month "YYYY-MM"
+        int category_id FK
+        float budget
+        float actual_spending
+    }
+    
+    INVENTORY_BLOCK_A {
+        int id PK
+        int tenant_id FK
+        string month
+        int category_id FK
+        string name
+        int unit_id FK
+        int channel_id FK
+        float quantity
+        float unit_price
+        float subtotal
+    }
+
+    INVENTORY_BLOCK_B {
+        int id PK
+        int tenant_id FK
+        string month
+        int category_id FK
+        string name
+        int channel_id FK
+        int unit_id FK
+        float price_per_kg
+        float subtotal
+    }
+    
+    REVENUES {
+        int id PK
+        int tenant_id FK
+        int year
+        string source
+        float jan_to_dec "Monthly Incomes"
+    }
+
+    EXPENSE_DETAILS {
+        int id PK
+        int tenant_id FK
+        int year
+        int section_id FK
+        string description
+        float jan_to_dec "Plan/Actual/Card"
+    }
+
+    CARD_CONFIGS {
+        int id PK
+        int tenant_id FK
+        string name
+        float total_limit
+        int channel_id FK
+        int alert_pct
+        int closing_day
+        int payment_day
+    }
+
+    USERS {
+        int id PK
+        int tenant_id FK
+        string email "Unique, Index"
+        string role "owner/admin"
+    }
+
+    TAXONOMY_SECTIONS {
+        int id PK
+        string name "Unique"
+    }
+
+    TAXONOMY_CATEGORIES {
+        int id PK
+        int tenant_id FK
+        int section_id FK
+        string name
+    }
+
     ITEMS {
         int id PK
         int tenant_id FK
