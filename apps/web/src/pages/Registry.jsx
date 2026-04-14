@@ -11,8 +11,9 @@ import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
-import Input from '../components/atoms/Input'
-import Select from '../components/atoms/Select'
+import KpiCard from '../components/molecules/KpiCard'
+import RegistryForm from '../components/organisms/RegistryForm'
+import RegistryTable from '../components/organisms/RegistryTable'
 import ConfirmModal from '../components/molecules/ConfirmModal'
 import OCRScanner from '../components/organisms/OCRScanner'
 
@@ -124,7 +125,7 @@ export default function Registry() {
   }
 
   const handleStatus = async (item) => {
-    if (isAuto(item)) return
+    if (isAutoExpense(item)) return
     const newStatus = item.status === 'Bought' ? 'Planned' : 'Bought'
     try {
       await expenseService.updateExpense(item.id, { ...item, status: newStatus })
@@ -231,126 +232,54 @@ export default function Registry() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card interactive className="p-6 border-t-2 border-success/20">
-            <Badge variant="success" glow className="mb-2">Total Investment</Badge>
-            <div className="text-3xl font-black text-success tabular-nums">{fmt(totalBought)}</div>
-        </Card>
-        <Card interactive className="p-6 border-t-2 border-accent/20">
-            <Badge variant="muted" className="mb-2">Inventory Items</Badge>
-            <div className="text-3xl font-black text-tx-primary tabular-nums">{items.length}</div>
-        </Card>
-        <Card interactive className="p-6 border-t-2 border-info/20">
-            <Badge variant="info" glow className="mb-2">Projected Balance</Badge>
-            <div className="text-3xl font-black text-info tabular-nums">{fmt(analysis?.kpis?.cash_balance || 0)}</div>
-        </Card>
+        <KpiCard 
+          badge="Total Investment" 
+          variant="success" 
+          glow 
+          value={fmt(totalBought)} 
+          className="border-t-2 border-success/20"
+        />
+        <KpiCard 
+          badge="Inventory Items" 
+          variant="muted" 
+          value={items.length} 
+          className="border-t-2 border-accent/20"
+        />
+        <KpiCard 
+          badge="Projected Balance" 
+          variant="info" 
+          glow 
+          value={fmt(analysis?.kpis?.cash_balance || 0)} 
+          className="border-t-2 border-info/20"
+        />
       </div>
 
-      <Card className={`p-8 border border-border-base shadow-premium transition-all duration-500 ${editId ? 'glow-accent' : ''}`}>
-        <div className="flex justify-between items-center mb-10">
-          <h3 className="text-sm font-black text-tx-primary tracking-[0.3em] uppercase">
-            {editId ? '✏️ Module Update' : '🚀 Supplies Ingestion'}
-          </h3>
-        </div>
+      <RegistryForm 
+        editId={editId}
+        form={form}
+        setForm={setForm}
+        catOptions={catOptions}
+        canalOptions={canalOptions}
+        unitOptions={unitOptions}
+        STATUS_OPTIONS={STATUS_OPTIONS}
+        handleSubmit={handleSubmit}
+        onCancel={() => { setEditId(null); setForm(REGISTRY_BLANK_STATE); }}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-          <div className="md:col-span-2">
-            <Input label="Product" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g.: Whole Milk" />
-          </div>
-          <Select label="Category" value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })} options={catOptions} />
-          <Select label="Channel" value={form.channel_id} onChange={e => setForm({ ...form, channel_id: e.target.value })} options={canalOptions} />
-          <div className="grid grid-cols-2 gap-2">
-            <Input label="Quantity" type="number" step="0.1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} />
-            <Select label="Unit" value={form.unit_id} onChange={e => setForm({ ...form, unit_id: e.target.value })} options={unitOptions} />
-          </div>
-          <Input label="Unit Price ($)" type="number" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} className="text-success font-black" />
-          <Select label="Status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={STATUS_OPTIONS} />
-
-          <div className="md:col-span-6 mt-4">
-            <Button className="w-full py-5" onClick={handleSubmit}>
-              {editId ? 'Confirm Changes' : 'Enter into Record'}
-            </Button>
-            {editId && (
-              <Button variant="ghost" className="w-full mt-2" onClick={() => { setEditId(null); setForm(REGISTRY_BLANK_STATE); }}>
-                Cancel Edit
-              </Button>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <div className="p-6 md:p-8 border-b border-border-base flex flex-col lg:flex-row justify-between items-center gap-6 bg-tx-primary/[0.01]">
-          <div className="flex flex-col gap-1 w-full lg:w-auto">
-            <h3 className="text-[11px] font-black text-tx-primary uppercase tracking-[0.25em]">Financial Flow History</h3>
-            <Input placeholder="🔍 Filter records..." value={search} onChange={e => setSearch(e.target.value)} className="py-2.5 px-4 h-auto text-xs w-full lg:w-64" />
-          </div>
-          <div className="flex bg-tx-primary/5 p-1 rounded-xl gap-1 overflow-x-auto no-scrollbar max-w-full">
-            {REGISTRY_FILTERS.map(f => (
-              <button
-                key={f.id} onClick={() => setFilter(f.id)}
-                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${filter === f.id ? 'bg-accent text-white shadow-lg glow-accent' : 'text-tx-secondary hover:bg-tx-primary/5'}`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[9px] font-black uppercase tracking-widest text-tx-muted bg-tx-primary/[0.01]">
-                <th className="p-5 pl-8 w-12 text-center">ST</th>
-                <th className="p-5">Detail</th>
-                <th className="p-5 hidden md:table-cell">Category</th>
-                <th className="p-5 text-right w-24">Qty</th>
-                <th className="p-5 hidden md:table-cell text-right">Unit Price</th>
-                <th className="p-5 text-right pr-8">Subtotal</th>
-                <th className="p-5 w-28">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-base">
-              {filtered.map(item => {
-                const auto = isAutoExpense(item)
-                const source = getSourceLabel(item.source)
-                const isBought = item.status === 'Bought'
-                return (
-                   <tr key={item.id} className={`hover:bg-tx-primary/[0.02] transition-colors group ${isBought ? '' : 'opacity-60'} ${auto ? 'bg-accent/[0.02]' : ''}`}>
-                    <td className="p-4 pl-8 text-center">
-                      <button
-                        onClick={() => handleStatus(item)} disabled={auto}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] border transition-all ${isBought ? 'bg-success/20 border-success/30 text-success glow-success' : 'bg-tx-primary/5 border-border-base grayscale'}`}
-                      >
-                        {isBought ? '✓' : '—'}
-                      </button>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-tx-primary leading-tight">{item.name}</span>
-                        {source && <Badge variant={source.variant} className="mt-1 w-fit">{source.label}</Badge>}
-                      </div>
-                    </td>
-                    <td className="p-4 hidden md:table-cell">
-                      <Badge variant="muted">{item.category_name}</Badge>
-                    </td>
-                    <td className="p-4 text-right tabular-nums text-sm font-bold text-tx-secondary">{item.quantity} <span className="text-[10px] opacity-40 ml-1 uppercase">{item.unit_name}</span></td>
-                    <td className="p-4 hidden md:table-cell text-right tabular-nums text-sm font-bold text-tx-muted">{fmt(item.unit_price)}</td>
-                    <td className="p-4 text-right pr-8 tabular-nums text-sm font-black text-success leading-none">{fmt(item.subtotal)}</td>
-                    <td className="p-4 text-right pr-8">
-                      <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                        {!auto && <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>✏️</Button>}
-                        {!auto && <Button variant="outline" size="sm" className="hover:!text-danger" onClick={() => setConfirmData({ item })}>🗑️</Button>}
-                        {auto && <Link to={item.source?.startsWith('BA:') ? '/block-a' : '/block-b'}><Button variant="outline" size="sm">🔗</Button></Link>}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          {!filtered.length && <div className="p-20 text-center text-tx-muted font-bold opacity-30 italic text-sm">End of data flow in this spectrum</div>}
-        </div>
-      </Card>
+      <RegistryTable 
+        search={search}
+        setSearch={setSearch}
+        filter={filter}
+        setFilter={setFilter}
+        REGISTRY_FILTERS={REGISTRY_FILTERS}
+        filtered={filtered}
+        handleStatus={handleStatus}
+        handleEdit={handleEdit}
+        setConfirmData={setConfirmData}
+        isAutoExpense={isAutoExpense}
+        getSourceLabel={getSourceLabel}
+        fmt={fmt}
+      />
 
       {scanning && (
         <OCRScanner

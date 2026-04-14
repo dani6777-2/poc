@@ -28,7 +28,7 @@ export const expenseService = {
   },
 
   // Registry (Transactional Expenses)
-  getExpenses: async (month) => {
+  getExpenses: async ({ month }) => {
     const { data } = await api.get(`/expenses/?month=${month}`)
     return data
   },
