@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import api from '../api/client'
+import { expenseService } from '../services'
 import { recentMonths } from '../constants/time'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
@@ -30,8 +30,8 @@ export default function BlockA() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await api.get(`/inventory/block-a/?month=${month}`)
-      setItems(response.data)
+      const data = await expenseService.getInventoryBlock('block-a', { month })
+      setItems(data)
     } catch (e) {
       addToast('Error connecting to inventory vault', 'error')
     } finally {
@@ -73,10 +73,10 @@ export default function BlockA() {
 
     try {
       if (editing) {
-        await api.put(`/inventory/block-a/${editing}`, payload)
+        await expenseService.updateInventoryItem('block-a', editing, payload)
         addToast('Registry updated in the matrix', 'success')
       } else {
-        await api.post('/inventory/block-a/', payload)
+        await expenseService.createInventoryItem('block-a', payload)
         addToast('New asset registered in Block A', 'success')
       }
       setModal(false)
@@ -89,7 +89,7 @@ export default function BlockA() {
   const handleDelete = async (id) => {
     if (!confirm('Confirm de-listing of this asset?')) return
     try {
-      await api.delete(`/inventory/block-a/${id}`)
+      await expenseService.deleteInventoryItem('block-a', id)
       addToast('Asset removed from inventory', 'warning')
       fetchData()
     } catch (e) {

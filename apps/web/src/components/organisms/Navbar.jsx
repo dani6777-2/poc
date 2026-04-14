@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import api from '../../api/client'
+import { cardService, analysisService } from '../../services'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 
@@ -42,14 +42,13 @@ export default function Navbar() {
 
   useEffect(() => {
     const month = new Date().toISOString().slice(0, 7)
-    api.get(`/card/balance/${month}`).then(r => {
-      const b = r.data
-      if (b.is_configured) setAlerts(a => ({ ...a, card: b.critical ? 'danger' : b.alert ? 'warning' : null }))
+    
+    cardService.getCardBalance(month).then(data => {
+      if (data.is_configured) setAlerts(a => ({ ...a, card: data.critical ? 'danger' : data.alert ? 'warning' : null }))
     }).catch(() => { })
 
-    api.get(`/health/alerts/${month}`).then(r => {
-      const d = r.data
-      if (!d.no_revenue) setAlerts(a => ({ ...a, health: d.global_level === 'ok' ? null : d.global_level }))
+    analysisService.getHealthAlerts(month).then(data => {
+      if (!data.no_revenue) setAlerts(a => ({ ...a, health: data.global_level === 'ok' ? null : data.global_level }))
     }).catch(() => { })
   }, [])
 

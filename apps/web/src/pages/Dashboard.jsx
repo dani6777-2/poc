@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { analysisService, expenseService } from '../services'
 import { MONTH_LABELS, MONTH_KEYS } from '../constants/finance'
 import { recentMonths } from '../constants/time'
 import PageHeader from '../components/molecules/PageHeader'
@@ -59,14 +59,14 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [anlRes, netRes, aiRes] = await Promise.all([
-        api.get(`/analysis/${month}`),
-        api.get(`/expense-details/${year}/net`).catch(() => ({ data: [] })),
-        api.get(`/ai/forecast/${month}`).catch(() => ({ data: null })),
+      const [anlData, netData, aiData] = await Promise.all([
+        analysisService.getAnalysis(month),
+        expenseService.getAnnualExpenseNet(year).catch(() => []),
+        analysisService.getAiForecast(month).catch(() => null),
       ])
-      setAnalysis(anlRes.data)
-      setNetData(netRes.data)
-      setForecast(aiRes.data)
+      setAnalysis(anlData)
+      setNetData(netData)
+      setForecast(aiData)
     } finally {
       setLoading(false)
     }

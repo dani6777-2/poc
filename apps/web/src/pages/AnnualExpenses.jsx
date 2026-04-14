@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { expenseService, revenueService } from '../services'
 import { MONTH_LABELS, MONTH_KEYS, ACTUAL_MONTH_KEYS, CARD_MONTH_KEYS, YEARS } from '../constants/finance'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
@@ -50,12 +50,12 @@ export default function AnnualExpenses() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [rowsRes, revRes] = await Promise.all([
-        api.get(`/expense-details/${year}`),
-        api.get(`/revenues/${year}/summary`).catch(() => ({ data: { by_month: {}, annual_total: 0 } }))
+      const [rowsData, revData] = await Promise.all([
+        expenseService.getAnnualExpenses(year),
+        revenueService.getRevenueSummary(year).catch(() => ({ by_month: {}, annual_total: 0 }))
       ])
-      setRows(rowsRes.data)
-      setRevenues(revRes.data)
+      setRows(rowsData)
+      setRevenues(revData)
     } finally {
       setLoading(false)
     }
@@ -79,7 +79,7 @@ export default function AnnualExpenses() {
             }
         }
         setSaving(s => ({ ...s, [id]: true }))
-        api.put(`/expense-details/${id}`, payload)
+        expenseService.updateExpenseDetail(id, payload)
           .catch(() => addToast('Error synchronizing cell', 'danger'))
           .finally(() => setSaving(s => ({ ...s, [id]: false })))
         return prev
@@ -90,7 +90,7 @@ export default function AnnualExpenses() {
   const handleAdd = async () => {
     if (!form.section_id || !form.description.trim()) return
     try {
-      await api.post('/expense-details/', { 
+      await expenseService.createExpenseDetail({ 
         year, 
         section_id: parseInt(form.section_id), 
         description: form.description.trim(), 
@@ -107,7 +107,7 @@ export default function AnnualExpenses() {
     const id = confirmId
     setConfirmId(null)
     try {
-      await api.delete(`/expense-details/${id}`)
+      await expenseService.deleteExpenseDetail(id)
       addToast('Concept deleted', 'success')
       fetchData()
     } catch (e) { addToast('Error deleting', 'danger') }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { analysisService } from '../services'
 import { recentMonths } from '../constants/time'
 import { useTheme } from '../context/ThemeContext'
 import { useFinance } from '../context/FinanceContext'
@@ -39,12 +39,12 @@ export default function Analysis() {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      api.get(`/analysis/${month}`),
-      api.get(`/health/alerts/${month}`).catch(() => ({ data: null })),
+      analysisService.getAnalysis(month),
+      analysisService.getHealthAlerts(month).catch(() => null),
     ])
-      .then(([anlRes, healthRes]) => {
-        setData(anlRes.data)
-        setHealth(healthRes.data)
+      .then(([anlData, healthData]) => {
+        setData(anlData)
+        setHealth(healthData)
       })
       .finally(() => setLoading(false))
   }, [month])

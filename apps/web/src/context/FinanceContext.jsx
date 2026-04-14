@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../api/client';
+import { financeService } from '../services';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
@@ -22,9 +22,9 @@ export const FinanceProvider = ({ children }) => {
     
     setTaxonomies(prev => ({ ...prev, loading: true }));
     try {
-      const response = await api.get('/taxonomy/');
+      const data = await financeService.getTaxonomies();
       setTaxonomies({
-        ...response.data,
+        ...data,
         loaded: true,
         loading: false
       });

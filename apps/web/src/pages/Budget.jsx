@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { financeService, analysisService } from '../services'
 import { useFinance } from '../context/FinanceContext'
 import { recentMonths } from '../constants/time'
 
@@ -19,22 +19,22 @@ export default function Budget() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-        const [presRes, anlRes] = await Promise.all([
-          api.get(`/budgets/${month}`),
-          api.get(`/analysis/${month}`),
+        const [presData, anlData] = await Promise.all([
+          financeService.getBudgets(month),
+          analysisService.getAnalysis(month),
         ])
 
         const catExpense = {}
-        ;(anlRes.data.category_chart || []).forEach(c => { catExpense[c.category] = c.actual })
+        ;(anlData.category_chart || []).forEach(c => { catExpense[c.category] = c.actual })
         
-        const synced = presRes.data.map(row => ({
+        const synced = presData.map(row => ({
             ...row,
             actual_expense: catExpense[row.category_name] ?? row.actual_expense
         }))
         
         setRows(synced)
-        setKpis(anlRes.data.kpis || {})
-        setRefSection(anlRes.data.ref_section_month || {})
+        setKpis(anlData.kpis || {})
+        setRefSection(anlData.ref_section_month || {})
     } finally {
         setLoading(false)
     }
@@ -49,7 +49,7 @@ export default function Budget() {
   const handleSave = async (row) => {
     setSaving(s => ({ ...s, [row.id]: true }))
     try {
-        await api.put(`/budgets/${row.id}`, row)
+        await financeService.updateBudget(row.id, row)
     } finally {
         setSaving(s => ({ ...s, [row.id]: false }))
     }

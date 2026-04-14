@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import api from '../api/client'
+import { authService } from '../services'
 import Button from '../components/atoms/Button'
 import Input from '../components/atoms/Input'
 import Card from '../components/atoms/Card'
@@ -17,7 +17,7 @@ export default function Login() {
     e.preventDefault()
     setError('')
     try {
-      const { data } = await api.post('/auth/login', { email, password })
+      const data = await authService.login(email, password)
       login(data)
       navigate('/')
     } catch (err) {

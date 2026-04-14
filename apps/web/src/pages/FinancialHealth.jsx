@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { analysisService } from '../services'
 import { NIVEL_CFG } from '../constants/finance'
 import { recentMonths } from '../constants/time'
 import PageHeader from '../components/molecules/PageHeader'
@@ -145,8 +145,8 @@ export default function FinancialHealth() {
 
   useEffect(() => {
     setLoading(true)
-    api.get(`/health/alerts/${month}`)
-      .then(r => setData(r.data))
+    analysisService.getHealthAlerts(month)
+      .then(data => setData(data))
       .finally(() => setLoading(false))
   }, [month])
 

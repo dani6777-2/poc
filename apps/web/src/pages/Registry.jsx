@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { expenseService, analysisService, ocrService } from '../services'
 import { recentMonths } from '../constants/time'
 import { useToast } from '../context/ToastContext'
 import { useFinance } from '../context/FinanceContext'
@@ -55,12 +55,12 @@ export default function Registry() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [itemsRes, anlRes] = await Promise.all([
-        api.get(`/expenses/?month=${month}`),
-        api.get(`/analysis/${month}`).catch(() => ({ data: null })),
+      const [itemsData, anlData] = await Promise.all([
+        expenseService.getExpenses({ month }),
+        analysisService.getAnalysis(month).catch(() => null),
       ])
-      setItems(itemsRes.data)
-      setAnalysis(anlRes.data)
+      setItems(itemsData)
+      setAnalysis(anlData)
     } finally {
       setLoading(false)
     }
@@ -95,10 +95,10 @@ export default function Registry() {
     
     try {
       if (editId) {
-        await api.put(`/expenses/${editId}`, payload)
+        await expenseService.updateExpense(editId, payload)
         addToast('Record updated successfully', 'success')
       } else {
-        await api.post('/expenses/', payload)
+        await expenseService.createExpense(payload)
         addToast('Purchase registered successfully', 'success')
       }
       setEditId(null)
@@ -133,7 +133,7 @@ export default function Registry() {
     const item = confirmData.item
     setConfirmData(null)
     try {
-      await api.delete(`/expenses/${item.id}`)
+      await expenseService.deleteExpense(item.id)
       addToast('Record permanently deleted', 'success')
       fetchData()
     } catch (e) {
@@ -146,7 +146,7 @@ export default function Registry() {
     if (isAuto(item)) return
     const newStatus = item.status === 'Bought' ? 'Planned' : 'Bought'
     try {
-      await api.put(`/expenses/${item.id}`, { ...item, status: newStatus })
+      await expenseService.updateExpense(item.id, { ...item, status: newStatus })
       addToast(`Status updated: ${newStatus}`, 'success')
       fetchData()
     } catch (err) {
@@ -185,9 +185,7 @@ export default function Registry() {
     const formData = new FormData()
     formData.append('file', file)
     try {
-      const { data } = await api.post('/ocr/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const data = await ocrService.upload(formData)
       setOcrResult(data.items)
       addToast('Invoice analyzed by AI', 'success')
     } catch (err) {
@@ -209,7 +207,7 @@ export default function Registry() {
         unit_id: units.find(u => u.name === 'un')?.id || units[0]?.id || null,
         source: 'OCR'
       }))
-      await api.post('/ocr/ingest', payload)
+      await ocrService.ingest(payload)
       addToast(`${ocrResult.length} items incorporated into flow`, 'success')
       setScanning(false)
       setOcrResult(null)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import api from '../api/client'
+import { revenueService } from '../services'
 import { MONTH_KEYS, MONTH_LABELS } from '../constants/finance'
 import PageHeader from '../components/molecules/PageHeader'
 import Card from '../components/atoms/Card'
@@ -31,8 +31,8 @@ export default function Revenues() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await api.get(`/revenues/${year}`)
-      setRows(res.data)
+      const data = await revenueService.getRevenues(year)
+      setRows(data)
     } catch(e) { 
       console.error(e) 
       addToast('Error connecting to revenue vault', 'danger')
@@ -58,7 +58,7 @@ export default function Revenues() {
         return
     }
     try {
-        await api.put(`/revenues/${id}`, { [field]: value })
+        await revenueService.updateRevenue(id, { [field]: value })
     } catch (e) {
         addToast('Failed to persist revenue entry', 'danger')
     } finally {
@@ -69,7 +69,7 @@ export default function Revenues() {
   const handleAddSource = async () => {
     if (!newSource.trim()) return
     try {
-        await api.post('/revenues/', { year, source: newSource.trim(), sort_order: rows.length })
+        await revenueService.createRevenue({ year, source: newSource.trim(), sort_order: rows.length })
         addToast('New flow source injected successfully', 'success')
         setNewSource('')
         setModal(false)
@@ -87,7 +87,7 @@ export default function Revenues() {
     
     setRows(prev => prev.filter(r => r.id !== id))
     try {
-      await api.delete(`/revenues/${id}`)
+      await revenueService.deleteRevenue(id)
       addToast('Revenue source removed from matrix', 'warning')
     } catch (e) {
       addToast('Failed to de-list the source', 'danger')

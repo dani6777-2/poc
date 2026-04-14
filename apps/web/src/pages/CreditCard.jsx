@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../api/client'
+import { cardService } from '../services'
 import { recentMonths } from '../constants/time'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
@@ -28,14 +28,14 @@ export default function CreditCard() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [balRes, histRes, cfgRes] = await Promise.all([
-        api.get(`/card/balance/${month}`),
-        api.get(`/card/history/${month}`),
-        api.get('/card/config')
+      const [balData, histData, cfgData] = await Promise.all([
+        cardService.getCardBalance(month),
+        cardService.getCardHistory(month),
+        cardService.getCardConfig()
       ])
-      setBalance(balRes.data)
-      setHistory(histRes.data)
-      setFormCfg(cfgRes.data)
+      setBalance(balData)
+      setHistory(histData)
+      setFormCfg(cfgData)
     } catch (e) { 
       console.error(e)
       addToast('Error loading financial data', 'error')
@@ -56,7 +56,7 @@ export default function CreditCard() {
             closing_day: parseInt(formCfg.closing_day) || 1,
             payment_day: parseInt(formCfg.payment_day) || 1
         }
-      await api.put('/card/config', payload)
+      await cardService.updateCardConfig(payload)
       addToast('Configuration updated successfully', 'success')
       setIsEditing(false)
       fetchData()
@@ -69,7 +69,7 @@ export default function CreditCard() {
 
   const syncNow = async () => {
     try {
-      await api.post(`/card/sync/${month}`)
+      await cardService.syncCard(month)
       addToast('Delta synchronization completed', 'success')
       fetchData()
     } catch (e) {

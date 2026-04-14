@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import api from '../api/client'
+import { expenseService } from '../services'
 import { recentMonths } from '../constants/time'
 import { useFinance } from '../context/FinanceContext'
 import PageHeader from '../components/molecules/PageHeader'
@@ -30,8 +30,8 @@ export default function BlockB() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await api.get(`/inventory/block-b/?month=${month}`)
-      setItems(response.data)
+      const data = await expenseService.getInventoryBlock('block-b', { month })
+      setItems(data)
     } catch (e) {
       addToast('Error connecting to perishable vault', 'error')
     } finally {
@@ -72,10 +72,10 @@ export default function BlockB() {
 
     try {
       if (editing) {
-        await api.put(`/inventory/block-b/${editing}`, payload)
+        await expenseService.updateInventoryItem('block-b', editing, payload)
         addToast('Registry optimization completed', 'success')
       } else {
-        await api.post('/inventory/block-b/', payload)
+        await expenseService.createInventoryItem('block-b', payload)
         addToast('New perishable asset registered', 'success')
       }
       setModal(false)
@@ -88,7 +88,7 @@ export default function BlockB() {
   const handleDelete = async (id) => {
     if (!confirm('Confirm de-listing of this asset?')) return
     try {
-      await api.delete(`/inventory/block-b/${id}`)
+      await expenseService.deleteInventoryItem('block-b', id)
       addToast('Asset removed from market matrix', 'warning')
       fetchData()
     } catch (e) {
