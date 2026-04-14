@@ -1,7 +1,7 @@
 class DomainException(Exception):
     pass
 
-class InvalidCredentialsError(DomainException):
+class AuthenticationError(DomainException):
     def __init__(self, message: str = "Email or password incorrect"):
         self.message = message
         super().__init__(self.message)

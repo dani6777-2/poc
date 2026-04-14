@@ -16,8 +16,8 @@ import Button from '../components/atoms/Button'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-const MESES = recentMonths(12)
-const fmt = (n) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0)
+const RECENT_MONTHS = recentMonths(12)
+const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 const NIVEL_COLOR = {
   ok:      '#10b981',
@@ -28,9 +28,9 @@ const NIVEL_COLOR = {
 
 const NIVEL_ICON = { ok: '🟢', warning: '🟡', danger: '🔴', no_data: '⚪' }
 
-export default function Analisis() {
+export default function Analysis() {
   const { getSection } = useFinance()
-  const [month, setMonth]     = useState(MESES[0])
+  const [month, setMonth]     = useState(RECENT_MONTHS[0])
   const [data, setData]   = useState(null)
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -149,7 +149,7 @@ export default function Analisis() {
               onChange={e => setMonth(e.target.value)}
               className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
             >
-              {MESES.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
             </select>
           </div>
         }
@@ -199,7 +199,7 @@ export default function Analisis() {
                   </div>
                 </div>
 
-                <Link to="/salud">
+                <Link to="/health">
                   <Button variant="ghost" className="whitespace-nowrap">Full Audit →</Button>
                 </Link>
               </div>
@@ -211,7 +211,7 @@ export default function Analisis() {
             <Card interactive className="p-6 border-t-2 border-success/20">
               <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] block mb-2 opacity-50">Total Revenue</label>
               <div className="text-2xl font-black text-success tabular-nums">{fmt(kpis.total_revenue)}</div>
-              <Link to="/ingresos" className="inline-block mt-4 text-[9px] font-black text-accent-light hover:underline uppercase tracking-widest opacity-60">View Matrix →</Link>
+              <Link to="/revenues" className="inline-block mt-4 text-[9px] font-black text-accent-light hover:underline uppercase tracking-widest opacity-60">View Matrix →</Link>
             </Card>
 
             <Card interactive className="p-6 border-t-2 border-border-base">
@@ -262,7 +262,7 @@ export default function Analisis() {
                    This volume has been diverted to the <span className="text-tx-primary font-bold">{kpis.card_channel}</span> channel. Remaining immediate liquidity: <span className="text-success font-black">{fmt(kpis.cash_balance)}</span>.
                 </p>
               </div>
-              <Link to="/tarjeta">
+              <Link to="/card">
                 <Button size="sm" variant="warning" className="px-6">View Card Management</Button>
               </Link>
             </Card>
@@ -276,8 +276,8 @@ export default function Analisis() {
                   <p className="text-[10px] font-bold text-tx-muted uppercase tracking-widest mt-1 opacity-40">Detailed analysis of structural deviations</p>
                </div>
                <div className="flex gap-4">
-                 <Link to="/salud"><Button variant="ghost" size="sm" className="text-[11px]">🏥 Full Health</Button></Link>
-                 <Link to="/gastos-anuales"><Button variant="ghost" size="sm" className="text-[11px]">📋 Roadmap</Button></Link>
+                 <Link to="/health"><Button variant="ghost" size="sm" className="text-[11px]">🏥 Full Health</Button></Link>
+                 <Link to="/annual-expenses"><Button variant="ghost" size="sm" className="text-[11px]">📋 Roadmap</Button></Link>
                </div>
             </div>
 
@@ -418,7 +418,7 @@ export default function Analisis() {
                     <p className="text-lg font-black text-tx-primary uppercase tracking-widest">Undefined Structure</p>
                     <p className="text-sm font-medium text-tx-secondary max-w-sm">No structural projection has been detected for this time period.</p>
                   </div>
-                  <Link to="/gastos-anuales"><Button variant="accent" className="mt-4">Configure Projection</Button></Link>
+                  <Link to="/annual-expenses"><Button variant="accent" className="mt-4">Configure Projection</Button></Link>
                 </div>
               )}
             </div>

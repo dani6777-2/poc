@@ -39,7 +39,7 @@ export function ToastProvider({ children }) {
             </span>
             <div className="flex flex-col">
               <p className="text-xs font-black uppercase tracking-widest leading-none mb-1">
-                {t.type === 'success' ? 'Completado' : t.type === 'danger' ? 'Error' : t.type === 'warning' ? 'Aviso' : 'Información'}
+                {t.type === 'success' ? 'Completed' : t.type === 'danger' ? 'Error' : t.type === 'warning' ? 'Warning' : 'Information'}
               </p>
               <p className="text-[13px] font-bold opacity-80">{t.message}</p>
             </div>

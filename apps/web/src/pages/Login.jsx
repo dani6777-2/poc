@@ -21,7 +21,7 @@ export default function Login() {
       login(data)
       navigate('/')
     } catch (err) {
-      setError(err.message || 'Credenciales inválidas')
+      setError(err.message || 'Invalid Credentials')
     }
   }
 
@@ -36,7 +36,7 @@ export default function Login() {
             FinOps Home <span className="text-accent">4.0</span>
           </h2>
           <p className="text-tx-secondary text-[13px] font-bold uppercase tracking-[0.2em] opacity-40">
-            Plataforma Corporativa de Inteligencia
+            Enterprise Intelligence Platform
           </p>
         </div>
         
@@ -49,7 +49,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-8">
           <Input 
-            label="Correo Corporativo"
+            label="Corporate Email"
             type="email" 
             value={email} 
             onChange={e => setEmail(e.target.value)} 
@@ -57,7 +57,7 @@ export default function Login() {
             required 
           />
           <Input 
-            label="Clave Secreta"
+            label="Secret Key"
             type="password" 
             value={password} 
             onChange={e => setPassword(e.target.value)} 
@@ -65,14 +65,14 @@ export default function Login() {
             required 
           />
           <Button type="submit" className="w-full h-14 mt-4">
-            Acceder al Terminal
+            Access Terminal
           </Button>
         </form>
 
         <div className="mt-12 pt-8 border-t border-border-base text-center">
           <p className="text-[10px] font-bold text-tx-muted uppercase tracking-widest opacity-30 flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-success"></span>
-            Protegido por cifrado de grado bancario (AES-256)
+            Protected by bank-grade encryption (AES-256)
           </p>
         </div>
       </Card>

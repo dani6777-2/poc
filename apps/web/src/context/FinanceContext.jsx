@@ -30,7 +30,7 @@ export const FinanceProvider = ({ children }) => {
       });
     } catch (error) {
       console.error('Error fetching taxonomies:', error);
-      addToast('Error al cargar taxonomías dinámicas', 'error');
+      addToast('Error loading dynamic taxonomies', 'error');
       setTaxonomies(prev => ({ ...prev, loading: false }));
     }
   }, [user, addToast]);

@@ -8,8 +8,8 @@ import Card from '../components/atoms/Card'
 import Badge from '../components/atoms/Badge'
 import Button from '../components/atoms/Button'
 
-const MESES = recentMonths(12)
-const fmt = n => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0)
+const RECENT_MONTHS = recentMonths(12)
+const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0)
 
 function ScoreGauge({ score, level }) {
   const cfg   = NIVEL_CFG[level] || NIVEL_CFG.ok
@@ -43,7 +43,7 @@ function describeArc(cx, cy, r, startAngle, endAngle) {
   return `M ${start.x},${start.y} A ${r},${r} 0 ${large},1 ${end.x},${end.y}`
 }
 
-function ReglaBarra({ label, icon, pct, meta, level, total }) {
+function RuleBar({ label, icon, pct, meta, level, total }) {
   const cfg  = NIVEL_CFG[level] || NIVEL_CFG.no_data
   const fill = pct !== null ? Math.min((pct / (meta * 1.5)) * 100, 100) : 0
   return (
@@ -138,8 +138,8 @@ function SectionCard({ sec }) {
   )
 }
 
-export default function SaludFinanciera() {
-  const [month, setMonth]   = useState(MESES[0])
+export default function FinancialHealth() {
+  const [month, setMonth]   = useState(RECENT_MONTHS[0])
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -175,7 +175,7 @@ export default function SaludFinanciera() {
               onChange={e => setMonth(e.target.value)}
               className="bg-transparent border-none text-tx-primary font-bold px-4 py-2 cursor-pointer outline-none text-sm"
             >
-              {MESES.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
+              {RECENT_MONTHS.map(m => <option key={m} value={m} className="bg-secondary">{m}</option>)}
             </select>
           </div>
         }
@@ -190,7 +190,7 @@ export default function SaludFinanciera() {
                 Percent saturation and operational efficiency calculations require a validated taxable base for this fiscal cycle.
              </p>
           </div>
-          <Link to="/ingresos">
+          <Link to="/revenues">
             <Button variant="warning" size="sm" className="px-8 font-black uppercase tracking-[0.2em] h-12 shadow-glow-warning">Register Revenue</Button>
           </Link>
         </Card>
@@ -231,7 +231,7 @@ export default function SaludFinanciera() {
               
               <div className="space-y-4">
                 {Object.entries(rule).map(([key, g]) => (
-                  <ReglaBarra key={key} label={g.label} icon={g.icon} pct={g.pct} meta={g.meta} level={g.level} total={g.total} />
+                  <RuleBar key={key} label={g.label} icon={g.icon} pct={g.pct} meta={g.meta} level={g.level} total={g.total} />
                 ))}
               </div>
               
@@ -273,7 +273,7 @@ export default function SaludFinanciera() {
                   </div>
                 </div>
 
-                <Link to="/tarjeta" className="shrink-0">
+                <Link to="/credit-card" className="shrink-0">
                   <Button variant="ghost" className="px-10 h-14 border border-border-base uppercase font-black text-[10px] tracking-[0.4em] hover:bg-tx-primary/5">Card Management →</Button>
                 </Link>
               </div>

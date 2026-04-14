@@ -135,7 +135,7 @@ export default function Dashboard() {
   return (
     <div className="page-entry pb-20 space-y-10">
       <PageHeader 
-        title={<>Executive <span className="text-accent italic font-light">Summary</span></>}
+        title={<>Strategic Executive <span className="text-accent italic font-light">Dashboard</span></>}
         subtitle="Predictive financial analytics and capital management"
         badge="Enterprise Core Protocol 4.5"
         icon="🏦"
@@ -278,7 +278,7 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-              <Link to="/physical-health" className="mt-10 relative z-10">
+              <Link to="/health" className="mt-10 relative z-10">
                 <Button className="w-full py-6 rounded-[1.5rem] uppercase font-black tracking-[0.3em] text-[11px] shadow-glow-accent" variant="primary">Full Health Diagnosis →</Button>
               </Link>
             </Card>
