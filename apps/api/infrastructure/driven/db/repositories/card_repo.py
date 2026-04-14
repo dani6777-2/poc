@@ -52,14 +52,11 @@ class SQLCardRepository(CardRepositoryPort):
         return self.get_config(tenant_id)
 
     def get_transactions_from_registry(self, tenant_id: int, month: str, channel_id: Optional[int]) -> List[CardTransactionEntity]:
-        if not channel_id:
-            return []
-            
         rows = self.db.query(models.Item).filter(
             models.Item.tenant_id == tenant_id,
             models.Item.month    == month,
             models.Item.status   == "Bought",
-            models.Item.channel_id == channel_id
+            models.Item.payment_method == "credit"
         ).all()
         return [CardTransactionEntity(name=r.name, subtotal=r.subtotal, date=r.date) for r in rows]
 

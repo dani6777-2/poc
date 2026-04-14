@@ -167,10 +167,10 @@ export default function Dashboard() {
       }
     >
       <div className="space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-5 md:p-8">
           <Card
             interactive
-            className="p-10 flex items-center gap-10 border-none shadow-premium relative overflow-hidden group"
+            className="p-6 lg:p-10 flex items-center gap-6 lg:p-10 border-none shadow-premium relative overflow-hidden group"
           >
             <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-30" />
             <HealthScore score={forecast?.health_score || 0} />
@@ -233,7 +233,7 @@ export default function Dashboard() {
 
           <Card
             interactive
-            className="p-10 flex flex-col justify-center gap-8 border-none shadow-premium bg-linear-to-br from-secondary to-transparent"
+            className="p-6 lg:p-10 flex flex-col justify-center gap-5 md:p-8 border-none shadow-premium bg-linear-to-br from-secondary to-transparent"
           >
             <h4 className="text-[11px] uppercase font-black text-tx-muted mb-2 tracking-[0.4em] opacity-40">
               AI Asset Location
@@ -282,8 +282,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
-          <Card className="p-10 shadow-premium border-none">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:p-10">
+          <Card className="p-6 lg:p-10 shadow-premium border-none">
             <div className="flex items-center justify-between mb-12 px-2">
               <div>
                 <h3 className="text-[13px] font-black text-tx-primary uppercase tracking-[0.4em]">
@@ -293,7 +293,7 @@ export default function Dashboard() {
                   Historical trend of 12 cyclic periods
                 </p>
               </div>
-              <div className="flex gap-8 text-[11px] font-black text-tx-muted uppercase tracking-[0.3em] opacity-50">
+              <div className="flex gap-5 md:p-8 text-[11px] font-black text-tx-muted uppercase tracking-[0.3em] opacity-50">
                 <span className="flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-success shadow-glow-success"></span>{" "}
                   Inflow
@@ -322,7 +322,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <Card className="p-12 shadow-premium border-none relative overflow-hidden">
+        <Card className="p-6 md:p-12 shadow-premium border-none relative overflow-hidden">
           <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
           <div className="flex items-center justify-between mb-12 px-4 relative z-10">
             <div className="space-y-1">
@@ -343,7 +343,7 @@ export default function Dashboard() {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:p-8 relative z-10">
             {analysis?.category_chart?.slice(0, 8).map((c) => {
               const ratio = c.budget > 0 ? (c.actual / c.budget) * 100 : 0;
               return (

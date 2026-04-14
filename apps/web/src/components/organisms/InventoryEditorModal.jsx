@@ -38,12 +38,12 @@ const InventoryEditorModal = ({
       : "New Market Ingestion";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in duration-500">
       <div
         className="absolute inset-0 bg-primary/95 backdrop-blur-xl"
         onClick={() => setModal(false)}
       />
-      <Card className="w-full max-w-2xl p-10 md:p-14 relative z-10 animate-in zoom-in-95 duration-500 rounded-[3rem]">
+      <Card className="w-full max-w-2xl p-6 lg:p-10 md:p-5 md:p-8 lg:p-14 relative z-10 animate-in zoom-in-95 duration-500 rounded-[3rem]">
         <div className="flex items-center justify-between mb-12">
           <div className="space-y-1">
             <h2 className="text-3xl font-black text-tx-primary uppercase tracking-tighter leading-none">
@@ -66,7 +66,7 @@ const InventoryEditorModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-8">
             <InventoryField
               label="Asset Descriptor / SKU"
               className="md:col-span-2"
@@ -170,7 +170,7 @@ const InventoryEditorModal = ({
           {subtotalValue > 0 && type === "block-a" && (
             <Card
               border={false}
-              className="p-8 bg-success/5 border border-success/20 flex items-center justify-between rounded-3xl"
+              className="p-5 md:p-8 bg-success/5 border border-success/20 flex items-center justify-between rounded-3xl"
             >
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-success uppercase tracking-[0.3em] leading-none">

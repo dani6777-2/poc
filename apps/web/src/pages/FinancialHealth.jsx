@@ -58,7 +58,7 @@ export default function FinancialHealth() {
       }
     >
       {data?.no_revenue && (
-        <Card border={false} className="p-8 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-top-4 shadow-premium">
+        <Card border={false} className="p-5 md:p-8 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-5 md:p-8 animate-in slide-in-from-top-4 shadow-premium">
           <div className="text-5xl drop-shadow-glow-warning animate-pulse">⚠️</div>
           <div className="flex-1 space-y-1">
             <h5 className="text-[14px] font-black text-warning uppercase tracking-[0.2em] leading-none">Revenue Baseline Missing</h5>
@@ -83,10 +83,10 @@ export default function FinancialHealth() {
 
           {/* ── CARD Alert ── */}
           {card && (
-            <Card border={false} className="p-10 shadow-premium transition-all hover:scale-[1.005] group border-none relative overflow-hidden"
+            <Card border={false} className="p-6 lg:p-10 shadow-premium transition-all hover:scale-[1.005] group border-none relative overflow-hidden"
               style={{ backgroundColor: `${NIVEL_CFG[card.level].color}05` }}>
               <div className="absolute left-0 top-0 w-1.5 h-full" style={{ backgroundColor: NIVEL_CFG[card.level].color }} />
-              <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+              <div className="flex flex-col md:flex-row items-center gap-6 md:p-12 relative z-10">
                 <div className="w-28 h-28 rounded-[2.5rem] bg-tx-primary/5 flex items-center justify-center text-6xl shadow-2xl group-hover:rotate-6 transition-transform duration-700">
                   💳
                   <div className="absolute -bottom-3 -right-3 text-2xl filter drop-shadow-md">{NIVEL_CFG[card.level].icon}</div>

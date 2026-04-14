@@ -36,7 +36,7 @@ const MonthViewBlock = ({
     return (
       <Card key={sec.id} className="overflow-hidden border-none shadow-premium relative" style={{ borderLeft: `8px solid ${color}` }}>
         <div 
-          className="p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors" 
+          className="p-5 md:p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors" 
           onClick={() => toggleCollapse(sec.id)}
         >
           <div className="flex items-center gap-5">
@@ -46,8 +46,8 @@ const MonthViewBlock = ({
                 <Badge variant="muted" size="sm" className="w-fit mt-2 opacity-30 font-black tracking-[0.2em] uppercase text-[8px]">Sec_ID {sec.id}</Badge>
             </div>
           </div>
-          <div className="flex gap-12 items-center">
-            <div className="hidden md:flex gap-10 text-[11px] font-black uppercase tracking-[0.2em]">
+          <div className="flex gap-6 md:p-12 items-center">
+            <div className="hidden md:flex gap-6 lg:p-10 text-[11px] font-black uppercase tracking-[0.2em]">
               <div className="flex flex-col items-end">
                   <span className="text-tx-muted opacity-40 text-[9px]">PLAN</span>
                   <span className="text-warning font-black tracking-tighter text-base">{fmt(planSec)}</span>

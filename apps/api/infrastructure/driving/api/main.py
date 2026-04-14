@@ -4,8 +4,9 @@ import time
 import uuid
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from infrastructure.driven.db.config import engine, Base
 from infrastructure.driven.db import models
 
@@ -47,7 +48,11 @@ app = FastAPI(
     title="Home Expenses Control API",
     description="API for home expenses management — v3.0 (Hexagonal Translated)",
     version=API_VERSION,
+    default_response_class=ORJSONResponse,
 )
+
+# Activar compresión para mejorar el performance en JSON arrays muy grandes
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.add_middleware(
     CORSMiddleware,
@@ -73,11 +78,7 @@ ROUTERS = [
     ocr.router,
 ]
 
-# Backward-compatible routes (v2)
-for r in ROUTERS:
-    app.include_router(r)
-
-# New versioned routes (v3)
+# Centralized versioned routes (v3)
 for r in ROUTERS:
     app.include_router(r, prefix=API_PREFIX)
 
@@ -90,7 +91,7 @@ async def request_log_middleware(request: Request, call_next):
         response = await call_next(request)
     except Exception:
         logger.exception("Unhandled error request_id=%s path=%s", request_id, request.url.path)
-        return JSONResponse(
+        return ORJSONResponse(
             status_code=500,
             content={"detail": "Internal server error", "request_id": request_id},
         )

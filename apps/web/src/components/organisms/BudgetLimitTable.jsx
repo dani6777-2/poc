@@ -24,7 +24,7 @@ const BudgetLimitTable = ({
 }) => {
   return (
     <section className="glass rounded-[3rem] border border-border-base overflow-hidden shadow-2xl">
-      <div className="p-8 border-b border-border-base flex items-center justify-between bg-border-base/10">
+      <div className="p-5 md:p-8 border-b border-border-base flex items-center justify-between bg-border-base/10">
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-6 bg-accent rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
           <h3 className="text-sm font-black text-tx-primary uppercase tracking-[0.2em]">
@@ -79,17 +79,17 @@ const BudgetLimitTable = ({
             </tbody>
             <tfoot className="border-t-2 border-border-base bg-tx-primary/[0.02]">
               <tr className="font-black text-tx-primary uppercase tracking-widest text-xs">
-                <td className="p-8 pl-10" colSpan={2}>
+                <td className="p-5 md:p-8 pl-10" colSpan={2}>
                   Aggregate Portfolio
                 </td>
-                <td className="p-8">{fmt(totalBudget)}</td>
-                <td className="p-8 text-yellow">{fmt(totalActual)}</td>
+                <td className="p-5 md:p-8">{fmt(totalBudget)}</td>
+                <td className="p-5 md:p-8 text-yellow">{fmt(totalActual)}</td>
                 <td
-                  className={`p-8 ${balance < 0 ? "text-danger" : "text-success"}`}
+                  className={`p-5 md:p-8 ${balance < 0 ? "text-danger" : "text-success"}`}
                 >
                   {fmt(balance)}
                 </td>
-                <td className="p-8">
+                <td className="p-5 md:p-8">
                   <span
                     className={`px-4 py-1.5 rounded-xl border ${pct >= 100 ? "border-danger text-danger bg-danger/5" : "border-success text-success bg-success/5"}`}
                   >
@@ -97,11 +97,11 @@ const BudgetLimitTable = ({
                   </span>
                 </td>
                 {totalRevenue > 0 && (
-                  <td className="p-8 opacity-40">
+                  <td className="p-5 md:p-8 opacity-40">
                     {((totalActual / totalRevenue) * 100).toFixed(1)}%
                   </td>
                 )}
-                <td className="p-8 pr-10"></td>
+                <td className="p-5 md:p-8 pr-10"></td>
               </tr>
             </tfoot>
           </table>

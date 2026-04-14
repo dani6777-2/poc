@@ -25,13 +25,13 @@ const InventorySummaryCard = ({
   return (
     <Card
       border={false}
-      className={`p-10 shadow-2xl relative overflow-hidden group ${gradientClass}`}
+      className={`p-6 lg:p-10 shadow-2xl relative overflow-hidden group ${gradientClass}`}
     >
       <div
         className={`absolute right-0 top-0 w-96 h-96 ${glowClass} rounded-full blur-[120px] -mr-40 -mt-40 pointer-events-none`}
       />
 
-      <div className="relative flex flex-col md:flex-row md:items-center gap-12">
+      <div className="relative flex flex-col md:flex-row md:items-center gap-6 md:p-12">
         <div className="space-y-1">
           <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.3em] opacity-40">
             {label}

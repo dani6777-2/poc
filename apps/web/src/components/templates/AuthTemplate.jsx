@@ -9,7 +9,7 @@ export default function AuthTemplate({ title, subtitle, children }) {
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-success/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Contenedor Principal */}
-      <div className="relative z-10 w-full max-w-md backdrop-blur-3xl bg-bg-surface/60 border border-white border-opacity-5 relative shadow-2xl rounded-3xl p-8 lg:p-12 overflow-hidden group hover:border-accent/30 transition-all duration-700">
+      <div className="relative z-10 w-full max-w-md backdrop-blur-3xl bg-bg-surface/60 border border-white border-opacity-5 relative shadow-2xl rounded-3xl p-5 md:p-8 lg:p-6 md:p-12 overflow-hidden group hover:border-accent/30 transition-all duration-700">
         
         {/* Luces sutiles en los bordes del contenedor al hacer hover (opcional pero aporta al diseño premium) */}
         <div className="absolute inset-0 bg-gradient-to-tr from-accent/0 via-accent/5 to-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />

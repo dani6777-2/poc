@@ -27,7 +27,7 @@ const RevenueFlowCard = ({
   }[variant] || 'text-tx-primary';
 
   return (
-    <Card interactive className="p-8 flex flex-col items-center text-center shadow-premium border-none relative overflow-hidden">
+    <Card interactive className="p-5 md:p-8 flex flex-col items-center text-center shadow-premium border-none relative overflow-hidden">
       <div className={`absolute top-0 left-0 w-full h-1 ${accentColorClass}`} />
       <label className="text-[10px] uppercase font-black tracking-[0.3em] text-tx-muted mb-4 opacity-40">{label}</label>
       <span className={`text-4xl font-black ${valueColorClass} tabular-nums tracking-tighter`}>{value}</span>

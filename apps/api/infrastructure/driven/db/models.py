@@ -73,6 +73,7 @@ class Item(Base):
     prev_month_price = Column(Float, nullable=True)
     status = Column(String, nullable=True, default="Planned")
     source = Column(String, nullable=True, index=True)
+    payment_method = Column(String, nullable=True, default="debit")
 
     category = relationship("TaxonomyCategory")
     channel = relationship("TaxonomyChannel")

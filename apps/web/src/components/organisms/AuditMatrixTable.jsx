@@ -5,7 +5,7 @@ import Badge from "../atoms/Badge";
 const AuditMatrixTable = ({ sections }) => {
   return (
     <Card className="overflow-hidden shadow-premium border-none">
-      <div className="p-12 border-b border-border-base bg-tx-primary/[0.01]">
+      <div className="p-6 md:p-12 border-b border-border-base bg-tx-primary/[0.01]">
         <h3 className="text-[14px] font-black text-tx-primary uppercase tracking-[0.4em]">
           Sectoral Audit Matrix
         </h3>
@@ -18,11 +18,11 @@ const AuditMatrixTable = ({ sections }) => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="text-[10px] font-black uppercase text-tx-muted opacity-40 border-b border-border-base bg-tx-primary/[0.02] tracking-[0.4em]">
-              <th className="p-10 pl-14">Sector Metric</th>
-              <th className="p-10 text-right">GREEN ZONE ✓</th>
-              <th className="p-10 text-right">AMBER ZONE ⚠️</th>
-              <th className="p-10 text-right">RED ZONE 🚨</th>
-              <th className="p-10 pl-14">Regulatory Framework</th>
+              <th className="p-6 lg:p-10 pl-14">Sector Metric</th>
+              <th className="p-6 lg:p-10 text-right">GREEN ZONE ✓</th>
+              <th className="p-6 lg:p-10 text-right">AMBER ZONE ⚠️</th>
+              <th className="p-6 lg:p-10 text-right">RED ZONE 🚨</th>
+              <th className="p-6 lg:p-10 pl-14">Regulatory Framework</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-base">
@@ -32,8 +32,8 @@ const AuditMatrixTable = ({ sections }) => {
                   key={s.section}
                   className="transition-all hover:bg-tx-primary/[0.02] group"
                 >
-                  <td className="p-8 pl-14">
-                    <div className="flex items-center gap-8">
+                  <td className="p-5 md:p-8 pl-14">
+                    <div className="flex items-center gap-5 md:p-8">
                       <span className="text-4xl grayscale group-hover:grayscale-0 transition-all duration-700">
                         {s.icon}
                       </span>
@@ -51,18 +51,18 @@ const AuditMatrixTable = ({ sections }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="p-10 text-right font-black text-success tabular-nums tracking-tighter text-xl drop-shadow-sm">
+                  <td className="p-6 lg:p-10 text-right font-black text-success tabular-nums tracking-tighter text-xl drop-shadow-sm">
                     {s.invert ? `≥ ${s.min_ok}%` : `≤ ${s.max_ok}%`}
                   </td>
-                  <td className="p-10 text-right font-black text-warning tabular-nums tracking-tighter text-xl opacity-60">
+                  <td className="p-6 lg:p-10 text-right font-black text-warning tabular-nums tracking-tighter text-xl opacity-60">
                     {s.invert
                       ? `${s.min_warning}–${s.min_ok}%`
                       : `${s.max_ok}–${s.max_warning}%`}
                   </td>
-                  <td className="p-10 text-right font-black text-danger tabular-nums tracking-tighter text-xl opacity-60">
+                  <td className="p-6 lg:p-10 text-right font-black text-danger tabular-nums tracking-tighter text-xl opacity-60">
                     {s.invert ? `< ${s.min_warning}%` : `> ${s.max_warning}%`}
                   </td>
-                  <td className="p-10 pl-14 text-[11px] font-black italic text-tx-muted uppercase opacity-20 tracking-tight leading-relaxed max-w-[240px]">
+                  <td className="p-6 lg:p-10 pl-14 text-[11px] font-black italic text-tx-muted uppercase opacity-20 tracking-tight leading-relaxed max-w-[240px]">
                     {s.reference}
                   </td>
                 </tr>
@@ -72,7 +72,7 @@ const AuditMatrixTable = ({ sections }) => {
         </table>
       </div>
 
-      <footer className="p-12 border-t border-border-base flex flex-col md:flex-row justify-between items-center opacity-30 hover:opacity-100 transition-all group/footer">
+      <footer className="p-6 md:p-12 border-t border-border-base flex flex-col md:flex-row justify-between items-center opacity-30 hover:opacity-100 transition-all group/footer">
         <p className="text-[10px] font-black text-tx-muted uppercase tracking-[0.3em] max-w-3xl text-center md:text-left leading-loose group-hover/footer:text-tx-primary transition-colors">
           Compliance Stack: Ramsey Intelligence Protocol 70/30 · OCDE Home
           Finance Directive · CMF Standards Suite 2026 · AI Diagnostic Core

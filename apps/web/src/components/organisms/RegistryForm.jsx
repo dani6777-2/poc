@@ -12,19 +12,20 @@ const RegistryForm = ({
   canalOptions, 
   unitOptions, 
   STATUS_OPTIONS, 
+  PAYMENT_METHOD_OPTIONS,
   handleSubmit, 
   onCancel,
   BLANK_STATE
 }) => {
   return (
-    <Card className={`p-8 border border-border-base shadow-premium transition-all duration-500 ${editId ? 'glow-accent' : ''}`}>
+    <Card className={`p-5 md:p-8 border border-border-base shadow-premium transition-all duration-500 ${editId ? 'glow-accent' : ''}`}>
       <div className="flex justify-between items-center mb-10">
         <h3 className="text-sm font-black text-tx-primary tracking-[0.3em] uppercase">
           {editId ? '✏️ Module Update' : '🚀 Supplies Ingestion'}
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
         <div className="md:col-span-2">
           <Input 
             label="Product" 
@@ -44,6 +45,12 @@ const RegistryForm = ({
           value={form.channel_id} 
           onChange={e => setForm({ ...form, channel_id: e.target.value })} 
           options={canalOptions} 
+        />
+        <Select 
+          label="Payment Method" 
+          value={form.payment_method} 
+          onChange={e => setForm({ ...form, payment_method: e.target.value })} 
+          options={PAYMENT_METHOD_OPTIONS || []} 
         />
         <div className="grid grid-cols-2 gap-2">
           <Input 
@@ -74,7 +81,7 @@ const RegistryForm = ({
           options={STATUS_OPTIONS} 
         />
 
-        <div className="md:col-span-6 mt-4">
+        <div className="md:col-span-7 mt-4">
           <Button className="w-full py-5" onClick={handleSubmit}>
             {editId ? 'Confirm Changes' : 'Enter into Record'}
           </Button>

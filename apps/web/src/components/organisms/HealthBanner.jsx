@@ -10,7 +10,7 @@ const HealthBanner = ({ health }) => {
 
   return (
     <Card
-      className="p-8 overflow-hidden relative group border-none shadow-2xl"
+      className="p-5 md:p-8 overflow-hidden relative group border-none shadow-2xl"
       glow={health.global_level !== "ok"}
     >
       <div
@@ -18,7 +18,7 @@ const HealthBanner = ({ health }) => {
         style={{ backgroundColor: NIVEL_COLOR[health.global_level] }}
       />
 
-      <div className="relative flex flex-col md:flex-row items-center gap-10">
+      <div className="relative flex flex-col md:flex-row items-center gap-6 lg:p-10">
         <div
           className="text-6xl font-black tabular-nums tracking-tighter"
           style={{ color: NIVEL_COLOR[health.global_level] }}

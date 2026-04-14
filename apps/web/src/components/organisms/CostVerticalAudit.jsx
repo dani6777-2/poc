@@ -17,7 +17,7 @@ const CostVerticalAudit = ({
 }) => {
   return (
     <Card className="overflow-hidden border border-border-base shadow-premium">
-      <div className="p-8 border-b border-border-base bg-tx-primary/[0.01] flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="p-5 md:p-8 border-b border-border-base bg-tx-primary/[0.01] flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h3 className="text-[12px] font-black text-tx-primary uppercase tracking-[0.25em]">
             Planned vs Actual by Vertical
@@ -174,7 +174,7 @@ const CostVerticalAudit = ({
 
             {/* Dynamic Alerts */}
             {health && health.active_alerts > 0 && (
-              <div className="p-8 bg-danger/[0.02] border-y border-danger/10 flex flex-col gap-5">
+              <div className="p-5 md:p-8 bg-danger/[0.02] border-y border-danger/10 flex flex-col gap-5">
                 <div className="flex items-center gap-3 text-danger font-black uppercase text-[10px] tracking-[0.25em]">
                   <span className="flex h-1.5 w-1.5 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75"></span>
@@ -209,7 +209,7 @@ const CostVerticalAudit = ({
             )}
 
             {/* Performance Chart */}
-            <div className="p-10 h-[380px]">
+            <div className="p-6 lg:p-10 h-[380px]">
               <Bar
                 data={barPvrData}
                 options={{

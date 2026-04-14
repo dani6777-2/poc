@@ -6,12 +6,20 @@ export const REGISTRY_BLANK_STATE = {
   name: '', 
   category_id: '', 
   channel_id: '', 
+  payment_method: 'debit',
   unit_id: '', 
   quantity: 1, 
   unit_price: 0, 
   prev_month_price: '', 
   status: 'Planned' 
 };
+
+export const PAYMENT_METHOD_OPTIONS = [
+  { value: 'debit', label: 'Debit' },
+  { value: 'credit', label: 'Credit Card' },
+  { value: 'cash', label: 'Cash' },
+  { value: 'transfer', label: 'Transfer' }
+];
 
 export const INVENTORY_BLOCK_A_DEFAULT = (month, category_id = '') => ({
   month,

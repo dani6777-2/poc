@@ -106,10 +106,10 @@ export default function CreditCard() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-6 lg:p-10 items-start">
         {/* PHYSICAL CARD VISUAL */}
-        <div className="flex flex-col gap-8">
-          <Card border={false} className="h-64 p-10 relative overflow-hidden flex flex-col justify-between shadow-premium group transition-all duration-700 select-none cursor-default bg-linear-to-br from-tx-primary/[0.08] to-tx-primary/[0.01] rounded-[2.5rem]">
+        <div className="flex flex-col gap-5 md:p-8">
+          <Card border={false} className="h-64 p-6 lg:p-10 relative overflow-hidden flex flex-col justify-between shadow-premium group transition-all duration-700 select-none cursor-default bg-linear-to-br from-tx-primary/[0.08] to-tx-primary/[0.01] rounded-[2.5rem]">
             {/* Animated Glow Overlay */}
             <div className="absolute inset-0 bg-linear-to-tr from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="absolute -top-32 -right-32 w-80 h-80 bg-accent rounded-full blur-[100px] opacity-[0.1] group-hover:opacity-[0.2] transition-opacity duration-700" />
@@ -139,7 +139,7 @@ export default function CreditCard() {
             </div>
           </Card>
 
-          <Card className="p-10 space-y-10 shadow-premium">
+          <Card className="p-6 lg:p-10 space-y-10 shadow-premium">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-accent rounded-full shadow-glow-accent" />
               <h3 className="text-[12px] font-black text-tx-primary uppercase tracking-[0.3em]">Operational Cycle</h3>
@@ -177,7 +177,7 @@ export default function CreditCard() {
 
         {/* TRANSACTIONS LIST */}
         <Card className="flex flex-col min-h-[640px] overflow-hidden shadow-premium">
-          <div className="p-8 border-b border-border-base flex items-center justify-between bg-tx-primary/[0.01]">
+          <div className="p-5 md:p-8 border-b border-border-base flex items-center justify-between bg-tx-primary/[0.01]">
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse shadow-glow-accent" />
               <h3 className="text-sm font-black text-tx-primary uppercase tracking-[0.3em]">Passive Transactions Ledger</h3>
@@ -226,7 +226,7 @@ export default function CreditCard() {
 
       {/* HISTORY */}
       <Card className="overflow-hidden shadow-premium">
-        <div className="p-10 border-b border-border-base bg-tx-primary/[0.01] flex items-center gap-4">
+        <div className="p-6 lg:p-10 border-b border-border-base bg-tx-primary/[0.01] flex items-center gap-4">
           <div className="w-2 h-8 bg-accent rounded-full shadow-glow-accent" />
           <h3 className="text-sm font-black text-tx-primary uppercase tracking-[0.4em]">Sector Analysis: Historical Saturation</h3>
         </div>
@@ -235,20 +235,20 @@ export default function CreditCard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-[9px] font-black uppercase text-tx-muted/30 border-b border-border-base bg-tx-primary/[0.02] tracking-[0.3em]">
-                <th className="p-8 px-12">Fiscal Window</th>
-                <th className="p-8">Assigned Consumption</th>
-                <th className="p-8">Cap Total</th>
-                <th className="p-8 text-center w-80">Saturation Vector</th>
-                <th className="p-8 text-right pr-12">Audit Action</th>
+                <th className="p-5 md:p-8 px-12">Fiscal Window</th>
+                <th className="p-5 md:p-8">Assigned Consumption</th>
+                <th className="p-5 md:p-8">Cap Total</th>
+                <th className="p-5 md:p-8 text-center w-80">Saturation Vector</th>
+                <th className="p-5 md:p-8 text-right pr-12">Audit Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-base">
               {history.map(h => (
                 <tr key={h.month} className="hover:bg-tx-primary/[0.01] transition-colors group">
-                  <td className="p-8 px-12 font-black text-tx-primary group-hover:text-accent transition-colors tracking-tight uppercase">{h.month}</td>
-                  <td className="p-8 font-black tabular-nums text-tx-primary text-xl tracking-tighter">{fmt(h.used)}</td>
-                  <td className="p-8 font-bold text-tx-muted opacity-30 tabular-nums">{fmt(h.total_limit)}</td>
-                  <td className="p-8">
+                  <td className="p-5 md:p-8 px-12 font-black text-tx-primary group-hover:text-accent transition-colors tracking-tight uppercase">{h.month}</td>
+                  <td className="p-5 md:p-8 font-black tabular-nums text-tx-primary text-xl tracking-tighter">{fmt(h.used)}</td>
+                  <td className="p-5 md:p-8 font-bold text-tx-muted opacity-30 tabular-nums">{fmt(h.total_limit)}</td>
+                  <td className="p-5 md:p-8">
                     <div className="flex items-center gap-6">
                       <div className="flex-1 h-3 bg-tx-primary/5 rounded-full overflow-hidden p-[2px]">
                         <div 
@@ -259,7 +259,7 @@ export default function CreditCard() {
                       <span className={`text-sm font-black tabular-nums w-14 text-right ${h.used_pct > 80 ? 'text-danger' : 'text-tx-secondary'}`}>{h.used_pct}%</span>
                     </div>
                   </td>
-                  <td className="p-8 text-right pr-12">
+                  <td className="p-5 md:p-8 text-right pr-12">
                     <Link to={`/registry?month=${h.month}`}>
                       <Button variant="ghost" size="sm" className="font-black text-[10px] tracking-widest px-8 border border-border-base/40">INSPECT</Button>
                     </Link>
@@ -273,15 +273,15 @@ export default function CreditCard() {
 
       {/* CONFIG MODAL */}
       {isEditing && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in duration-500">
           <div className="absolute inset-0 bg-primary/90 backdrop-blur-xl" onClick={() => setIsEditing(false)} />
-          <Card className="w-full max-w-2xl p-10 md:p-14 relative z-10 animate-in zoom-in-95 duration-500 rounded-[3rem] shadow-premium">
+          <Card className="w-full max-w-2xl p-6 lg:p-10 md:p-5 md:p-8 lg:p-14 relative z-10 animate-in zoom-in-95 duration-500 rounded-[3rem] shadow-premium">
             <div className="flex flex-col gap-2 mb-12">
               <h2 className="text-3xl font-black text-tx-primary uppercase tracking-tighter leading-none">Node Architecture</h2>
               <Badge variant="accent" className="w-fit tracking-[0.4em] font-black uppercase text-[9px] px-3">SECURITY PROTOCOL VII</Badge>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.3em] ml-2">Asset Alias</label>
                 <Input value={formCfg.name} onChange={e => setFormCfg({ ...formCfg, name: e.target.value })} placeholder="e.g. Black Priority Card" />

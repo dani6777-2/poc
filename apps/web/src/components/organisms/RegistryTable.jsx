@@ -19,7 +19,7 @@ const RegistryTable = ({
 }) => {
   return (
     <Card className="overflow-hidden">
-      <div className="p-6 md:p-8 border-b border-border-base flex flex-col lg:flex-row justify-between items-center gap-6 bg-tx-primary/[0.01]">
+      <div className="p-6 md:p-5 md:p-8 border-b border-border-base flex flex-col lg:flex-row justify-between items-center gap-6 bg-tx-primary/[0.01]">
         <div className="flex flex-col gap-1 w-full lg:w-auto">
           <h3 className="text-[11px] font-black text-tx-primary uppercase tracking-[0.25em]">Financial Flow History</h3>
           <Input

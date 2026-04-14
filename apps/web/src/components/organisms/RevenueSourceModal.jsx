@@ -16,12 +16,12 @@ const RevenueSourceModal = ({
   onAdd,
 }) => {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in duration-500">
       <div
         className="absolute inset-0 bg-primary/95 backdrop-blur-3xl"
         onClick={onClose}
       />
-      <Card className="max-w-xl w-full p-12 md:p-16 relative z-10 animate-in zoom-in-95 duration-500 rounded-[4rem] border-none shadow-premium bg-secondary">
+      <Card className="max-w-xl w-full p-6 md:p-12 md:p-8 lg:p-16 relative z-10 animate-in zoom-in-95 duration-500 rounded-[4rem] border-none shadow-premium bg-secondary">
         <div className="flex items-center justify-between mb-16">
           <div className="space-y-2">
             <h2 className="text-4xl font-black text-tx-primary uppercase tracking-tighter leading-none">

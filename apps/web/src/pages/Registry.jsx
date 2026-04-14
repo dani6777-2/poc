@@ -8,6 +8,7 @@ import {
   REGISTRY_BLANK_STATE,
   STATUS_OPTIONS,
   REGISTRY_FILTERS,
+  PAYMENT_METHOD_OPTIONS
 } from "../constants/forms";
 import { useToast } from "../context/ToastContext";
 import { useFinance } from "../context/FinanceContext";
@@ -81,6 +82,7 @@ export default function Registry() {
       month,
       category_id: parseInt(form.category_id) || null,
       channel_id: parseInt(form.channel_id) || null,
+      payment_method: form.payment_method || "debit",
       unit_id: parseInt(form.unit_id) || null,
       unit_price: parseFloat(form.unit_price) || 0,
       quantity: parseFloat(form.quantity) || 1,
@@ -99,11 +101,13 @@ export default function Registry() {
       }
       setEditId(null);
       const lastChannel = form.channel_id;
+      const lastPaymentMethod = form.payment_method;
       const lastUnit = form.unit_id;
       setForm({
         ...REGISTRY_BLANK_STATE,
         category_id: categories[0]?.id || "",
         channel_id: lastChannel,
+        payment_method: lastPaymentMethod || "debit",
         unit_id: lastUnit,
       });
       fetchData();
@@ -118,6 +122,7 @@ export default function Registry() {
       ...item,
       category_id: item.category_id || "",
       channel_id: item.channel_id || "",
+      payment_method: item.payment_method || "debit",
       unit_id: item.unit_id || "",
       prev_month_price: item.prev_month_price || "",
     });
@@ -312,6 +317,7 @@ export default function Registry() {
         canalOptions={canalOptions}
         unitOptions={unitOptions}
         STATUS_OPTIONS={STATUS_OPTIONS}
+        PAYMENT_METHOD_OPTIONS={PAYMENT_METHOD_OPTIONS}
         handleSubmit={handleSubmit}
         onCancel={() => {
           setEditId(null);

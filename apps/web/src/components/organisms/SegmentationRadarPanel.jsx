@@ -6,8 +6,8 @@ import InflationRow from "../molecules/InflationRow";
 
 const SegmentationRadarPanel = ({ data, channelsChart, chartOptions, fmt }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <Card className="p-8 space-y-8 shadow-premium border border-border-base">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:p-8">
+      <Card className="p-5 md:p-8 space-y-8 shadow-premium border border-border-base">
         <div>
           <h3 className="text-[12px] font-black text-tx-primary uppercase tracking-[0.2em] flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Capital
@@ -62,7 +62,7 @@ const SegmentationRadarPanel = ({ data, channelsChart, chartOptions, fmt }) => {
         )}
       </Card>
 
-      <Card className="p-8 space-y-8 relative overflow-hidden shadow-premium border border-border-base">
+      <Card className="p-5 md:p-8 space-y-8 relative overflow-hidden shadow-premium border border-border-base">
         <div className="absolute top-0 right-0 w-64 h-64 bg-danger/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 animate-pulse pointer-events-none" />
 
         <div>

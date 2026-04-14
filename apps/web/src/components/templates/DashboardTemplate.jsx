@@ -15,7 +15,7 @@ export default function DashboardTemplate({
 }) {
   return (
     <div
-      className={`pb-20 space-y-10 animate-in fade-in duration-500 ${className}`}
+      className={`pb-20 space-y-10 animate-in fade-in duration-500 w-full min-w-0 ${className}`}
     >
       {(title || subtitle) && (
         <PageHeader
@@ -38,7 +38,7 @@ export default function DashboardTemplate({
           </Text>
         </div>
       ) : (
-        <div className="flex flex-col gap-10">{children}</div>
+        <div className="flex flex-col gap-6 lg:p-10 w-full min-w-0">{children}</div>
       )}
     </div>
   );

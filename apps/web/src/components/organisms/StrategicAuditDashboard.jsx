@@ -13,8 +13,8 @@ const StrategicAuditDashboard = ({
   totalActualSpending,
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-10">
-      <Card className="p-10 flex flex-col items-center justify-center gap-12 relative overflow-hidden group shadow-premium border-none">
+    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:p-10">
+      <Card className="p-6 lg:p-10 flex flex-col items-center justify-center gap-6 md:p-12 relative overflow-hidden group shadow-premium border-none">
         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-accent/30 to-transparent" />
         <ScoreGauge score={score} level={level} />
 
@@ -40,7 +40,7 @@ const StrategicAuditDashboard = ({
         </div>
       </Card>
 
-      <Card className="p-12 relative overflow-hidden shadow-premium border-none">
+      <Card className="p-6 md:p-12 relative overflow-hidden shadow-premium border-none">
         <div className="flex items-center gap-4 mb-14">
           <div className="w-2 h-7 bg-accent rounded-full shadow-glow-accent" />
           <h3 className="text-[14px] font-black text-tx-primary uppercase tracking-[0.4em]">
@@ -62,7 +62,7 @@ const StrategicAuditDashboard = ({
           ))}
         </div>
 
-        <div className="mt-14 pt-12 border-t border-border-base flex flex-col md:flex-row justify-between items-end gap-10">
+        <div className="mt-14 pt-12 border-t border-border-base flex flex-col md:flex-row justify-between items-end gap-6 lg:p-10">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.4em] opacity-30 block">
               Total Actual Period Spending

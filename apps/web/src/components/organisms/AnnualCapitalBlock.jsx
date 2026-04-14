@@ -29,7 +29,7 @@ const AnnualCapitalBlock = ({
   return (
     <div className="space-y-10 page-entry">
       <Card className="overflow-hidden border-none shadow-premium">
-        <div className="p-10 border-b border-border-base bg-tx-primary/[0.02] flex items-center justify-between">
+        <div className="p-6 lg:p-10 border-b border-border-base bg-tx-primary/[0.02] flex items-center justify-between">
           <div className="flex items-center gap-5">
             <Badge
               variant="purple"
@@ -125,31 +125,31 @@ const AnnualCapitalBlock = ({
                 </td>
               </tr>
               <tr className="bg-tx-primary/[0.06] border-t-2 border-border-base relative">
-                <td className="p-8 px-10 font-black text-[15px] text-tx-primary sticky left-0 z-20 bg-secondary border-r border-border-base/40 uppercase tracking-[0.2em] shadow-2xl">
+                <td className="p-5 md:p-8 px-10 font-black text-[15px] text-tx-primary sticky left-0 z-20 bg-secondary border-r border-border-base/40 uppercase tracking-[0.2em] shadow-2xl">
                   Net Surplus
                 </td>
                 {netMonth.map((v, i) => (
                   <td
                     key={i}
-                    className={`p-8 text-right font-black text-base tabular-nums tracking-tighter ${v >= 0 ? "text-success" : "text-danger"}`}
+                    className={`p-5 md:p-8 text-right font-black text-base tabular-nums tracking-tighter ${v >= 0 ? "text-success" : "text-danger"}`}
                   >
                     {fmt(v)}
                   </td>
                 ))}
                 <td
-                  className={`p-8 text-right font-black text-xl tabular-nums tracking-tighter ${totalRevenuesAnnual - totalActualAnnual >= 0 ? "text-success drop-shadow-glow-success" : "text-danger drop-shadow-glow-danger"}`}
+                  className={`p-5 md:p-8 text-right font-black text-xl tabular-nums tracking-tighter ${totalRevenuesAnnual - totalActualAnnual >= 0 ? "text-success drop-shadow-glow-success" : "text-danger drop-shadow-glow-danger"}`}
                 >
                   {fmt(totalRevenuesAnnual - totalActualAnnual)}
                 </td>
               </tr>
               <tr className="bg-accent/[0.08] shadow-inner">
-                <td className="p-8 px-10 font-black text-[15px] text-accent-light sticky left-0 z-20 bg-secondary/90 border-r border-border-base/40 uppercase tracking-[0.2em]">
+                <td className="p-5 md:p-8 px-10 font-black text-[15px] text-accent-light sticky left-0 z-20 bg-secondary/90 border-r border-border-base/40 uppercase tracking-[0.2em]">
                   Accumulated Cash
                 </td>
                 {accumulated.map((v, i) => (
                   <td
                     key={i}
-                    className={`p-8 text-right font-black text-base tabular-nums tracking-tighter ${v >= 0 ? "text-accent-light" : "text-danger-light"}`}
+                    className={`p-5 md:p-8 text-right font-black text-base tabular-nums tracking-tighter ${v >= 0 ? "text-accent-light" : "text-danger-light"}`}
                   >
                     {fmt(v)}
                   </td>
@@ -176,7 +176,7 @@ const AnnualCapitalBlock = ({
             style={{ borderLeft: `6px solid ${color}` }}
           >
             <div
-              className="p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
+              className="p-5 md:p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
               onClick={() => toggleCollapse(sec.id)}
             >
               <div className="flex items-center gap-5">
@@ -187,7 +187,7 @@ const AnnualCapitalBlock = ({
                   {sec.name}
                 </h4>
               </div>
-              <div className="flex gap-12 items-center">
+              <div className="flex gap-6 md:p-12 items-center">
                 <div className="hidden lg:flex flex-col items-end">
                   <span className="text-[9px] font-black text-tx-muted uppercase tracking-[0.3em] opacity-40">
                     ANNUALIZED TOTAL

@@ -15,16 +15,16 @@ export default function OCRScanner({
   return (
     <div className="fixed inset-0 bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4 z-[2000] animate-in fade-in duration-300">
       <Card className="max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
-        <div className="p-8 border-b border-border-base flex items-center justify-between">
+        <div className="p-5 md:p-8 border-b border-border-base flex items-center justify-between">
           <h3 className="text-xl font-black text-tx-primary tracking-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-purple/20 flex items-center justify-center text-lg shadow-lg shadow-purple/10">📸</div> Inteligencia Artificial Visual
           </h3>
           <Button variant="ghost" size="sm" onClick={onClose}>✕</Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
           {!ocrResult ? (
-            <div className="h-72 border-2 border-dashed border-border-base rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center group hover:border-purple/40 hover:bg-purple/5 transition-all">
+            <div className="h-72 border-2 border-dashed border-border-base rounded-[2.5rem] flex flex-col items-center justify-center p-6 md:p-12 text-center group hover:border-purple/40 hover:bg-purple/5 transition-all">
               {processing ? (
                 <div className="flex flex-col items-center gap-6">
                   <div className="w-16 h-16 rounded-full bg-purple/20 animate-pulse flex items-center justify-center border border-purple/40">

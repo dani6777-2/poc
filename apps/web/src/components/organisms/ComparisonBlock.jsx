@@ -33,7 +33,7 @@ const ComparisonBlock = ({
         style={{ borderLeft: `6px solid ${color}` }}
       >
         <div
-          className="p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
+          className="p-5 md:p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
           onClick={() => toggleCollapse(sec.id)}
         >
           <div className="flex items-center gap-5">
@@ -44,8 +44,8 @@ const ComparisonBlock = ({
               {sec.name}
             </h4>
           </div>
-          <div className="flex gap-16 items-center">
-            <div className="hidden lg:flex gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-tx-muted opacity-60">
+          <div className="flex gap-8 lg:p-16 items-center">
+            <div className="hidden lg:flex gap-6 md:p-12 text-[10px] font-black uppercase tracking-[0.2em] text-tx-muted opacity-60">
               <div className="flex flex-col items-end">
                 <span>PLAN</span>
                 <span className="text-warning font-black text-[15px] tracking-tighter mt-1">

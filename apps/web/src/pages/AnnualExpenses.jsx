@@ -181,7 +181,7 @@ export default function AnnualExpenses() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 md:p-8">
         <KpiCard label={`Revenues ${year}`} variant="success" value={fmt(totalRevenuesAnnual)}>
             <Link to="/revenues" className="inline-block mt-5 text-[9px] font-black text-accent hover:underline uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-all">✏️ Flow Management</Link>
         </KpiCard>
@@ -208,7 +208,7 @@ export default function AnnualExpenses() {
             ))}
           </div>
 
-          <Card className="p-10 flex flex-wrap gap-x-16 gap-y-8 items-center border-none shadow-premium relative overflow-hidden">
+          <Card className="p-6 lg:p-10 flex flex-wrap gap-x-16 gap-y-8 items-center border-none shadow-premium relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-accent/30 to-transparent" />
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.4em] mb-1 opacity-40">Month Revenue</label>
@@ -273,7 +273,7 @@ export default function AnnualExpenses() {
 
       {modal && (
         <div className="fixed inset-0 bg-primary/95 backdrop-blur-2xl flex items-center justify-center p-6 z-[2000] animate-in fade-in duration-500" onClick={e => e.target === e.currentTarget && setModal(false)}>
-          <Card className="max-w-[520px] w-full p-12 md:p-16 animate-in zoom-in-95 duration-700 rounded-[3.5rem] border-none shadow-premium relative bg-secondary overflow-hidden">
+          <Card className="max-w-[520px] w-full p-6 md:p-12 md:p-8 lg:p-16 animate-in zoom-in-95 duration-700 rounded-[3.5rem] border-none shadow-premium relative bg-secondary overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-[60px] -mr-24 -mt-24 pointer-events-none" />
             
             <div className="flex items-center justify-between mb-14 relative z-10">

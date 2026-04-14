@@ -11,7 +11,7 @@ const KpiCard = ({
   children 
 }) => {
   return (
-    <Card interactive className={`p-8 border-none shadow-premium relative overflow-hidden group ${className}`}>
+    <Card interactive className={`p-5 md:p-8 border-none shadow-premium relative overflow-hidden group ${className}`}>
       <div className={`absolute top-0 left-0 w-1.5 h-full bg-${variant} opacity-30`} />
       
       {badge && (

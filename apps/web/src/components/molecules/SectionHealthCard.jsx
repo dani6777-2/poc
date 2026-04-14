@@ -14,7 +14,7 @@ const SectionHealthCard = ({ sec }) => {
     <Card
       interactive
       border={false}
-      className="p-8 group shadow-premium relative overflow-hidden transition-all hover:-translate-y-1"
+      className="p-5 md:p-8 group shadow-premium relative overflow-hidden transition-all hover:-translate-y-1"
       style={{ borderTop: `4px solid ${cfg.color}` }}
     >
       <div
