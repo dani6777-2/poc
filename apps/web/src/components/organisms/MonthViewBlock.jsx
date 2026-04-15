@@ -16,6 +16,7 @@ const MonthViewBlock = ({
   toggleCollapse, 
   saving, 
   handleCellChange, 
+  handleSaveRow,
   setConfirmId, 
   setForm, 
   setModal, 
@@ -101,6 +102,7 @@ const MonthViewBlock = ({
                     cardMonthKey={cardMonthKey}
                     saving={saving}
                     handleCellChange={handleCellChange}
+                      handleSaveRow={handleSaveRow}
                     setConfirmId={setConfirmId}
                     fmt={fmt}
                   />

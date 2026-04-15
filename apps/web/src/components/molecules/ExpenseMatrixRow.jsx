@@ -11,6 +11,7 @@ const ExpenseMatrixRow = ({
   cardMonthKey, 
   saving, 
   handleCellChange, 
+  handleSaveRow,
   setConfirmId, 
   fmt 
 }) => {
@@ -60,15 +61,27 @@ const ExpenseMatrixRow = ({
           />
       </td>
       <td className="p-5 text-right"><VarBadge plan={planV} actual={actualV} /></td>
-      <td className="p-5 text-right">
+      <td className="p-3 text-right">
         {!auto && (
-            <Button 
-                variant="ghost" 
-                className="p-3 rounded-xl text-tx-muted hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all" 
-                onClick={() => setConfirmId(row.id)}
-            >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5h6m-6 4h6"/></svg>
-            </Button>
+           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+             <Button 
+               variant="ghost" 
+               className="p-3 rounded-xl text-tx-muted hover:text-success hover:bg-success/10 transition-all" 
+               onClick={() => handleSaveRow(row.id)}
+               disabled={saving[row.id]}
+               title="Guardar Cambios"
+             >
+               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+             </Button>
+             <Button 
+                 variant="ghost" 
+                 className="p-3 rounded-xl text-tx-muted hover:text-danger hover:bg-danger/10 transition-all" 
+                 onClick={() => setConfirmId(row.id)}
+                 title="Eliminar Concepto"
+             >
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5h6m-6 4h6"/></svg>
+             </Button>
+           </div>
         )}
       </td>
     </tr>

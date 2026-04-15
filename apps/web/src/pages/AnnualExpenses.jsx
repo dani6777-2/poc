@@ -38,8 +38,8 @@ export default function AnnualExpenses() {
   const [loading, setLoading] = useState(true)
   const saveTimers = useRef({})
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const [rowsData, revData] = await Promise.all([
         expenseService.getAnnualExpenses(year),
@@ -48,34 +48,44 @@ export default function AnnualExpenses() {
       setRows(rowsData)
       setRevenues(revData)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [year])
 
   useEffect(() => { fetchData() }, [fetchData])
 
   const handleCellChange = (id, field, value) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
-    clearTimeout(saveTimers.current[`${id}_${field}`])
-    saveTimers.current[`${id}_${field}`] = setTimeout(() => {
-      setRows(prev => {
-        const current = prev.find(r => r.id === id)
-        if (!current) return prev
-        const payload = { ...current }
-        for (const key in payload) {
-            if (key === 'id' || key === 'tenant_id' || key === 'section_name') continue;
-            if (typeof payload[key] === 'string' && payload[key] === '' && key !== 'description') payload[key] = 0
-            else if (typeof payload[key] === 'string' && !isNaN(payload[key]) && key !== 'description' && key !== 'section') {
-                payload[key] = parseFloat(payload[key]) || 0
-            }
+      setRows(prev => prev.map(r => {
+        if (r.id !== id) return r
+        let updated = { ...r, [field]: value }
+        if (field.startsWith('actual_card_') && parseFloat(value || 0) > parseFloat(updated[field.replace('_card', '')] || 0)) {
+          updated[field.replace('_card', '')] = value
         }
-        setSaving(s => ({ ...s, [id]: true }))
-        expenseService.updateExpenseDetail(id, payload)
-          .catch(() => addToast('Error synchronizing cell', 'danger'))
-          .finally(() => setSaving(s => ({ ...s, [id]: false })))
-        return prev
-      })
-    }, 800)
+        return updated
+      }))
+  }
+
+  const handleSaveRow = async (id) => {
+    const current = rows.find(r => r.id === id)
+    if (!current) return
+    const payload = { ...current }
+    for (const key in payload) {
+        if (key === 'id' || key === 'tenant_id' || key === 'section_name') continue;
+        if (typeof payload[key] === 'string' && payload[key] === '' && key !== 'description') payload[key] = 0
+        else if (typeof payload[key] === 'string' && !isNaN(payload[key]) && key !== 'description' && key !== 'section') {
+            payload[key] = parseFloat(payload[key]) || 0
+        }
+    }
+    setSaving(s => ({ ...s, [id]: true }))
+    try {
+      await expenseService.updateExpenseDetail(id, payload)
+      addToast('Saved successfully', 'success')
+      fetchData(true)
+    } catch {
+      addToast('Error synchronizing cell', 'danger')
+    } finally {
+      setSaving(s => ({ ...s, [id]: false }))
+    }
   }
 
   const handleAdd = async () => {
@@ -263,6 +273,7 @@ export default function AnnualExpenses() {
         toggleCollapse={toggleCollapse}
         saving={saving}
         handleCellChange={handleCellChange}
+          handleSaveRow={handleSaveRow}
         setConfirmId={setConfirmId}
         setForm={setForm}
         setModal={setModal}
