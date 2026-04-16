@@ -27,4 +27,10 @@ export const NAVBAR_SECTIONS = [
       { to: '/block-b', icon: '🥩', label: 'Block B — Market' },
     ]
   },
+  {
+    title: 'System',
+    links: [
+      { to: '/settings', icon: '⚙️', label: 'Settings' },
+    ]
+  }
 ];

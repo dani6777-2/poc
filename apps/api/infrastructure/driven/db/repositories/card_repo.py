@@ -70,11 +70,10 @@ class SQLCardRepository(CardRepositoryPort):
             models.ExpenseDetail.year == year
         ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id).all()
         
-        AUTO_PREFIXES = ('📝 Registry:', '💳 Card:', '🛒 Supermarket')
         tx_gs = []
         for r in rows:
             val = getattr(r, actual_card_mk) or 0
-            if val > 0 and hasattr(r, 'description') and r.description and not any(r.description.startswith(p) for p in AUTO_PREFIXES):
+            if val > 0 and hasattr(r, 'description') and r.description:
                 sec_icon = r.section.icon + " " if (r.section and r.section.icon) else "🏷️ "
                 
                 tx_gs.append(CardTransactionEntity(

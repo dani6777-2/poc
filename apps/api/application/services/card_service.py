@@ -29,12 +29,9 @@ class CardService:
         if not config.total_limit or config.total_limit == 0:
             return self._empty_balance(config, month)
 
-        # 1. Transactions from Registry
-        tx_reg = self.card_repo.get_transactions_from_registry(tenant_id, month, config.channel_id)
-        # 2. Transactions from Annual Expenses (manual actual_card_*)
-        tx_gs = self.card_repo.get_manual_tc_expenses_from_annual(tenant_id, month)
+        # Transactions from Annual Expenses (manual actual_card_*)
+        transactions = self.card_repo.get_manual_tc_expenses_from_annual(tenant_id, month)
         
-        transactions = tx_reg + tx_gs
         used = sum(t.subtotal for t in transactions)
         
         limit = config.total_limit

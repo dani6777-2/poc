@@ -5,29 +5,30 @@ import { authService } from '../services'
 import { Button, Input, Text } from '../components/atoms'
 import { AuthTemplate } from '../components/templates'
 
-export default function Login() {
+export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [tenantName, setTenantName] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     setError('')
     try {
-      const data = await authService.login(email, password)
+      const data = await authService.register(email, password, tenantName)
       login(data)
       navigate('/')
     } catch (err) {
-      setError(err.message || 'Invalid Credentials')
+      setError(err.response?.data?.detail || err.message || 'Registration failed')
     }
   }
 
   return (
     <AuthTemplate 
-      title="FinOps Home 4.0" 
-      subtitle="Enterprise Intelligence Platform"
+      title="FinOps Registration" 
+      subtitle="Create your workspace instance"
     >
       {error && (
         <div className="p-4 bg-danger/10 border border-danger/20 rounded-xl mb-8 flex items-center gap-3 animate-in shake-in duration-300">
@@ -36,13 +37,21 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-6">
+      <form onSubmit={handleRegister} className="space-y-6">
+        <Input 
+          label="Workspace Name"
+          type="text" 
+          value={tenantName} 
+          onChange={e => setTenantName(e.target.value)} 
+          placeholder="e.g. My Finances" 
+          required 
+        />
         <Input 
           label="Corporate Email"
           type="email" 
           value={email} 
           onChange={e => setEmail(e.target.value)} 
-          placeholder="admin@finops.test" 
+          placeholder="you@organization.com" 
           required 
         />
         <Input 
@@ -54,16 +63,16 @@ export default function Login() {
           required 
         />
         <Button type="submit" className="w-full h-14 mt-4">
-          Access Terminal
+          Provision Workspace
         </Button>
       </form>
 
       <div className="mt-8 text-center">
         <Text variant="caption" className="opacity-70 inline-block">
-          First time?{' '}
+          Already have access?{' '}
         </Text>
-        <Link to="/register" className="text-accent ml-2 hover:underline text-xs font-bold uppercase tracking-widest transition-all">
-          Provision Workspace
+        <Link to="/login" className="text-accent ml-2 hover:underline text-xs font-bold uppercase tracking-widest transition-all">
+          Sign In
         </Link>
       </div>
 

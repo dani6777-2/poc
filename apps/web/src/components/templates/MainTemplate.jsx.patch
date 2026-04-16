@@ -1,0 +1,10 @@
+import re
+
+with open("/Users/PERSONAL/Documents/poc/apps/web/src/components/templates/MainTemplate.jsx", "r") as f:
+    text = f.read()
+
+# Remove z-10 from main or set it to auto to avoid stacking context traps
+text = re.sub(r' relative z-10 transition-all', r' relative transition-all', text)
+
+with open("/Users/PERSONAL/Documents/poc/apps/web/src/components/templates/MainTemplate.jsx", "w") as f:
+    f.write(text)

@@ -123,13 +123,20 @@ export default function AnnualExpenses() {
   const totalPlannedAnnual = totalPlannedMonth.reduce((a, b) => a + b, 0)
   const totalActualAnnual  = totalActualMonth.reduce((a, b) => a + b, 0)
   const totalCardAnnual    = totalCardMonth.reduce((a, b) => a + b, 0)
-  const totalCashAnnual    = totalActualAnnual - totalCardAnnual
+  
+  const totalExecutedAnnual = totalActualAnnual + totalCardAnnual;
+  const totalCashAnnual    = totalActualAnnual
+
   const totalRevenuesMonth = MONTH_KEYS.map(m => (revenues.by_month?.[m]) || 0)
   const totalRevenuesAnnual = revenues.annual_total || 0
+
   const revenueCurrentMonth = totalRevenuesMonth[monthIdx] || 0
   const plannedCurrentMonth = totalPlannedMonth[monthIdx]
   const actualCurrentMonth  = totalActualMonth[monthIdx]
-  const netMonth            = MONTH_KEYS.map((_, i) => (totalRevenuesMonth[i] || 0) - (totalActualMonth[i] - totalCardMonth[i]))
+  const cardCurrentMonth    = totalCardMonth[monthIdx]
+  const executedCurrentMonth = actualCurrentMonth + cardCurrentMonth
+  
+  const netMonth            = MONTH_KEYS.map((_, i) => (totalRevenuesMonth[i] || 0) - totalActualMonth[i])
   const accumulated         = netMonth.reduce((acc, n, i) => [...acc, (acc[i - 1] || 0) + n], [])
 
   const rowsGroupedBySection = useMemo(() => {
@@ -198,25 +205,25 @@ export default function AnnualExpenses() {
         <KpiCard label="Budgeted" variant="warning" value={fmt(totalPlannedAnnual)}>
             <div className="text-[9px] font-black text-tx-muted mt-3 opacity-20 uppercase tracking-widest">{totalRevenuesAnnual > 0 ? `${Math.round(totalPlannedAnnual / totalRevenuesAnnual * 100)}% of revenue` : '—'}</div>
         </KpiCard>
-        <KpiCard label="Actual Expense" variant="purple" value={fmt(totalActualAnnual)}>
-            <div className="text-[9px] font-black text-tx-muted mt-3 opacity-20 uppercase tracking-widest">{totalRevenuesAnnual > 0 ? `${Math.round(totalActualAnnual / totalRevenuesAnnual * 100)}% of revenue` : '—'}</div>
-        </KpiCard>
-        <KpiCard label="Differential" variant={totalPlannedAnnual - totalActualAnnual >= 0 ? 'success' : 'danger'} value={fmt(totalPlannedAnnual - totalActualAnnual)} />
-        <KpiCard label="Net Cash Flow" variant={(totalRevenuesAnnual - totalCashAnnual) >= 0 ? 'info' : 'danger'} value={fmt(totalRevenuesAnnual - totalCashAnnual)} />
-      </div>
+          <KpiCard label="Actual Executed" variant="purple" value={fmt(totalExecutedAnnual)}>
+              <div className="text-[9px] font-black text-tx-muted mt-3 opacity-20 uppercase tracking-widest">{totalRevenuesAnnual > 0 ? `${Math.round(totalExecutedAnnual / totalRevenuesAnnual * 100)}% of revenue` : '—'}</div>
+          </KpiCard>
+          <KpiCard label="Differential" variant={totalPlannedAnnual - totalExecutedAnnual >= 0 ? 'success' : 'danger'} value={fmt(totalPlannedAnnual - totalExecutedAnnual)} />
+          <KpiCard label="Net Cash Flow" variant={(totalRevenuesAnnual - totalCashAnnual) >= 0 ? 'info' : 'danger'} value={fmt(totalRevenuesAnnual - totalCashAnnual)} />
+        </div>
 
-      {view === 'month' && (
-        <div className="space-y-10 page-entry">
-          <div className="glass p-2 rounded-2xl flex gap-1 overflow-x-auto no-scrollbar max-w-full shadow-premium">
-            {MONTH_LABELS.map((label, i) => (
-              <button
-                key={i} onClick={() => setMonthIdx(i)}
-                className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase transition-all whitespace-nowrap tracking-widest ${monthIdx === i ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        {view === 'month' && (
+          <div className="space-y-10 page-entry">
+            <div className="glass p-2 rounded-2xl flex gap-1 overflow-x-auto no-scrollbar max-w-full shadow-premium">
+              {MONTH_LABELS.map((label, i) => (
+                <button
+                  key={i} onClick={() => setMonthIdx(i)}
+                  className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase transition-all whitespace-nowrap tracking-widest ${monthIdx === i ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
           <Card className="p-6 lg:p-10 flex flex-wrap gap-x-16 gap-y-8 items-center border-none shadow-premium relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-accent/30 to-transparent" />
@@ -231,12 +238,12 @@ export default function AnnualExpenses() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.4em] mb-1 opacity-40">Actual Executed</label>
-              <div className="text-3xl font-black text-purple tabular-nums tracking-tighter">{fmt(actualCurrentMonth)}</div>
+              <div className="text-3xl font-black text-purple tabular-nums tracking-tighter">{fmt(executedCurrentMonth)}</div>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.4em] mb-1 opacity-40">Month Delta</label>
-              <div className={`text-3xl font-black tabular-nums tracking-tighter ${plannedCurrentMonth >= actualCurrentMonth ? 'text-success' : 'text-danger'}`}>
-                {fmt(plannedCurrentMonth - actualCurrentMonth)}
+              <div className={`text-3xl font-black tabular-nums tracking-tighter ${plannedCurrentMonth >= executedCurrentMonth ? 'text-success' : 'text-danger'}`}>
+                {fmt(plannedCurrentMonth - executedCurrentMonth)}
               </div>
             </div>
             {revenueCurrentMonth > 0 && (
@@ -329,4 +336,4 @@ export default function AnnualExpenses() {
       )}
     </DashboardTemplate>
   )
-}
+}   

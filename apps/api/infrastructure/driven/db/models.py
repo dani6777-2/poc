@@ -18,10 +18,11 @@ class User(Base):
 # ─── Taxonomies (Normalization) ──────────────────────────────────────────
 
 class TaxonomySection(Base):
-    """Global sections (Food, Home, etc.)"""
+    """Sections (Food, Home, etc.)"""
     __tablename__ = "taxonomy_sections"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, unique=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True) 
+    name = Column(String, nullable=False)
     icon = Column(String, nullable=True)
     color_bg = Column(String, nullable=True)
     color_accent = Column(String, nullable=True)

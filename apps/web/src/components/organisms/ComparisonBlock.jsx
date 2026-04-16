@@ -29,18 +29,18 @@ const ComparisonBlock = ({
     return (
       <Card
         key={sec.id}
-        className="overflow-hidden border-none shadow-premium relative"
+        className="overflow-hidden border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500"
         style={{ borderLeft: `6px solid ${color}` }}
       >
         <div
-          className="p-5 md:p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
           onClick={() => toggleCollapse(sec.id)}
         >
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             <span className="text-3xl filter drop-shadow-sm grayscale group-hover:grayscale-0 transition-all duration-700">
               {sec.icon || "📂"}
             </span>
-            <h4 className="text-[14px] font-black text-tx-primary uppercase tracking-[0.3em]">
+            <h4 className="text-[12px] font-black text-tx-primary uppercase tracking-[0.2em]">
               {sec.name}
             </h4>
           </div>

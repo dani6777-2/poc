@@ -44,6 +44,12 @@ class AnnualExpenseService:
         return self._enrich(entity)
 
     def update_annual_expense(self, tenant_id: int, expense_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
+        for m in MONTHS:
+            actual_val = getattr(data, f"actual_{m}") or 0.0
+            actual_card_val = getattr(data, f"actual_card_{m}") or 0.0
+            if actual_card_val > actual_val:
+                setattr(data, f"actual_{m}", actual_card_val)
+
         entity = self.annual_repo.update(tenant_id, expense_id, data)
         for month_idx in range(1, 13):
             month_str = f"{entity.year}-{str(month_idx).zfill(2)}"
@@ -58,8 +64,6 @@ class AnnualExpenseService:
 
     def sync_registry_to_expenses(self, tenant_id: int, year: int) -> None:
         self.annual_repo.delete_by_prefix(tenant_id, year, "🛒 Supermarket")
-        config = self.card_repo.get_config(tenant_id)
-        channel_id_card = config.channel_id if config and (config.total_limit or 0) > 0 else None
         
         existing_rows = self.annual_repo.get_all_by_year(tenant_id, year)
         descriptions_by_sec = {}
@@ -68,7 +72,7 @@ class AnnualExpenseService:
                 descriptions_by_sec[r.section_id] = {}
             descriptions_by_sec[r.section_id][r.description.strip().lower()] = r.id
 
-        # Aggregation: {(section_id, description_id_opt): {mk: {total, card, plan}}}
+        # Aggregation: {(section_id, description_id_opt): {mk: {total, plan}}}
         per_description: Dict[Tuple[int, Optional[int]], Dict[str, Dict[str, float]]] = {}
         # By generic section (for categories without specific manual description)
         per_section_gen: Dict[int, Dict[str, Dict[str, float]]] = {}
@@ -78,11 +82,11 @@ class AnnualExpenseService:
             # Check if it's a manual category-matched row (already in descriptions_by_sec)
             # OR if it's a generic Registry row
             if r.description.startswith(REGISTRY_DESCRIPTION_PREFIX):
-                per_section_gen[r.section_id] = {m: {'total': 0.0, 'card': 0.0, 'plan': 0.0} for m in MONTHS}
+                per_section_gen[r.section_id] = {m: {'total': 0.0, 'plan': 0.0} for m in MONTHS}
             else:
                 # Any row that is NOT generic might be a category-matched one. 
                 # We pre-init it to 0 so if it has no matches, it resets.
-                per_description[(r.section_id, r.id)] = {m: {'total': 0.0, 'card': 0.0, 'plan': 0.0} for m in MONTHS}
+                per_description[(r.section_id, r.id)] = {m: {'total': 0.0, 'plan': 0.0} for m in MONTHS}
         
         for month_idx, mk in enumerate(MONTHS):
             month_str = f"{year}-{str(month_idx + 1).zfill(2)}"
@@ -92,20 +96,18 @@ class AnnualExpenseService:
                 
                 sec_id = item.section_id
                 sub = item.subtotal or 0.0
-                is_card = channel_id_card and item.channel_id == channel_id_card
                 is_bought = item.status == "Bought"
                 
                 # Check if item category matches a manual description
                 description_id = descriptions_by_sec.get(sec_id, {}).get(item.category_name.strip().lower() if item.category_name else "")
                 
                 if description_id:
-                    target = per_description.setdefault((sec_id, description_id), {m: {'total': 0.0, 'card': 0.0, 'plan': 0.0} for m in MONTHS})
+                    target = per_description.setdefault((sec_id, description_id), {m: {'total': 0.0, 'plan': 0.0} for m in MONTHS})
                 else:
-                    target = per_section_gen.setdefault(sec_id, {m: {'total': 0.0, 'card': 0.0, 'plan': 0.0} for m in MONTHS})
+                    target = per_section_gen.setdefault(sec_id, {m: {'total': 0.0, 'plan': 0.0} for m in MONTHS})
 
                 if is_bought:
                     target[mk]['total'] += sub
-                    if is_card: target[mk]['card'] += sub
                 elif item.status == "Planned":
                     target[mk]['plan'] += sub
 
@@ -114,7 +116,6 @@ class AnnualExpenseService:
             updates = {}
             for mk, data in month_totals.items():
                 updates[f"actual_{mk}"] = round(data['total'], 0)
-                updates[f"actual_card_{mk}"] = round(data['card'], 0)
                 if data['plan'] > 0: updates[mk] = round(data['plan'], 0)
             self.annual_repo.set_values(description_id, updates)
 
@@ -125,16 +126,26 @@ class AnnualExpenseService:
             if any_row: sec_name = any_row.section_name
             
             description = f"{REGISTRY_DESCRIPTION_PREFIX}{sec_name}"
-            row = self.annual_repo.get_by_concept(tenant_id, year, sec_id, description)
+            
+            generic_rows = [r for r in existing_rows if r.section_id == sec_id and r.description.startswith(REGISTRY_DESCRIPTION_PREFIX)]
+            row = generic_rows[0] if generic_rows else None
+
             if not row:
                 dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, description=description, sort_order=999)
                 row = self.annual_repo.create(tenant_id, dto)
+            else:
+                if row.description != description:
+                    dto = AnnualExpenseCreateDto(year=row.year, section_id=row.section_id, description=description, sort_order=row.sort_order)
+                    self.annual_repo.update(tenant_id, row.id, dto)
+                # Cleanup any duplicates generated by previous bug
+                if len(generic_rows) > 1:
+                    for dup in generic_rows[1:]:
+                        self.annual_repo.delete(tenant_id, dup.id)
 
             updates = {}
             for mk, data in month_totals.items():
                 updates[mk] = round(data['plan'], 0)
                 updates[f"actual_{mk}"] = round(data['total'], 0)
-                updates[f"actual_card_{mk}"] = round(data['card'], 0)
             self.annual_repo.set_values(row.id, updates)
 
         # Sync debts
@@ -144,9 +155,8 @@ class AnnualExpenseService:
     def sync_card_to_debts_for_month(self, tenant_id: int, month_str: str) -> None:
         config = self.card_repo.get_config(tenant_id)
         if not config.total_limit or config.total_limit == 0: return
-        tx_reg = self.card_repo.get_transactions_from_registry(tenant_id, month_str, config.channel_id)
-        tx_gs = self.card_repo.get_manual_tc_expenses_from_annual(tenant_id, month_str)
-        used = sum(t.subtotal for t in tx_reg + tx_gs)
+        transactions = self.card_repo.get_manual_tc_expenses_from_annual(tenant_id, month_str)
+        used = sum(t.subtotal for t in transactions)
         self.card_repo.sync_to_deudas_next_month(tenant_id, month_str, config.name, used)
 
     def get_summary(self, tenant_id: int, year: int) -> Dict:

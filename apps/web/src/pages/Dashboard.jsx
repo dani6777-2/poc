@@ -170,7 +170,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-5 md:p-8">
           <Card
             interactive
-            className="p-6 lg:p-10 flex items-center gap-6 lg:p-10 border-none shadow-premium relative overflow-hidden group"
+            className="p-6 lg:p-8 flex flex-col xl:flex-row items-center justify-center gap-6 border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] overflow-hidden group"
           >
             <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-30" />
             <HealthScore score={forecast?.health_score || 0} />
@@ -205,11 +205,11 @@ export default function Dashboard() {
               className="flex-1"
             >
               <div className="absolute top-0 right-0 w-40 h-40 bg-success/5 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none" />
-              <div className="border-t border-border-base/40 pt-6 mt-6">
+              <div className="border-t border-border-base/40 pt-4">
                 <label className="text-[10px] uppercase text-tx-muted font-black tracking-[0.3em] mb-2 opacity-30 block">
                   Operational Expense Rate
                 </label>
-                <div className="text-3xl font-black text-tx-primary tabular-nums tracking-tighter">
+                <div className="text-3xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-sm">
                   {fmt(kpis.actual_expense)}
                 </div>
               </div>
@@ -233,7 +233,7 @@ export default function Dashboard() {
 
           <Card
             interactive
-            className="p-6 lg:p-10 flex flex-col justify-center gap-5 md:p-8 border-none shadow-premium bg-linear-to-br from-secondary to-transparent"
+            className="p-6 lg:p-8 flex flex-col justify-center gap-5 border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem]"
           >
             <h4 className="text-[11px] uppercase font-black text-tx-muted mb-2 tracking-[0.4em] opacity-40">
               AI Asset Location
@@ -283,7 +283,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:p-10">
-          <Card className="p-6 lg:p-10 shadow-premium border-none">
+          <Card className="p-6 lg:p-8 flex flex-col justify-between border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] h-full overflow-hidden">
             <div className="flex items-center justify-between mb-12 px-2">
               <div>
                 <h3 className="text-[13px] font-black text-tx-primary uppercase tracking-[0.4em]">
@@ -322,7 +322,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <Card className="p-6 md:p-12 shadow-premium border-none relative overflow-hidden">
+        <Card className="p-6 lg:p-10 border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] overflow-hidden">
           <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
           <div className="flex items-center justify-between mb-12 px-4 relative z-10">
             <div className="space-y-1">

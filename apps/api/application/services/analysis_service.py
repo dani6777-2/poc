@@ -108,8 +108,10 @@ class AnalysisService:
         for r in annual_entities:
             if r.description and not any(r.description.startswith(p) for p in AUTO_PREFIXES):
                 val_total = getattr(r, actual_mk) or 0
-                if val_total > 0:
-                    cat_consolidated[r.description] = cat_consolidated.get(r.description, 0) + val_total
+                val_card = getattr(r, actual_card_mk) or 0
+                val_cash = val_total - val_card
+                if val_cash > 0:
+                    cat_consolidated[r.description] = cat_consolidated.get(r.description, 0) + val_cash
         
         highest_cat = max(cat_consolidated, key=cat_consolidated.get) if cat_consolidated else "—"
 

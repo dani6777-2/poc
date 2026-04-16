@@ -28,9 +28,9 @@ const AnnualCapitalBlock = ({
 }) => {
   return (
     <div className="space-y-10 page-entry">
-      <Card className="overflow-hidden border-none shadow-premium">
-        <div className="p-6 lg:p-10 border-b border-border-base bg-tx-primary/[0.02] flex items-center justify-between">
-          <div className="flex items-center gap-5">
+      <Card className="overflow-hidden border border-border-base shadow-md relative bg-secondary rounded-[1.5rem]">
+        <div className="p-4 lg:p-6 border-b border-border-base bg-tx-primary/[0.02] flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Badge
               variant="purple"
               glow
@@ -172,14 +172,14 @@ const AnnualCapitalBlock = ({
           <Card
             key={sec.id}
             border={false}
-            className="overflow-hidden border-none shadow-premium relative"
+            className="overflow-hidden border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500"
             style={{ borderLeft: `6px solid ${color}` }}
           >
             <div
               className="p-5 md:p-8 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
               onClick={() => toggleCollapse(sec.id)}
             >
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-4">
                 <span className="text-3xl filter drop-shadow-sm grayscale group-hover:grayscale-0 transition-all duration-700">
                   {sec.icon || "📂"}
                 </span>

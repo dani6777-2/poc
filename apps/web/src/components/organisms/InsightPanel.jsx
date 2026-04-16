@@ -5,7 +5,7 @@ import InsightItem from "../molecules/InsightItem";
 
 const InsightPanel = ({ insights }) => {
   return (
-    <Card className="p-6 lg:p-10 border-none shadow-premium relative bg-secondary overflow-hidden h-full">
+    <Card className="p-6 lg:p-8 flex flex-col border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] h-full overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
 
       <div className="flex items-center justify-between mb-10 relative z-10">
