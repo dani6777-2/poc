@@ -7,6 +7,12 @@ import BudgetTableRow from "../molecules/BudgetTableRow";
  * BudgetLimitTable
  * Main table for managing category budget limits vs actuals.
  */
+import { useAuth } from "../../context/AuthContext";
+
+/**
+ * BudgetLimitTable
+ * Main table for managing category budget limits vs actuals.
+ */
 const BudgetLimitTable = ({
   rows,
   loading,
@@ -22,6 +28,8 @@ const BudgetLimitTable = ({
   handleSave,
   fmt,
 }) => {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === "guest";
   return (
     <section className="glass rounded-[3rem] border border-border-base overflow-hidden shadow-2xl">
       <div className="p-5 md:p-8 border-b border-border-base flex items-center justify-between bg-border-base/10">
@@ -57,7 +65,7 @@ const BudgetLimitTable = ({
                 <th className="p-5">Balance</th>
                 <th className="p-5">Execution</th>
                 {totalRevenue > 0 && <th className="p-5">% Revenue</th>}
-                <th className="p-5 pr-10 text-right">Commit</th>
+                {!isGuest && <th className="p-5 pr-10 text-right">Commit</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border-base">

@@ -24,3 +24,23 @@ class TenantRepositoryPort(ABC):
     @abstractmethod
     def create(self, name: str) -> TenantEntity:
         pass
+
+    @abstractmethod
+    def get_by_invite_code(self, code: str) -> Optional[TenantEntity]:
+        pass
+
+    @abstractmethod
+    def update_invite_code(self, tenant_id: int, code: str) -> None:
+        pass
+
+    @abstractmethod
+    def get_user_access_list(self, user_id: int) -> list:
+        pass
+
+    @abstractmethod
+    def add_user_access(self, user_id: int, tenant_id: int, role: str) -> None:
+        pass
+
+    @abstractmethod
+    def get_user_role(self, user_id: int, tenant_id: int) -> Optional[str]:
+        pass

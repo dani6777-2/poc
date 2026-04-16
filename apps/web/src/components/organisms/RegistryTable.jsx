@@ -1,7 +1,4 @@
-import React from 'react';
-import Card from '../atoms/Card';
-import Input from '../atoms/Input';
-import RegistryRow from '../molecules/RegistryRow';
+import { useAuth } from '../../context/AuthContext';
 
 const RegistryTable = ({
   search,
@@ -17,6 +14,8 @@ const RegistryTable = ({
   getSourceLabel,
   fmt
 }) => {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === 'guest';
   return (
     <Card className="overflow-hidden">
       <div className="p-6 md:p-5 md:p-8 border-b border-border-base flex flex-col lg:flex-row justify-between items-center gap-6 bg-tx-primary/[0.01]">
@@ -55,7 +54,7 @@ const RegistryTable = ({
               <th className="p-5 text-right w-24">Qty</th>
               <th className="p-5 hidden md:table-cell text-right">Unit Price</th>
               <th className="p-5 text-right pr-8">Subtotal</th>
-              <th className="p-5 w-28">Actions</th>
+              {!isGuest && <th className="p-5 w-28">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-border-base">

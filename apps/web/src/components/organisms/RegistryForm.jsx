@@ -1,8 +1,5 @@
-import React from 'react';
-import Card from '../atoms/Card';
-import Input from '../atoms/Input';
-import Select from '../atoms/Select';
-import Button from '../atoms/Button';
+import { useAuth } from '../../context/AuthContext';
+import { Card, Button, Input, Select } from '../atoms';
 
 const RegistryForm = ({ 
   editId, 
@@ -17,6 +14,11 @@ const RegistryForm = ({
   onCancel,
   BLANK_STATE
 }) => {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === 'guest';
+
+  if (isGuest) return null;
+
   return (
     <Card className={`p-5 md:p-8 border border-border-base shadow-premium transition-all duration-500 ${editId ? 'glow-accent' : ''}`}>
       <div className="flex justify-between items-center mb-10">

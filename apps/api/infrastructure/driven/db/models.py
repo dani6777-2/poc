@@ -6,14 +6,26 @@ class Tenant(Base):
     __tablename__ = "tenants"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True)
+    invite_code = Column(String, unique=True, nullable=True)
+
+class TenantAccess(Base):
+    __tablename__ = "tenant_access"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    role = Column(String, default="owner") # "owner" or "guest"
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True) # Home / Primary Tenant
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, default="owner")
+
+    tenants = relationship("TenantAccess", back_populates="user")
+
+TenantAccess.user = relationship("User", back_populates="tenants")
 
 # ─── Taxonomies (Normalization) ──────────────────────────────────────────
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { useAuth } from "../../context/AuthContext";
 import Badge from "../atoms/Badge";
 import Button from "../atoms/Button";
 
@@ -13,6 +14,8 @@ const InventoryItemRow = ({
   fmt,
   type = "block-a",
 }) => {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === "guest";
   // Logic from Block A
   const diffA = item.prev_month_price
     ? item.unit_price - item.prev_month_price
@@ -106,6 +109,7 @@ const InventoryItemRow = ({
       </td>
 
       <td className="p-6 text-right pr-10">
+        {!isGuest && (
         <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
@@ -148,6 +152,7 @@ const InventoryItemRow = ({
             </svg>
           </Button>
         </div>
+        )}
       </td>
     </tr>
   );

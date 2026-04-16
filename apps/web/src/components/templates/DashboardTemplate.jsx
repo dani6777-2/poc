@@ -1,6 +1,7 @@
 import React from "react";
 import { PageHeader } from "../molecules";
-import { Spinner, Text } from "../atoms";
+import { Spinner, Text, Badge } from "../atoms";
+import { useAuth } from "../../context/AuthContext";
 
 export default function DashboardTemplate({
   title,
@@ -13,6 +14,9 @@ export default function DashboardTemplate({
   children,
   className = "",
 }) {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === "guest";
+
   return (
     <div
       className={`pb-20 space-y-10 animate-in fade-in duration-500 w-full min-w-0 ${className}`}
@@ -22,8 +26,8 @@ export default function DashboardTemplate({
           title={title}
           subtitle={subtitle}
           icon={icon}
-          badge={badge}
-          actions={headerAction}
+          badge={isGuest ? <Badge variant="warning" glow>👁️ READ ONLY</Badge> : badge}
+          actions={isGuest ? null : headerAction}
         />
       )}
 

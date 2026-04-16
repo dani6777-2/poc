@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { DashboardTemplate } from '../components/templates'
-import { Card, Button, Input, Select, Badge } from '../components/atoms'
-import { financeService } from '../services'
-import { useToast } from '../context/ToastContext'
 import { useFinance } from '../context/FinanceContext'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { tenantService } from '../services/tenant.service'
+import { financeService } from '../services/finance.service'
+import { Card, Button, Input, Select, Badge } from '../components/atoms'
 
 export default function Settings() {
   const { fetchTaxonomies, sections, categories, channels } = useFinance()
   const { addToast } = useToast()
+  const { activeTenant } = useAuth()
   
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('sections') // sections | categories | channels
+  const [activeTab, setActiveTab] = useState('invites') // invites | sections | categories | channels
+  const [inviteCode, setInviteCode] = useState('')
+  const [joinCode, setJoinCode] = useState('')
+  const isGuest = activeTenant?.role === 'guest'
 
   // Forms
   const [secForm, setSecForm] = useState({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })
@@ -23,9 +29,18 @@ export default function Settings() {
     setLoading(false)
   }
 
+  const loadInviteCode = async () => {
+    if (activeTenant?.role !== 'owner') return
+    try {
+      const data = await tenantService.getInviteCode()
+      setInviteCode(data.invite_code)
+    } catch (e) {}
+  }
+
   useEffect(() => {
     loadData()
-  }, [])
+    loadInviteCode()
+  }, [activeTenant])
 
   // --- Sections CRUD ---
   const handleSaveSection = async () => {
@@ -139,6 +154,33 @@ export default function Settings() {
     }
   }
 
+  const handleJoin = async () => {
+    if (!joinCode) return addToast("Enter a code", "warning")
+    try {
+      setLoading(true)
+      await tenantService.joinTenant(joinCode)
+      addToast("Successfully joined home!", "success")
+      setJoinCode('')
+    } catch (e) {
+      addToast(e.message || "Invalid code", "danger")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRefreshCode = async () => {
+    try {
+      setLoading(true)
+      const data = await tenantService.getInviteCode()
+      setInviteCode(data.invite_code)
+      addToast("Invite code sequence updated", "success")
+    } catch (e) {
+      addToast("Failed to refresh code", "danger")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const sectionOptions = sections.map(s => ({ value: s.id, label: `${s.icon} ${s.name}` }))
 
   return (
@@ -148,54 +190,109 @@ export default function Settings() {
       icon="⚙️"
       loading={loading}
     >
-      <div className="flex gap-3 mb-8 glass p-1 w-fit rounded-2xl">
+      <div className="flex gap-3 mb-8 glass p-1 w-fit rounded-2xl overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab('invites')}
+          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'invites' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
+        >
+          🤝 Invites
+        </button>
         <button
           onClick={() => setActiveTab('sections')}
-          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'sections' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
+          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'sections' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
         >
           Sections
         </button>
         <button
           onClick={() => setActiveTab('categories')}
-          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'categories' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
+          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'categories' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
         >
           Categories
         </button>
         <button
           onClick={() => setActiveTab('channels')}
-          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'channels' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
+          className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'channels' ? 'bg-accent text-white shadow-glow-accent' : 'text-tx-secondary hover:bg-tx-primary/10'}`}
         >
           Channels
         </button>
       </div>
 
+      {activeTab === 'invites' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+          <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02] flex flex-col justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-accent/10 text-accent flex items-center justify-center text-3xl mx-auto mb-6">🔑</div>
+            <h3 className="text-xl font-black tracking-tighter mb-2">My <span className="text-accent italic font-light">Access Code</span></h3>
+            <p className="text-[10px] font-bold text-tx-muted uppercase tracking-[0.2em] mb-8 opacity-60">Share this code to let others view this home</p>
+            
+            {activeTenant?.role === 'owner' ? (
+              <div className="space-y-6">
+                <div className="bg-secondary/50 border border-accent/20 rounded-3xl p-6 relative group overflow-hidden">
+                  <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="text-4xl font-black text-accent tracking-[0.3em] font-mono selection:bg-accent selection:text-white">
+                    {inviteCode || '••••••••'}
+                  </div>
+                </div>
+                <Button variant="ghost" className="uppercase font-black text-[10px] tracking-widest" onClick={handleRefreshCode}>
+                  🔄 Regerate Code
+                </Button>
+              </div>
+            ) : (
+                <div className="p-10 glass rounded-3xl border-danger/20">
+                    <p className="text-danger font-black text-xs uppercase tracking-widest">Administrative Lock</p>
+                    <p className="text-[10px] text-tx-muted mt-2">Only the home owner can generate invitation codes.</p>
+                </div>
+            )}
+          </Card>
+
+          <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02] flex flex-col justify-center text-center">
+             <div className="w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center text-3xl mx-auto mb-6">🤝</div>
+            <h3 className="text-xl font-black tracking-tighter mb-2">Join <span className="text-success italic font-light">Existing Home</span></h3>
+            <p className="text-[10px] font-bold text-tx-muted uppercase tracking-[0.2em] mb-8 opacity-60">Enter a secret code shared by a friend</p>
+            
+            <div className="space-y-4 max-w-xs mx-auto w-full">
+              <Input 
+                className="text-center text-lg font-black tracking-widest uppercase h-14" 
+                placeholder="PROMO-CODE-X"
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value)}
+              />
+              <Button variant="accent" className="w-full h-14 shadow-glow-accent" onClick={handleJoin} disabled={!joinCode}>
+                JOIN HOME
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {activeTab === 'sections' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
-              <h3 className="text-lg font-black uppercase tracking-widest mb-6">
-                {secForm.id ? 'Edit Section' : 'New Section'}
-              </h3>
-              <div className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
-                  <Input value={secForm.name} onChange={e => setSecForm({ ...secForm, name: e.target.value })} placeholder="e.g. Food..." />
+          {!isGuest && (
+            <div className="lg:col-span-1">
+              <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
+                <h3 className="text-lg font-black uppercase tracking-widest mb-6">
+                  {secForm.id ? 'Edit Section' : 'New Section'}
+                </h3>
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
+                    <Input value={secForm.name} onChange={e => setSecForm({ ...secForm, name: e.target.value })} placeholder="e.g. Food..." />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Icon (Emoji)</label>
+                    <Input value={secForm.icon} onChange={e => setSecForm({ ...secForm, icon: e.target.value })} placeholder="e.g. 🍽️" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
+                    <Input type="number" value={secForm.sort_order} onChange={e => setSecForm({ ...secForm, sort_order: e.target.value })} />
+                  </div>
+                  <div className="pt-4 flex gap-3">
+                    <Button variant="accent" className="flex-1" onClick={handleSaveSection}>💾 Save</Button>
+                    {secForm.id && <Button variant="ghost" onClick={() => setSecForm({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })}>Cancel</Button>}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Icon (Emoji)</label>
-                  <Input value={secForm.icon} onChange={e => setSecForm({ ...secForm, icon: e.target.value })} placeholder="e.g. 🍽️" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
-                  <Input type="number" value={secForm.sort_order} onChange={e => setSecForm({ ...secForm, sort_order: e.target.value })} />
-                </div>
-                <div className="pt-4 flex gap-3">
-                  <Button variant="accent" className="flex-1" onClick={handleSaveSection}>💾 Save</Button>
-                  {secForm.id && <Button variant="ghost" onClick={() => setSecForm({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })}>Cancel</Button>}
-                </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
 
           <div className="lg:col-span-2">
             <Card className="overflow-hidden border-none shadow-premium">
@@ -223,8 +320,8 @@ export default function Settings() {
                         </td>
                         <td className="p-5 text-right">
                           <div className="flex justify-end gap-2">
-                            <Button title={sec.tenant_id === null ? "Cannot edit global section" : "Edit section"} variant="ghost" size="sm" disabled={sec.tenant_id === null} onClick={() => setSecForm({ id: sec.id, name: sec.name, icon: sec.icon || '', color_bg: sec.color_bg || '', color_accent: sec.color_accent || '', sort_order: sec.sort_order || 0 })}>✏️</Button>
-                            <Button title={sec.tenant_id === null ? "Cannot delete global section" : "Delete section"} variant="ghost" size="sm" disabled={sec.tenant_id === null} onClick={() => handleDeleteSection(sec.id)} className="text-danger hover:text-danger-light disabled:opacity-50 disabled:cursor-not-allowed">🗑️</Button>
+                            <Button title={isGuest ? "Read-Only Mode" : (sec.tenant_id === null ? "Cannot edit global section" : "Edit section")} variant="ghost" size="sm" disabled={isGuest || sec.tenant_id === null} onClick={() => setSecForm({ id: sec.id, name: sec.name, icon: sec.icon || '', color_bg: sec.color_bg || '', color_accent: sec.color_accent || '', sort_order: sec.sort_order || 0 })}>✏️</Button>
+                            <Button title={isGuest ? "Read-Only Mode" : (sec.tenant_id === null ? "Cannot delete global section" : "Delete section")} variant="ghost" size="sm" disabled={isGuest || sec.tenant_id === null} onClick={() => handleDeleteSection(sec.id)} className="text-danger hover:text-danger-light disabled:opacity-50 disabled:cursor-not-allowed">🗑️</Button>
                           </div>
                         </td>
                       </tr>
@@ -239,35 +336,37 @@ export default function Settings() {
 
       {activeTab === 'categories' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
-              <h3 className="text-lg font-black uppercase tracking-widest mb-6">
-                {catForm.id ? 'Edit Category' : 'New Category'}
-              </h3>
-              <div className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
-                  <Input value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} placeholder="e.g. Groceries..." />
+          {!isGuest && (
+            <div className="lg:col-span-1">
+              <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
+                <h3 className="text-lg font-black uppercase tracking-widest mb-6">
+                  {catForm.id ? 'Edit Category' : 'New Category'}
+                </h3>
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
+                    <Input value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} placeholder="e.g. Groceries..." />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Section</label>
+                    <Select 
+                      value={catForm.section_id} 
+                      onChange={e => setCatForm({ ...catForm, section_id: e.target.value })} 
+                      options={[{value:'', label:'- Select Section -'}, ...sectionOptions]} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
+                    <Input type="number" value={catForm.sort_order} onChange={e => setCatForm({ ...catForm, sort_order: e.target.value })} />
+                  </div>
+                  <div className="pt-4 flex gap-3">
+                    <Button variant="accent" className="flex-1" onClick={handleSaveCategory}>💾 Save</Button>
+                    {catForm.id && <Button variant="ghost" onClick={() => setCatForm({ id: null, name: '', section_id: '', sort_order: 0 })}>Cancel</Button>}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Section</label>
-                  <Select 
-                    value={catForm.section_id} 
-                    onChange={e => setCatForm({ ...catForm, section_id: e.target.value })} 
-                    options={[{value:'', label:'- Select Section -'}, ...sectionOptions]} 
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
-                  <Input type="number" value={catForm.sort_order} onChange={e => setCatForm({ ...catForm, sort_order: e.target.value })} />
-                </div>
-                <div className="pt-4 flex gap-3">
-                  <Button variant="accent" className="flex-1" onClick={handleSaveCategory}>💾 Save</Button>
-                  {catForm.id && <Button variant="ghost" onClick={() => setCatForm({ id: null, name: '', section_id: '', sort_order: 0 })}>Cancel</Button>}
-                </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
 
           <div className="lg:col-span-2">
             <Card className="overflow-hidden border-none shadow-premium">
@@ -316,23 +415,25 @@ export default function Settings() {
 
       {activeTab === 'channels' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
-              <h3 className="text-lg font-black uppercase tracking-widest mb-6">
-                {chanForm.id ? 'Edit Channel' : 'New Channel'}
-              </h3>
-              <div className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
-                  <Input value={chanForm.name} onChange={e => setChanForm({ ...chanForm, name: e.target.value })} placeholder="e.g. Amazon, Credit..." />
+          {!isGuest && (
+            <div className="lg:col-span-1">
+              <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02]">
+                <h3 className="text-lg font-black uppercase tracking-widest mb-6">
+                  {chanForm.id ? 'Edit Channel' : 'New Channel'}
+                </h3>
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Name</label>
+                    <Input value={chanForm.name} onChange={e => setChanForm({ ...chanForm, name: e.target.value })} placeholder="e.g. Amazon, Credit..." />
+                  </div>
+                  <div className="pt-4 flex gap-3">
+                    <Button variant="accent" className="flex-1" onClick={handleSaveChannel}>💾 Save</Button>
+                    {chanForm.id && <Button variant="ghost" onClick={() => setChanForm({ id: null, name: '' })}>Cancel</Button>}
+                  </div>
                 </div>
-                <div className="pt-4 flex gap-3">
-                  <Button variant="accent" className="flex-1" onClick={handleSaveChannel}>💾 Save</Button>
-                  {chanForm.id && <Button variant="ghost" onClick={() => setChanForm({ id: null, name: '' })}>Cancel</Button>}
-                </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
 
           <div className="lg:col-span-2">
             <Card className="overflow-hidden border-none shadow-premium">

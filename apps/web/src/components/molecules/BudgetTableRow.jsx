@@ -1,5 +1,5 @@
-import React from "react";
-import Badge from "../atoms/Badge";
+import { useAuth } from "../../context/AuthContext";
+import { Badge, Button, Input } from "../atoms";
 
 /**
  * BudgetTableRow
@@ -15,6 +15,8 @@ const BudgetTableRow = ({
   totalRevenue,
   fmt,
 }) => {
+  const { activeTenant } = useAuth();
+  const isGuest = activeTenant?.role === "guest";
   const budgetVal = parseFloat(row.budget) || 0;
   const actualVal = parseFloat(row.actual_spending) || 0;
   const rowBal = budgetVal > 0 ? budgetVal - actualVal : 0;
@@ -46,14 +48,15 @@ const BudgetTableRow = ({
         </div>
       </td>
       <td className="p-6">
-        <div className="flex items-center gap-2 bg-tx-primary/5 border border-border-base rounded-xl px-4 py-2.5 w-36 focus-within:border-accent/40 transition-all">
+        <div className={`flex items-center gap-2 border rounded-xl px-4 py-2.5 w-36 transition-all ${isGuest ? 'bg-transparent border-transparent' : 'bg-tx-primary/5 border-border-base focus-within:border-accent/40'}`}>
           <span className="text-tx-muted opacity-30 font-black text-xs">$</span>
           <input
             type="number"
             step="1000"
             value={row.budget || ""}
             onChange={(e) => onChange(row.id, "budget", e.target.value)}
-            className="bg-transparent border-none text-tx-primary font-black w-full outline-none text-xs tabular-nums"
+            disabled={isGuest}
+            className={`bg-transparent border-none text-tx-primary font-black w-full outline-none text-xs tabular-nums ${isGuest ? 'cursor-default' : ''}`}
             placeholder="0"
           />
         </div>
@@ -97,6 +100,7 @@ const BudgetTableRow = ({
         </td>
       )}
       <td className="p-6 text-right pr-10">
+        {!isGuest && (
         <button
           className="p-2.5 rounded-xl bg-tx-primary/5 text-tx-primary hover:bg-accent hover:text-primary transition-all disabled:opacity-30 flex items-center justify-center float-right"
           onClick={() => onSave(row)}
@@ -108,6 +112,7 @@ const BudgetTableRow = ({
             "💾"
           )}
         </button>
+        )}
       </td>
     </tr>
   );

@@ -58,6 +58,12 @@
   --color-tx-primary-soft: rgba(var(--tx-rgb), 0.05);
 }
 
+[data-view-mode="guest"] {
+  --color-accent: #fb923c; /* orange-400 */
+  --color-accent-soft: rgba(251, 146, 60, 0.12);
+  --color-accent-glow: rgba(251, 146, 60, 0.35);
+}
+
 :root {
   --primary: #f8fafc;
   --secondary: #ffffff;

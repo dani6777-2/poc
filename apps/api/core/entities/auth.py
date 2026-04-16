@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class Token(BaseModel):
@@ -27,3 +28,9 @@ class UserEntity(BaseModel):
 class TenantEntity(BaseModel):
     id: int
     name: str
+    invite_code: Optional[str] = None
+
+class TenantAccessEntity(BaseModel):
+    id: int
+    name: str
+    role: str

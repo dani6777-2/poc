@@ -14,6 +14,10 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  const activeTenantId = sessionStorage.getItem('activeTenantId')
+  if (activeTenantId) {
+    config.headers['X-Tenant-Id'] = activeTenantId
+  }
   return config
 })
 

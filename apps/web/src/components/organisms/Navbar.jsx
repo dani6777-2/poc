@@ -4,13 +4,15 @@ import { cardService, analysisService } from "../../services";
 import { NAVBAR_SECTIONS } from "../../constants/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import HomeSwitcherModal from "./HomeSwitcherModal";
 
 export default function Navbar() {
   const [alerts, setAlerts] = useState({ card: null, health: null });
   const [isOpen, setIsOpen] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, activeTenant, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showSwitcher, setShowSwitcher] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -166,19 +168,30 @@ export default function Navbar() {
         </div>
 
         <div className="mt-auto pt-8 border-t border-border-base space-y-4">
-          <div className="glass p-4 rounded-[1.5rem] flex items-center gap-3 border-accent/20">
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-accent to-purple flex items-center justify-center text-[11px] font-black shadow-lg">
-              {user?.email?.charAt(0).toUpperCase() || "👤"}
+          <div 
+            onClick={() => setShowSwitcher(true)}
+            className="glass p-4 rounded-[1.5rem] flex items-center gap-3 border-accent/20 cursor-pointer hover:bg-accent/5 transition-all group"
+          >
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black shadow-lg transition-transform group-hover:scale-110 ${activeTenant?.role === 'owner' ? 'bg-linear-to-br from-accent to-purple' : 'bg-linear-to-br from-success to-emerald'}`}>
+              {activeTenant?.role === 'owner' ? (user?.email?.charAt(0).toUpperCase() || "👤") : "🤝"}
             </div>
             <div className="flex-1 overflow-hidden">
-              <div className="text-[11px] font-black text-tx-primary truncate">
+              <div className="text-[11px] font-black text-tx-primary truncate flex items-center gap-2">
                 {user?.email || "Guest User"}
+                {activeTenant?.role === 'guest' && (
+                  <span className="text-[7px] bg-emerald/10 text-emerald border border-emerald/20 px-1 rounded-sm">GUEST</span>
+                )}
               </div>
               <div className="text-[9px] font-bold text-tx-muted uppercase tracking-widest opacity-60">
-                🏠 {user?.tenant_name || "Personal Space"}
+                🏠 {activeTenant?.name || "Personal Space"}
               </div>
             </div>
           </div>
+
+          <HomeSwitcherModal 
+            isOpen={showSwitcher} 
+            onClose={() => setShowSwitcher(false)} 
+          />
 
           <button
             onClick={() => {

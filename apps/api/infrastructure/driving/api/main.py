@@ -24,6 +24,7 @@ from infrastructure.driving.api.routers import health_router as health
 from infrastructure.driving.api.routers import list_router as taxonomy
 from infrastructure.driving.api.routers import ai_router as ai
 from infrastructure.driving.api.routers import ocr_router as ocr
+from infrastructure.driving.api.routers import tenant_router as tenants
 from infrastructure.driving.api.routers.inventory_router import router_a as block_a, router_b as block_b
 
 
@@ -74,6 +75,7 @@ ROUTERS = [
     card.router,
     health.router,
     auth.router,
+    tenants.router,
     ai.router,
     ocr.router,
 ]
