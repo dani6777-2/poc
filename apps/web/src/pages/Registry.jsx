@@ -65,8 +65,10 @@ export default function Registry() {
   // Initialize form with defaults when taxonomies load
   useEffect(() => {
     if (taxonomiesLoaded && !editId) {
+      const today = new Date().toISOString().split('T')[0];
       setForm((f) => ({
         ...f,
+        date: today,
         category_id: categories[0]?.id || "",
         channel_id:
           channels.find((c) => c.name === "Cash")?.id || channels[0]?.id || "",
@@ -74,6 +76,7 @@ export default function Registry() {
       }));
     }
   }, [taxonomiesLoaded, categories, channels, units, editId]);
+
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
@@ -103,8 +106,11 @@ export default function Registry() {
       const lastChannel = form.channel_id;
       const lastPaymentMethod = form.payment_method;
       const lastUnit = form.unit_id;
+      const today = new Date().toISOString().split('T')[0];
+      
       setForm({
         ...REGISTRY_BLANK_STATE,
+        date: today,
         category_id: categories[0]?.id || "",
         channel_id: lastChannel,
         payment_method: lastPaymentMethod || "debit",

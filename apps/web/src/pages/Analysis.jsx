@@ -203,35 +203,6 @@ export default function Analysis() {
 
       <AnalysisKpiGrid kpis={kpis} />
 
-      {kpis.has_card && kpis.month_card_expense > 0 && (
-        <Card
-          border={false}
-          className="p-6 bg-warning/5 border-l-4 border-warning flex flex-col md:flex-row items-center gap-6"
-        >
-          <div className="text-3xl">💳</div>
-          <div className="flex-1">
-            <h5 className="text-[13px] font-black text-warning uppercase tracking-widest leading-none">
-              Projected Deferred Debt: {fmt(kpis.month_card_expense)}
-            </h5>
-            <p className="text-[11px] text-tx-secondary font-medium mt-2 opacity-60">
-              This volume has been diverted to the{" "}
-              <span className="text-tx-primary font-bold">
-                {kpis.card_channel}
-              </span>{" "}
-              channel. Remaining immediate liquidity:{" "}
-              <span className="text-success font-black">
-                {fmt(kpis.cash_balance)}
-              </span>
-              .
-            </p>
-          </div>
-          <Link to="/card">
-            <Button size="sm" variant="warning" className="px-6">
-              View Card Management
-            </Button>
-          </Link>
-        </Card>
-      )}
 
       <CostVerticalAudit
         hasPlanVsActual={hasPlanVsActual}

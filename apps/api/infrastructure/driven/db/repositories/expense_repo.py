@@ -6,7 +6,6 @@ from infrastructure.driven.db import models
 
 from core.ports.secondary.annual_expense_repository import AnnualExpenseRepositoryPort
 from core.ports.secondary.card_repository import CardRepositoryPort
-from application.services.annual_expense_service import AnnualExpenseService
 
 class SQLExpenseRepository(ExpenseRepositoryPort):
     def __init__(self, db: Session):
@@ -51,7 +50,8 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             subtotal=subtotal,
             prev_month_price=dto.prev_month_price,
             status=dto.status,
-            source=dto.source
+            source=dto.source,
+            payment_method=dto.payment_method or "debit",
         )
         self.db.add(row)
         self.db.commit()
@@ -72,6 +72,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
         row.prev_month_price = dto.prev_month_price
         row.status = dto.status
         row.source = dto.source
+        row.payment_method = dto.payment_method or "debit"
         self.db.commit()
         return self.get_by_id(tenant_id, item_id)
 
@@ -117,11 +118,13 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             subtotal=row.subtotal,
             prev_month_price=row.prev_month_price,
             status=row.status,
-            source=row.source
+            source=row.source,
+            payment_method=row.payment_method or "debit",
         )
 
 class LegacyExpenseSyncAdapter(ExpenseSyncPort):
     def __init__(self, db: Session, annual_repo: AnnualExpenseRepositoryPort, card_repo: CardRepositoryPort):
+        from application.services.annual_expense_service import AnnualExpenseService
         self.db = db
         self.annual_service = AnnualExpenseService(annual_repo, SQLExpenseRepository(db), card_repo)
 

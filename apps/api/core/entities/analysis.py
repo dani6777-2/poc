@@ -60,7 +60,7 @@ class AnalysisResponse(BaseModel):
     channels: List[CanalStat]
     inflation: List[InflationStat]
     category_chart: List[CategoryChartItem]
-    plan_vs_real: List[PlanVsRealItem]
+    plan_vs_actual: List[PlanVsRealItem]
     section_planned: Dict[str, float]
     section_actual: Dict[str, float]
     ref_section_month: Dict[str, float]

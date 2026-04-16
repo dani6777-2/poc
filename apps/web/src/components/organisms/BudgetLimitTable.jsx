@@ -50,14 +50,14 @@ const BudgetLimitTable = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-[10px] font-black uppercase text-tx-muted opacity-30 tracking-widest border-b border-border-base bg-tx-primary/[0.01]">
-                <th className="p-6 pl-10">Category</th>
-                <th className="p-6">Structure</th>
-                <th className="p-6">Set Limit</th>
-                <th className="p-6">Actual Expense</th>
-                <th className="p-6">Balance</th>
-                <th className="p-6">Execution</th>
-                {totalRevenue > 0 && <th className="p-6">% Revenue</th>}
-                <th className="p-6 pr-10 text-right">Commit</th>
+                <th className="p-5 pl-10">Category</th>
+                <th className="p-5">Structure</th>
+                <th className="p-5">Set Limit</th>
+                <th className="p-5">Actual Expense</th>
+                <th className="p-5">Balance</th>
+                <th className="p-5">Execution</th>
+                {totalRevenue > 0 && <th className="p-5">% Revenue</th>}
+                <th className="p-5 pr-10 text-right">Commit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-base">
@@ -77,31 +77,37 @@ const BudgetLimitTable = ({
                 />
               ))}
             </tbody>
-            <tfoot className="border-t-2 border-border-base bg-tx-primary/[0.02]">
-              <tr className="font-black text-tx-primary uppercase tracking-widest text-xs">
-                <td className="p-5 md:p-8 pl-10" colSpan={2}>
+            <tfoot className="border-t-2 border-border-base bg-tx-primary/[0.03]">
+              <tr className="font-black text-tx-primary uppercase tracking-widest text-[10px]">
+                <td className="p-5 pl-10" colSpan={2}>
                   Aggregate Portfolio
                 </td>
-                <td className="p-5 md:p-8">{fmt(totalBudget)}</td>
-                <td className="p-5 md:p-8 text-yellow">{fmt(totalActual)}</td>
+                <td className="p-5">{fmt(totalBudget)}</td>
+                <td className="p-5 text-yellow">{fmt(totalActual)}</td>
                 <td
-                  className={`p-5 md:p-8 ${balance < 0 ? "text-danger" : "text-success"}`}
+                  className={`p-5 ${balance < 0 ? "text-danger" : "text-success"}`}
                 >
                   {fmt(balance)}
                 </td>
-                <td className="p-5 md:p-8">
-                  <span
-                    className={`px-4 py-1.5 rounded-xl border ${pct >= 100 ? "border-danger text-danger bg-danger/5" : "border-success text-success bg-success/5"}`}
-                  >
-                    {pct}% Executed
-                  </span>
+                <td className="p-5">
+                  <div className="flex items-center">
+                    <span
+                      className={`px-3 py-1 rounded-lg border text-[9px] whitespace-nowrap ${
+                        pct >= 100
+                          ? "border-danger/30 text-danger bg-danger/5"
+                          : "border-success/30 text-success bg-success/5 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                      }`}
+                    >
+                      {pct}% Executed
+                    </span>
+                  </div>
                 </td>
                 {totalRevenue > 0 && (
-                  <td className="p-5 md:p-8 opacity-40">
+                  <td className="p-5 opacity-40 tabular-nums">
                     {((totalActual / totalRevenue) * 100).toFixed(1)}%
                   </td>
                 )}
-                <td className="p-5 md:p-8 pr-10"></td>
+                <td className="p-5 pr-10"></td>
               </tr>
             </tfoot>
           </table>

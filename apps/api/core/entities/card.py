@@ -14,6 +14,14 @@ class CardConfigEntity(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+class CardMonthlyStateEntity(BaseModel):
+    id: Optional[int] = None
+    tenant_id: int
+    month: str
+    manual_payment: float = 0.0
+
+    model_config = ConfigDict(from_attributes=True)
+
 class CardTransactionEntity(BaseModel):
     name: str
     subtotal: float
@@ -25,6 +33,8 @@ class CardBalanceEntity(BaseModel):
     channel_name: Optional[str] = None
     total_limit: float
     used: float
+    manual_payment: float = 0.0
+    net_debt: float = 0.0      # used - manual_payment (real pending debt after partial payment)
     available: float
     pct_used: float
     alert: bool
@@ -35,5 +45,5 @@ class CardBalanceEntity(BaseModel):
     is_configured: bool
     cutoff_day: int
     payment_day: int
-    next_cutoff: str
+    next_closing: str
     next_payment: str

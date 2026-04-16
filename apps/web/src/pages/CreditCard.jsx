@@ -51,7 +51,7 @@ export default function CreditCard() {
             channel_id: parseInt(formCfg.channel_id) || null,
             total_limit: parseFloat(formCfg.total_limit) || 0,
             alert_threshold: parseFloat(formCfg.alert_threshold) || 0,
-            closing_day: parseInt(formCfg.closing_day) || 1,
+            cutoff_day: parseInt(formCfg.closing_day) || 1,
             payment_day: parseInt(formCfg.payment_day) || 1
         }
       await cardService.updateCardConfig(payload)
@@ -122,9 +122,15 @@ export default function CreditCard() {
               <div className="w-12 h-10 glass rounded-lg flex items-center justify-center text-xl filter drop-shadow-glow-accent">📡</div>
             </div>
 
-            <div className="z-10 group-hover:translate-x-1 transition-transform duration-500">
-              <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.25em] block mb-2 opacity-40">Settlement Balance</label>
-              <div className="text-5xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-2xl">{fmt(balance?.used)}</div>
+            <div className="z-10 group-hover:translate-x-1 transition-transform duration-500 flex justify-between items-end">
+              <div>
+                <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.25em] block mb-2 opacity-40">Settlement Balance</label>
+                <div className="text-5xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-2xl">{fmt(balance?.used)}</div>
+              </div>
+              <div className="text-right pb-1">
+                <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.25em] block mb-2 opacity-40">Net Pending</label>
+                <div className="text-2xl font-black text-accent tabular-nums tracking-tighter drop-shadow-glow-accent">{fmt(balance?.net_debt)}</div>
+              </div>
             </div>
 
             <div className="flex justify-between items-end z-10 border-t border-border-base/40 pt-6">
@@ -167,6 +173,39 @@ export default function CreditCard() {
                   style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: barColor }} 
                 />
               </div>
+            </div>
+
+            <div className="pt-6 border-t border-border-base/40 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-4 bg-purple rounded-full shadow-glow-purple" />
+                <h3 className="text-[10px] font-black text-tx-primary uppercase tracking-[0.2em]">Cycle Settlement (Manual)</h3>
+              </div>
+              <div className="flex gap-4">
+                <Input 
+                   type="number"
+                   value={balance?.manual_payment || 0}
+                   onChange={(e) => setBalance({...balance, manual_payment: e.target.value})}
+                   className="flex-1 font-black tabular-nums h-12"
+                   placeholder="Prev Month Debt"
+                />
+                <Button 
+                   onClick={async () => {
+                     try {
+                        await cardService.updateCardMonthlyState(month, { manual_payment: parseFloat(balance.manual_payment) || 0 })
+                        addToast('Settlement updated', 'success')
+                        fetchData()
+                     } catch(e) { addToast('Update failed', 'error') }
+                   }}
+                   variant="accent" 
+                   size="sm" 
+                   className="px-6 font-black uppercase text-[10px] tracking-widest h-12"
+                >
+                  SAVE
+                </Button>
+              </div>
+              <p className="text-[9px] font-black text-tx-muted uppercase tracking-[0.1em] opacity-30 leading-relaxed">
+                This amount will be deducted from the current month's liquidity as "Previous Month CC Payment".
+              </p>
             </div>
 
             <Button onClick={syncNow} variant="ghost" className="w-full py-7 font-black tracking-[0.2em] uppercase text-[11px] gap-3 border border-border-base/40">

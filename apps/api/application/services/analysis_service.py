@@ -8,9 +8,7 @@ from core.ports.secondary.revenue_repository import RevenueRepositoryPort
 from core.ports.secondary.annual_expense_repository import AnnualExpenseRepositoryPort
 from core.ports.secondary.budget_repository import BudgetRepositoryPort
 from core.ports.secondary.card_repository import CardRepositoryPort
-
-MONTHS_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-AUTO_PREFIXES = ('📝 Registry:', '💳 Card:', '🛒 Supermarket')
+from core.constants import MONTHS_KEYS, AUTO_PREFIXES, CARD_DESCRIPTION_PREFIX
 
 class AnalysisService:
     def __init__(
@@ -41,8 +39,8 @@ class AnalysisService:
         items = self.expense_repo.get_all(tenant_id, month)
         bought_items = [i for i in items if i.status == "Bought"]
         
-        card_items = [i for i in bought_items if card_channel_id and i.channel_id == card_channel_id]
-        cash_items = [i for i in bought_items if not (card_channel_id and i.channel_id == card_channel_id)]
+        card_items = [i for i in bought_items if i.payment_method == "credit" or (card_channel_id and i.channel_id == card_channel_id)]
+        cash_items = [i for i in bought_items if not (i.payment_method == "credit" or (card_channel_id and i.channel_id == card_channel_id))]
 
         total_expense_reg = sum(i.subtotal or 0 for i in bought_items)
         cash_expense_reg = sum(i.subtotal or 0 for i in cash_items)
@@ -59,9 +57,9 @@ class AnalysisService:
 
         section_planned: dict = {}
         section_actual_gs: dict = {}
-        card_expense_gs = 0
-        cash_expense_gs = 0
-        auto_card_pay = 0
+
+        total_expense_matrix = 0
+        total_card_expense = 0
 
         for r in annual_entities:
             plan_v = getattr(r, mk) or 0
@@ -69,27 +67,33 @@ class AnalysisService:
             actual_card = getattr(r, actual_card_mk) or 0
 
             sec_name = r.section_name or "Various"
-            is_card_pay = r.description and r.description.startswith('💳 Card:')
-            
-            section_planned[sec_name] = section_planned.get(sec_name, 0) + plan_v
-            section_actual_gs[sec_name] = section_actual_gs.get(sec_name, 0) + actual_v
+            is_card_debt_row = r.description and r.description.startswith(CARD_DESCRIPTION_PREFIX)
 
-            if is_card_pay:
-                auto_card_pay += actual_v
-            
-            if r.description and not any(r.description.startswith(p) for p in AUTO_PREFIXES):
-                card_expense_gs += actual_card
-                cash_expense_gs += (actual_v - actual_card)
+            # Fix #1 & #9: exclude 💳 Card: debt rows from expense matrix (already counted via manual_payment)
+            # and track cash vs card separately in section_actual
+            if not is_card_debt_row:
+                section_planned[sec_name] = section_planned.get(sec_name, 0) + plan_v
+                # Fix #1: section_actual shows cash-only spending (actual minus card portion)
+                cash_portion = actual_v - actual_card
+                section_actual_gs[sec_name] = section_actual_gs.get(sec_name, 0) + cash_portion
+
+                total_expense_matrix += actual_v
+                total_card_expense += actual_card
 
         # Budget
         budgets = self.budget_repo.get_all(tenant_id, month)
         total_budget = sum(b.budget or 0 for b in budgets)
 
+        # Monthly state (Manual CC Payment)
+        m_state = self.card_repo.get_monthly_state(tenant_id, month)
+        manual_cc_payment = m_state.get("manual_payment", 0.0) if m_state else 0.0
+
         # Calculations
-        total_card_expense = card_expense_month + card_expense_gs
-        total_cash_expense = cash_expense_reg + cash_expense_gs + auto_card_pay
+        total_cash_expense = total_expense_matrix - total_card_expense
         
-        cash_balance = total_revenue - total_cash_expense if total_revenue > 0 else (total_budget - total_cash_expense)
+        # Liquidity (Cash Balance) = Revenue - Cash Expenses - Manual CC Previous Month Payment
+        cash_balance = total_revenue - total_cash_expense - manual_cc_payment if total_revenue > 0 else (total_budget - total_cash_expense - manual_cc_payment)
+        
         projected_balance = total_revenue - total_cash_expense - total_card_expense if total_revenue > 0 else None
         
         primary_balance = cash_balance 
@@ -148,7 +152,7 @@ class AnalysisService:
                 n_purchases=s["n"],
                 avg_price=round(s["total"] / s["n"], 0),
                 is_card=bool(is_card),
-                note="Not deducted today — paid next month" if is_card else None
+                note="Deducted only via manual payment entry" if is_card else None
             ))
 
         # Inflation
@@ -180,11 +184,11 @@ class AnalysisService:
                 total_revenue=round(total_revenue, 0),
                 planned_expense=round(sum(section_planned.values()), 0),
                 total_budget=round(total_budget, 0),
-                total_expense=round(total_expense_reg + cash_expense_gs + card_expense_gs, 0),
+                total_expense=round(total_expense_matrix, 0),
                 actual_expense=round(total_cash_expense, 0),
                 cash_expense=round(total_cash_expense, 0),
                 card_expense_month=round(card_expense_month, 0),
-                card_expense_annuals=round(card_expense_gs, 0),
+                card_expense_annuals=round(total_card_expense, 0),
                 total_card_expense=round(total_card_expense, 0),
                 has_card=total_card_expense > 0,
                 card_channel=config.channel_name if config else None,
@@ -203,7 +207,7 @@ class AnalysisService:
             channels=sorted(channels, key=lambda x: x.total, reverse=True),
             inflation=sorted(inflation, key=lambda x: abs(x.variation_pct), reverse=True),
             category_chart=category_chart,
-            plan_vs_real=plan_vs_real,
+            plan_vs_actual=plan_vs_real,
             section_planned={s: round(v, 0) for s, v in section_planned.items()},
             section_actual={s: round(v, 0) for s, v in section_actual_gs.items()},
             ref_section_month={s: round(v, 0) for s, v in section_planned.items()},

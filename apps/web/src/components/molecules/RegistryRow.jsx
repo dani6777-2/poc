@@ -31,7 +31,10 @@ const RegistryRow = ({
       <td className="p-4">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-tx-primary leading-tight">{item.name}</span>
-          {source && <Badge variant={source.variant} className="mt-1 w-fit">{source.label}</Badge>}
+          <div className="flex items-center gap-2 mt-1">
+            {item.date && <span className="text-[10px] font-black text-tx-muted opacity-60 uppercase">{item.date}</span>}
+            {source && <Badge variant={source.variant} className="w-fit">{source.label}</Badge>}
+          </div>
         </div>
       </td>
       <td className="p-4 hidden md:table-cell">

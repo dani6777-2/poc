@@ -6,9 +6,7 @@ from core.ports.secondary.expense_repository import ExpenseRepositoryPort
 from core.ports.secondary.revenue_repository import RevenueRepositoryPort
 from core.ports.secondary.annual_expense_repository import AnnualExpenseRepositoryPort
 from core.ports.secondary.card_repository import CardRepositoryPort
-
-MONTHS_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-AUTO_PREFIXES = ('📝 Registry:', '💳 Card:', '🛒 Supermarket')
+from core.constants import MONTHS_KEYS, AUTO_PREFIXES
 
 RULES = {
     # ── Needs (50%) ──
@@ -316,14 +314,21 @@ class HealthService:
         card_alert = None
         if card_config and (card_config.total_limit or 0) > 0:
             card_pct = round(total_card_expense / card_config.total_limit * 100, 1) if card_config.total_limit > 0 else 0
-            tc_level = "ok" if card_pct <= CARD_RULES["max_ok"] else ("warning" if card_pct <= CARD_RULES["max_warning"] else "danger")
+            alert_threshold = card_config.alert_pct or 70
+            tc_level = "ok" if card_pct <= alert_threshold else ("warning" if card_pct <= 90 else "danger")
+            advice_map = {
+                "ok": "Credit card usage under control ✓",
+                "warning": f"Card usage at {card_pct}% — approaching limit",
+                "danger": f"Critical: Card at {card_pct}% — over safe threshold"
+            }
             card_alert = CardAlert(
-                name=card_config.name, channel_name=card_config.channel_name,
+                name=card_config.name or "Credit Card",
+                channel_name=card_config.channel_name or "Not Linked",
                 total_limit=card_config.total_limit, used=round(total_card_expense, 0),
                 available=round(card_config.total_limit - total_card_expense, 0),
-                pct_used=card_pct, level=tc_level, advice=CARD_RULES["advice"][tc_level],
-                reference=f"Alert set at {card_config.alert_pct}%", n_transactions=len(card_items),
-                note="Does not deduct from your current balance — paid next month"
+                pct_used=card_pct, level=tc_level, advice=advice_map.get(tc_level, ""),
+                reference=f"Alert set at {alert_threshold}%", n_transactions=len(card_items),
+                note="Tracked separately — deducted only via manual settlement"
             )
             scores.append(self._level_score(tc_level))
 

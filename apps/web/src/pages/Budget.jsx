@@ -44,11 +44,8 @@ export default function Budget() {
         catExpense[c.category] = c.actual;
       });
 
-      // Deep Sync Fix: Map over all categories to ensure the table is never empty
-      const targetSectionIds = sections.filter(s => s.name === 'Food' || s.name === 'Comida').map(s => s.id);
-      const targetCategories = categories.filter(cat => targetSectionIds.includes(cat.section_id));
-
-      const synced = targetCategories.map((cat) => {
+      // Deep Sync Fix: Ensure the table shows all categories available
+      const synced = categories.map((cat) => {
         const existing = presData.find((p) => p.category_id === cat.id);
         return {
           id: existing?.id || `new-${cat.id}`, // Placeholder ID for new entries

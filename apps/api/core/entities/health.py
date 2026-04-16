@@ -27,7 +27,7 @@ class Group503020(BaseModel):
 
 class CardAlert(BaseModel):
     name: str
-    channel_name: str
+    channel_name: Optional[str] = None
     total_limit: float
     used: float
     available: float

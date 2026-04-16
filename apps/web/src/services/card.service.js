@@ -24,5 +24,10 @@ export const cardService = {
   syncCard: async (month) => {
     const { data } = await api.post(`card/sync/${month}`)
     return data
+  },
+
+  updateCardMonthlyState: async (month, payload) => {
+    const { data } = await api.post(`card/monthly-state/${month}`, payload)
+    return data
   }
 }

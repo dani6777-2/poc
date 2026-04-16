@@ -54,9 +54,9 @@ const AnalysisKpiGrid = ({ kpis }) => {
         >
           {fmt(kpis.cash_balance)}
         </div>
-        <div className="text-[9px] font-black text-tx-muted mt-2 opacity-30 uppercase">
-          {kpis.projected_balance !== undefined &&
-            `Net Card: ${fmt(kpis.projected_balance)}`}
+        <div className="text-[9px] font-black text-tx-muted mt-2 uppercase tracking-widest opacity-40">
+          {kpis.total_card_expense > 0 &&
+            `💳 Deferred: ${fmt(kpis.total_card_expense)}`}
         </div>
       </Card>
 

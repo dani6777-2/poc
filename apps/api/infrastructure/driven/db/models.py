@@ -227,3 +227,14 @@ class CardConfig(Base):
     payment_day  = Column(Integer, nullable=True, default=5)
     
     channel = relationship("TaxonomyChannel")
+
+class CardMonthlyState(Base):
+    __tablename__ = "card_monthly_states"
+    id           = Column(Integer, primary_key=True, index=True)
+    tenant_id    = Column(Integer, ForeignKey("tenants.id"), index=True)
+    month        = Column(String, nullable=False, index=True) # e.g. "2024-04"
+    manual_payment = Column(Float, default=0.0)
+
+    __table_args__ = (
+        UniqueConstraint('tenant_id', 'month', name='uix_card_monthly_state'),
+    )

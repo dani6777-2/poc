@@ -35,7 +35,7 @@ class SQLCardRepository(CardRepositoryPort):
             channel_id=row.channel_id,
             channel_name=row.channel.name if row.channel else None,
             alert_pct=row.alert_pct,
-            closing_day=row.closing_day,
+            cutoff_day=row.closing_day,
             payment_day=row.payment_day
         )
 
@@ -46,19 +46,36 @@ class SQLCardRepository(CardRepositoryPort):
             row.total_limit = config.total_limit
             row.channel_id = config.channel_id
             row.alert_pct = config.alert_pct
-            row.closing_day = config.closing_day
+            row.closing_day = config.cutoff_day
             row.payment_day = config.payment_day
             self.db.commit()
         return self.get_config(tenant_id)
 
     def get_transactions_from_registry(self, tenant_id: int, month: str, channel_id: Optional[int]) -> List[CardTransactionEntity]:
-        rows = self.db.query(models.Item).filter(
+        from sqlalchemy import or_
+        conditions = [
             models.Item.tenant_id == tenant_id,
-            models.Item.month    == month,
-            models.Item.status   == "Bought",
-            models.Item.payment_method == "credit"
-        ).all()
-        return [CardTransactionEntity(name=r.name, subtotal=r.subtotal, date=r.date) for r in rows]
+            models.Item.month == month,
+            models.Item.status == "Bought",
+        ]
+        # Include if: payment_method is 'credit' OR channel matches the configured CC channel
+        if channel_id:
+            conditions.append(or_(
+                models.Item.payment_method == "credit",
+                models.Item.channel_id == channel_id
+            ))
+        else:
+            conditions.append(models.Item.payment_method == "credit")
+
+        rows = self.db.query(models.Item).filter(*conditions).all()
+        return [
+            CardTransactionEntity(
+                name=f"🛒 {r.name}",
+                subtotal=r.subtotal or 0,
+                date=r.date or f"{month}-01"
+            )
+            for r in rows
+        ]
 
     def get_manual_tc_expenses_from_annual(self, tenant_id: int, month: str) -> List[CardTransactionEntity]:
         year = int(month[:4])
@@ -74,6 +91,9 @@ class SQLCardRepository(CardRepositoryPort):
         for r in rows:
             val = getattr(r, actual_card_mk) or 0
             if val > 0 and hasattr(r, 'description') and r.description:
+                if r.description.startswith("📝 Registry:"): # Hardcoded prefix check to avoid circular import of constants
+                    continue
+                
                 sec_icon = r.section.icon + " " if (r.section and r.section.icon) else "🏷️ "
                 
                 tx_gs.append(CardTransactionEntity(
@@ -115,4 +135,20 @@ class SQLCardRepository(CardRepositoryPort):
         val = round(total_used, 0)
         setattr(row, next_mk, val)
         setattr(row, actual_next_mk, val)
+        self.db.commit()
+
+    def get_monthly_state(self, tenant_id: int, month: str) -> Optional[dict]:
+        row = self.db.query(models.CardMonthlyState).filter_by(tenant_id=tenant_id, month=month).first()
+        if not row: return None
+        return {"manual_payment": row.manual_payment}
+
+    def update_monthly_state(self, tenant_id: int, month: str, data: dict) -> None:
+        row = self.db.query(models.CardMonthlyState).filter_by(tenant_id=tenant_id, month=month).first()
+        if not row:
+            row = models.CardMonthlyState(tenant_id=tenant_id, month=month)
+            self.db.add(row)
+        
+        if "manual_payment" in data:
+            row.manual_payment = data["manual_payment"]
+        
         self.db.commit()

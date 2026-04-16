@@ -11,6 +11,7 @@ const StrategicAuditDashboard = ({
   activeAlerts,
   okSecsCount,
   totalActualSpending,
+  card,
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:p-10">
@@ -29,6 +30,21 @@ const StrategicAuditDashboard = ({
               {activeAlerts || 0}
             </span>
           </div>
+
+          <div className="flex items-baseline justify-between opacity-30 group-hover:opacity-100 transition-opacity">
+            <span className="text-[11px] font-black text-tx-muted uppercase tracking-[0.3em]">
+              Credit Saturation
+            </span>
+            <div className="flex items-center gap-3">
+               <span className={`text-lg font-black tabular-nums ${(card?.used_pct || 0) > 80 ? "text-danger" : "text-tx-primary"}`}>
+                {card?.used_pct || 0}%
+              </span>
+              <a href="/card" className="text-[8px] font-black text-accent hover:underline uppercase tracking-widest">
+                Manage →
+              </a>
+            </div>
+          </div>
+
           <div className="flex items-baseline justify-between opacity-30 group-hover:opacity-100 transition-opacity">
             <span className="text-[11px] font-black text-tx-muted uppercase tracking-[0.3em]">
               Optimized Sectors

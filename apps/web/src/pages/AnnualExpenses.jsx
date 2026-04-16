@@ -57,11 +57,7 @@ export default function AnnualExpenses() {
   const handleCellChange = (id, field, value) => {
       setRows(prev => prev.map(r => {
         if (r.id !== id) return r
-        let updated = { ...r, [field]: value }
-        if (field.startsWith('actual_card_') && parseFloat(value || 0) > parseFloat(updated[field.replace('_card', '')] || 0)) {
-          updated[field.replace('_card', '')] = value
-        }
-        return updated
+        return { ...r, [field]: value }
       }))
   }
 

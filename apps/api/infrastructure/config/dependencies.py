@@ -34,14 +34,15 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
 
 def get_budget_service(db: Session = Depends(get_db)) -> BudgetService:
     repo = SQLBudgetRepository(db)
-    return BudgetService(budget_repo=repo)
+    taxonomy = get_taxonomy_service(db)
+    return BudgetService(budget_repo=repo, taxonomy_service=taxonomy)
 
 def get_expense_service(db: Session = Depends(get_db)) -> ExpenseService:
     repo = SQLExpenseRepository(db)
     annual_repo = SQLAnnualExpenseRepository(db)
     card_repo = SQLCardRepository(db)
     sync = LegacyExpenseSyncAdapter(db, annual_repo, card_repo)
-    return ExpenseService(expense_repo=repo, sync_port=sync)
+    return ExpenseService(expense_repo=repo, sync_port=sync, card_repo=card_repo)
 
 def get_card_service(db: Session = Depends(get_db)) -> CardService:
     repo = SQLCardRepository(db)
@@ -63,10 +64,14 @@ def get_annual_expense_service(db: Session = Depends(get_db)) -> AnnualExpenseSe
     annual_repo = SQLAnnualExpenseRepository(db)
     expense_repo = SQLExpenseRepository(db)
     card_repo = SQLCardRepository(db)
+    budget_repo = SQLBudgetRepository(db)
+    taxonomy_service = get_taxonomy_service(db)
     return AnnualExpenseService(
         annual_repo=annual_repo,
         expense_repo=expense_repo,
-        card_repo=card_repo
+        card_repo=card_repo,
+        budget_repo=budget_repo,
+        taxonomy_service=taxonomy_service
     )
 
 def get_analysis_service(db: Session = Depends(get_db)) -> AnalysisService:

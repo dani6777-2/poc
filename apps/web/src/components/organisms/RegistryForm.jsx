@@ -34,6 +34,12 @@ const RegistryForm = ({
             placeholder="e.g.: Whole Milk" 
           />
         </div>
+        <Input 
+          label="Purchase Date"
+          type="date"
+          value={form.date} 
+          onChange={e => setForm({ ...form, date: e.target.value })} 
+        />
         <Select 
           label="Category" 
           value={form.category_id} 

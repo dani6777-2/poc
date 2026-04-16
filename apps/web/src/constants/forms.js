@@ -4,6 +4,7 @@
 
 export const REGISTRY_BLANK_STATE = { 
   name: '', 
+  date: '',
   category_id: '', 
   channel_id: '', 
   payment_method: 'debit',
