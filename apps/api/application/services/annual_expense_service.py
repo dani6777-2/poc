@@ -23,7 +23,7 @@ class AnnualExpenseService:
         self.taxonomy_service = taxonomy_service
 
     def _enrich(self, entity: AnnualExpenseEntity) -> AnnualExpenseEntity:
-        entity.is_automatic = any(entity.description.startswith(p) for p in AUTO_PREFIXES)
+        entity.is_automatic = entity.is_automatic or any(entity.description.startswith(p) for p in AUTO_PREFIXES)
         entity.annual_total = sum(getattr(entity, m) or 0.0 for m in MONTHS)
         entity.actual_annual_total = sum(getattr(entity, r) or 0.0 for r in ACTUAL_MONTHS)
         entity.actual_card_annual_total = sum(getattr(entity, t) or 0.0 for t in CARD_MONTHS)
@@ -35,20 +35,20 @@ class AnnualExpenseService:
         return [self._enrich(r) for r in rows]
 
     def create_annual_expense(self, tenant_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
-        if data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES):
+        if data.is_automatic or (data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES)):
             raise ValueError(f"No se pueden crear filas manuales con prefijos de sistema.")
         entity = self.annual_repo.create(tenant_id, data)
         return self._enrich(entity)
 
     def update_annual_expense(self, tenant_id: int, expense_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
-        if data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES):
+        if data.is_automatic or (data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES)):
             raise ValueError(f"No se pueden utilizar prefijos de sistema en descripciones manuales.")
         entity = self.annual_repo.update(tenant_id, expense_id, data)
         return self._enrich(entity)
 
     def delete_annual_expense(self, tenant_id: int, expense_id: int) -> None:
         existing = self.annual_repo.get_by_id(tenant_id, expense_id)
-        if not existing or any(existing.description.startswith(p) for p in AUTO_PREFIXES):
+        if not existing or existing.is_automatic or any(existing.description.startswith(p) for p in AUTO_PREFIXES):
             return 
         self.annual_repo.delete(tenant_id, expense_id)
 
@@ -147,7 +147,7 @@ class AnnualExpenseService:
             row = generic_rows[0] if generic_rows else None
 
             if not row:
-                dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, description=description, sort_order=999)
+                dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, description=description, sort_order=999, is_automatic=True)
                 row = self.annual_repo.create(tenant_id, dto)
             
             updates = {}
@@ -175,8 +175,8 @@ class AnnualExpenseService:
                 per_section[sec_name]['annual_total'] = 0.0
                 per_section[sec_name]['actual_annual_total'] = 0.0
             for m in MONTHS:
-                per_section[sec_name][m] += getattr(r, m) or 0
-                per_section[sec_name][f"actual_{m}"] += getattr(r, f"actual_{m}") or 0
+                per_section[sec_name][m] = round(per_section[sec_name][m] + (getattr(r, m) or 0), 2)
+                per_section[sec_name][f"actual_{m}"] = round(per_section[sec_name][f"actual_{m}"] + (getattr(r, f"actual_{m}") or 0), 2)
             per_section[sec_name]['annual_total'] += sum(getattr(r, m) or 0 for m in MONTHS)
             per_section[sec_name]['actual_annual_total'] += sum(getattr(r, f"actual_{m}") or 0 for m in MONTHS)
         return {
@@ -201,9 +201,9 @@ class AnnualExpenseService:
             # Fix #7: deduct manual CC payment (prev month debt paid in cash this month)
             m_state = self.card_repo.get_monthly_state(tenant_id, month_str)
             manual_payment = m_state.get("manual_payment", 0.0) if m_state else 0.0
-            final_expense = (cash_expense + manual_payment) if actual_total > 0 else plan
-            net = inc - final_expense
-            accumulated += net
+            final_expense = round((cash_expense + manual_payment) if actual_total > 0 else plan, 2)
+            net = round(inc - final_expense, 2)
+            accumulated = round(accumulated + net, 2)
             result.append({
                 "month": m, "revenues": inc, "expenses": final_expense, "planned_expenses": plan,
                 "actual_total_expenses": actual_total, "actual_card_expenses": actual_card_total,

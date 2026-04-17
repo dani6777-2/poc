@@ -24,6 +24,8 @@ class AnalysisKpis(BaseModel):
     balance_vs_planned: Optional[float]
     executed_pct: float
     has_revenue: bool
+    expected_revenues: Optional[float] = None
+    liquidity_gap: Optional[float] = None
 
 class CanalStat(BaseModel):
     channel: str

@@ -183,6 +183,7 @@ class ExpenseDetail(Base):
     section_id = Column(Integer, ForeignKey("taxonomy_sections.id"), nullable=False, index=True)
     description   = Column(String, nullable=False)
     sort_order      = Column(Integer, nullable=True, default=0)
+    is_automatic = Column(Boolean, default=False)
     
     jan = Column(Float, nullable=True, default=0)
     feb = Column(Float, nullable=True, default=0)

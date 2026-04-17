@@ -55,14 +55,34 @@ class ExpenseService:
     def get_expenses(self, tenant_id: int, month: Optional[str] = None) -> List[ItemEntity]:
         return self.expense_repo.get_all(tenant_id, month)
 
+    def _validate_expense_dto(self, dto):
+        if not dto.category_id:
+            raise ValueError("Category is mandatory to register an expense.")
+        if not dto.date:
+            raise ValueError("Date is mandatory to register an expense.")
+        if dto.quantity <= 0 or dto.unit_price <= 0:
+            raise ValueError("Quantity and Unit Price must be strictly positive.")
+
     def create_expense(self, tenant_id: int, dto: ItemCreateDto) -> ItemEntity:
         if self._is_auto(dto.source):
             raise AutoSourceActionError()
+        
+        self._validate_expense_dto(dto)
         
         # Auto-normalize payment method based on channel config
         dto.payment_method = self._normalize_payment_method(tenant_id, dto.channel_id, dto.payment_method)
         
         subtotal = self._calc_subtotal(dto.quantity, dto.unit_price)
+
+        # Check for potential duplicates (soft duplicate block)
+        existing_items = self.expense_repo.get_all(tenant_id, dto.month)
+        for item in existing_items:
+            if (item.category_id == dto.category_id and
+                item.date == dto.date and
+                item.payment_method == dto.payment_method and
+                item.subtotal == subtotal):
+                raise ValueError("Posible registro duplicado detectado: Ya existe un gasto idéntico (categoría, fecha, monto exacto y método de pago).")
+
         item = self.expense_repo.create(tenant_id, dto, subtotal)
         
         # Dispatch sync
@@ -76,6 +96,8 @@ class ExpenseService:
             
         if self._is_auto(existing.source):
             raise AutoSourceActionError("This item is managed automatically from Shopping Lists")
+
+        self._validate_expense_dto(dto)
 
         prev_status = existing.status
         

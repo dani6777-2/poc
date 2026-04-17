@@ -6,19 +6,28 @@ import { fmt } from "../../utils/formatters";
 const AnalysisKpiGrid = ({ kpis }) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
-      <Card interactive className="p-6 border-t-2 border-success/20">
-        <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] block mb-2 opacity-50">
-          Total Revenue
-        </label>
-        <div className="text-2xl font-black text-success tabular-nums">
-          {fmt(kpis.total_revenue)}
+      <Card interactive className="p-6 border-t-2 border-success/20 flex flex-col justify-between">
+        <div>
+          <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] block mb-2 opacity-50">
+            Total Revenue
+          </label>
+          <div className="text-2xl font-black text-success tabular-nums">
+            {fmt(kpis.total_revenue)}
+          </div>
         </div>
-        <Link
-          to="/revenues"
-          className="inline-block mt-4 text-[9px] font-black text-accent-light hover:underline uppercase tracking-widest opacity-60"
-        >
-          View Matrix →
-        </Link>
+        <div className="flex items-center justify-between mt-4">
+          <Link
+            to="/revenues"
+            className="text-[9px] font-black text-accent-light hover:underline uppercase tracking-widest opacity-60"
+          >
+            View Matrix →
+          </Link>
+          {kpis.expected_revenues !== undefined && kpis.expected_revenues !== null && (
+            <span className="text-[9px] font-black text-tx-muted uppercase tracking-widest opacity-40">
+              Expected: {fmt(kpis.expected_revenues)}
+            </span>
+          )}
+        </div>
       </Card>
 
       <Card interactive className="p-6 border-t-2 border-border-base">
@@ -45,18 +54,28 @@ const AnalysisKpiGrid = ({ kpis }) => {
         </div>
       </Card>
 
-      <Card interactive className="p-6 border-t-2 border-accent/20">
-        <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] block mb-2 opacity-50">
-          Monthly Variance
-        </label>
-        <div
-          className={`text-2xl font-black tabular-nums ${kpis.cash_balance < 0 ? "text-danger" : "text-success"}`}
-        >
-          {fmt(kpis.cash_balance)}
+      <Card interactive className="p-6 border-t-2 border-accent/20 flex flex-col justify-between">
+        <div>
+          <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] block mb-2 opacity-50">
+            Monthly Variance
+          </label>
+          <div
+            className={`text-2xl font-black tabular-nums ${kpis.cash_balance < 0 ? "text-danger" : "text-success"}`}
+          >
+            {fmt(kpis.cash_balance)}
+          </div>
         </div>
-        <div className="text-[9px] font-black text-tx-muted mt-2 uppercase tracking-widest opacity-40">
-          {kpis.total_card_expense > 0 &&
-            `💳 Deferred: ${fmt(kpis.total_card_expense)}`}
+        <div className="flex flex-col gap-1 mt-2">
+          {kpis.total_card_expense > 0 && (
+            <div className="text-[9px] font-black text-tx-muted uppercase tracking-widest opacity-40">
+              💳 Deferred: {fmt(kpis.total_card_expense)}
+            </div>
+          )}
+          {kpis.liquidity_gap < 0 && (
+            <div className="text-[9px] font-black text-danger uppercase tracking-widest opacity-80">
+              ⚠️ Liq. Gap: {fmt(kpis.liquidity_gap)}
+            </div>
+          )}
         </div>
       </Card>
 

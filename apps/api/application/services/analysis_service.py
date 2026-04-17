@@ -202,7 +202,9 @@ class AnalysisService:
                 balance_vs_budget=round(total_budget - total_cash_expense, 0),
                 balance_vs_planned=round(sum(section_planned.values()) - total_cash_expense, 0) if sum(section_planned.values()) > 0 else None,
                 executed_pct=executed_pct,
-                has_revenue=total_revenue > 0
+                has_revenue=total_revenue > 0,
+                expected_revenues=round(total_revenue, 0),
+                liquidity_gap=round(projected_balance, 0) if projected_balance < 0 else 0
             ),
             channels=sorted(channels, key=lambda x: x.total, reverse=True),
             inflation=sorted(inflation, key=lambda x: abs(x.variation_pct), reverse=True),

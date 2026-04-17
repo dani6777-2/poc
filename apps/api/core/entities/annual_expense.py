@@ -68,6 +68,7 @@ class AnnualExpenseCreateDto(BaseModel):
     category_id: Optional[int] = None
     description: str
     sort_order: Optional[int] = 0
+    is_automatic: bool = False
     jan: float = 0.0
     feb: float = 0.0
     mar: float = 0.0

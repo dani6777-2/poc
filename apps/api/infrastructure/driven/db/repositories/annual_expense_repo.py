@@ -92,6 +92,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
             section_name=row.section.name if row.section else None,
             description=row.description,
             sort_order=row.sort_order,
+            is_automatic=bool(row.is_automatic),
             category_id=row.category_id,
             category_name=row.category.name if row.category else None,
             jan=row.jan, feb=row.feb, mar=row.mar, apr=row.apr, may=row.may, jun=row.jun,
