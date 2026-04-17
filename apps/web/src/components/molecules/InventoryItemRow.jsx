@@ -183,3 +183,5 @@ const InventoryItemRow = ({
     </tr>
   );
 };
+
+export default InventoryItemRow;

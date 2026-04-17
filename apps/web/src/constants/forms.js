@@ -60,7 +60,8 @@ export const INVENTORY_BLOCK_A_DEFAULT = (month, category_id = '') => ({
   quantity: '',
   channel_id: '',
   unit_price: '',
-  prev_month_price: ''
+  prev_month_price: '',
+  status: 'Planned'
 });
 
 export const INVENTORY_BLOCK_B_DEFAULT = (month, category_id = '') => ({
@@ -70,7 +71,8 @@ export const INVENTORY_BLOCK_B_DEFAULT = (month, category_id = '') => ({
   channel_id: '',
   unit_id: '',
   price_per_kg: '',
-  prev_month_price: ''
+  prev_month_price: '',
+  status: 'Planned'
 });
 
 export const STATUS_OPTIONS = [
