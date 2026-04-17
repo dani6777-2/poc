@@ -35,10 +35,14 @@ class AnnualExpenseService:
         return [self._enrich(r) for r in rows]
 
     def create_annual_expense(self, tenant_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
+        if data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES):
+            raise ValueError(f"No se pueden crear filas manuales con prefijos de sistema.")
         entity = self.annual_repo.create(tenant_id, data)
         return self._enrich(entity)
 
     def update_annual_expense(self, tenant_id: int, expense_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
+        if data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES):
+            raise ValueError(f"No se pueden utilizar prefijos de sistema en descripciones manuales.")
         entity = self.annual_repo.update(tenant_id, expense_id, data)
         return self._enrich(entity)
 
@@ -127,9 +131,9 @@ class AnnualExpenseService:
             if row:
                 updates = {}
                 for mk, data in month_totals.items():
-                    updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 0)
-                    updates[f"actual_{mk}"] = round(data['total'], 0)
-                    updates[f"actual_card_{mk}"] = round(data['card'], 0)
+                    updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 2)
+                    updates[f"actual_{mk}"] = round(data['total'], 2)
+                    updates[f"actual_card_{mk}"] = round(data['card'], 2)
                 self.annual_repo.set_values(row.id, updates)
 
         # 7. Update generic "Registry" rows per section
@@ -148,9 +152,9 @@ class AnnualExpenseService:
             
             updates = {}
             for mk, data in month_totals.items():
-                updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 0)
-                updates[f"actual_{mk}"] = round(data['total'], 0)
-                updates[f"actual_card_{mk}"] = round(data['card'], 0)
+                updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 2)
+                updates[f"actual_{mk}"] = round(data['total'], 2)
+                updates[f"actual_card_{mk}"] = round(data['card'], 2)
             
             self.annual_repo.set_values(row.id, updates)
 

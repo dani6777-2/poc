@@ -92,9 +92,9 @@ class AnalysisService:
         total_cash_expense = total_expense_matrix - total_card_expense
         
         # Liquidity (Cash Balance) = Revenue - Cash Expenses - Manual CC Previous Month Payment
-        cash_balance = total_revenue - total_cash_expense - manual_cc_payment if total_revenue > 0 else (total_budget - total_cash_expense - manual_cc_payment)
+        cash_balance = total_revenue - total_cash_expense - manual_cc_payment
         
-        projected_balance = total_revenue - total_cash_expense - total_card_expense if total_revenue > 0 else None
+        projected_balance = total_revenue - total_cash_expense - total_card_expense
         
         primary_balance = cash_balance 
         base_pct = total_revenue if total_revenue > 0 else total_budget
@@ -196,9 +196,9 @@ class AnalysisService:
                 avg_ticket=avg_ticket,
                 highest_expense_cat=highest_cat,
                 balance=round(primary_balance, 0),
-                balance_vs_revenue=round(cash_balance, 0) if total_revenue > 0 else None,
-                cash_balance=round(cash_balance, 0) if total_revenue > 0 else None,
-                projected_balance=round(projected_balance, 0) if projected_balance is not None else None,
+                balance_vs_revenue=round(cash_balance, 0),
+                cash_balance=round(cash_balance, 0),
+                projected_balance=round(projected_balance, 0),
                 balance_vs_budget=round(total_budget - total_cash_expense, 0),
                 balance_vs_planned=round(sum(section_planned.values()) - total_cash_expense, 0) if sum(section_planned.values()) > 0 else None,
                 executed_pct=executed_pct,

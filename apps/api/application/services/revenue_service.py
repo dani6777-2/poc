@@ -16,11 +16,19 @@ class RevenueService:
         rows = self.revenue_repo.get_all_by_year(tenant_id, year)
         return [self._enrich(r) for r in rows]
 
+    def _validate_positive(self, data) -> None:
+        for m in MONTHS_COLS:
+            val = getattr(data, m, None)
+            if val is not None and val < 0:
+                raise ValueError(f"El ingreso de {m} no puede ser negativo.")
+
     def create_revenue(self, tenant_id: int, data: RevenueCreateDto) -> RevenueEntity:
+        self._validate_positive(data)
         entity = self.revenue_repo.create(tenant_id, data)
         return self._enrich(entity)
 
     def update_revenue(self, tenant_id: int, revenue_id: int, data: RevenueUpdateDto) -> RevenueEntity:
+        self._validate_positive(data)
         entity = self.revenue_repo.update(tenant_id, revenue_id, data)
         return self._enrich(entity)
 

@@ -226,7 +226,7 @@ class HealthService:
             return "danger"
 
     def _level_score(self, level: str) -> int:
-        return {"ok": 100, "warning": 50, "danger": 0, "no_data": 70}.get(level, 70)
+        return {"ok": 100, "warning": 50, "danger": 0, "no_data": 0}.get(level, 0)
 
     def get_health(self, tenant_id: int, month: str) -> HealthResponse:
         year = int(month[:4])
@@ -332,8 +332,10 @@ class HealthService:
             )
             scores.append(self._level_score(tc_level))
 
-        global_score = round(sum(scores) / len(scores)) if scores else 0
+        global_score = round(sum(scores) / len(scores)) if scores and not no_revenue else 0
         global_level = "ok" if global_score >= 80 else ("warning" if global_score >= 55 else "danger")
+        if no_revenue and (total_cash_expense + total_card_expense) == 0:
+            global_level = "no_data"
         active_alerts_list = [a for a in section_alerts if a.level in ("warning", "danger")]
 
         return HealthResponse(

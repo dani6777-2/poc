@@ -13,7 +13,10 @@ function describeArc(cx, cy, r, startAngle, endAngle) {
 const ScoreGauge = ({ score, level }) => {
   const cfg = NIVEL_CFG[level] || NIVEL_CFG.ok;
   const angle = (score / 100) * 180;   // semicircle 0→180°
-  const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Critical';
+  const label = score >= 80 ? 'Excellent' : 
+                score >= 60 ? 'Good' : 
+                score >= 40 ? 'Fair' : 
+                score > 0 ? 'Critical' : 'Not Started';
 
   return (
     <div className="text-center py-6 flex flex-col items-center">
@@ -38,7 +41,7 @@ const ScoreGauge = ({ score, level }) => {
           <text x="100" y="85" textAnchor="middle" fill="currentColor" className="text-[36px] font-black text-tx-primary drop-shadow-sm">{score}%</text>
         </svg>
       </div>
-      <Badge variant={level === 'ok' ? 'success' : level === 'warning' ? 'warning' : 'danger'} glow className="mt-4 px-6 tracking-[0.3em] uppercase font-black text-[10px]">
+      <Badge variant={level === 'ok' ? 'success' : level === 'warning' ? 'warning' : level === 'no_data' ? 'muted' : 'danger'} glow={level !== 'no_data'} className="mt-4 px-6 tracking-[0.3em] uppercase font-black text-[10px]">
         DIAGNOSIS: {label.toUpperCase()}
       </Badge>
     </div>

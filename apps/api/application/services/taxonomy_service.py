@@ -111,7 +111,16 @@ class TaxonomyService:
         cat = self.db.query(models.TaxonomyCategory).filter_by(id=category_id, tenant_id=tenant_id).first()
         if not cat:
             raise ValueError("Category not found or access denied")
-        # Check dependencies in items? Optional, but good practice. For now we just delete.
+        
+        # Check dependencies
+        item_count = self.db.query(models.Item).filter_by(category_id=category_id).count()
+        block_a_count = self.db.query(models.InventoryBlockA).filter_by(category_id=category_id).count()
+        block_b_count = self.db.query(models.InventoryBlockB).filter_by(category_id=category_id).count()
+        annual_count = self.db.query(models.ExpenseDetail).filter_by(category_id=category_id).count()
+        
+        if item_count > 0 or block_a_count > 0 or block_b_count > 0 or annual_count > 0:
+            raise ValueError("No se puede eliminar la categoría porque está en uso en gastos o inventario.")
+
         self.db.delete(cat)
         self.db.commit()
         return True

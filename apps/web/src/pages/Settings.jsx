@@ -19,6 +19,7 @@ export default function Settings() {
   const [inviteCode, setInviteCode] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [members, setMembers] = useState([])
+  const { user } = useAuth() // Get current user for safety checks
   const isGuest = activeTenant?.role === 'guest'
 
   // Forms
@@ -217,6 +218,10 @@ export default function Settings() {
   }
 
   const handleRevoke = async (userId) => {
+    if (userId === user?.id) {
+      addToast("Safety Lock: You cannot revoke your own access.", "warning")
+      return
+    }
     if (!confirm("Are you sure you want to revoke access?")) return
     try {
       setLoading(true)
@@ -336,17 +341,29 @@ export default function Settings() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {members.filter(m => m.user_id !== activeTenant.user_id).map(member => (
-                  <div key={member.user_id} className="p-4 rounded-2xl bg-secondary/50 border border-border-base/40 flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-black text-tx-primary">{member.email}</span>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-tx-muted opacity-40">{member.role}</span>
+                {members.map(member => {
+                  const isMe = member.user_id === user?.id
+                  return (
+                    <div key={member.user_id} className={`p-4 rounded-2xl border flex items-center justify-between ${isMe ? 'bg-accent/5 border-accent/20' : 'bg-secondary/50 border-border-base/40'}`}>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-tx-primary">{member.email}</span>
+                          {isMe && <Badge variant="accent" size="sm" className="text-[8px] px-1 h-4">ME</Badge>}
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-tx-muted opacity-40">{member.role}</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className={`${isMe ? 'opacity-20 cursor-not-allowed' : 'text-danger hover:bg-danger/10'}`} 
+                        onClick={() => !isMe && handleRevoke(member.user_id)}
+                        disabled={isMe}
+                      >
+                        {isMe ? 'Protected' : 'Revoke'}
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-danger hover:bg-danger/10" onClick={() => handleRevoke(member.user_id)}>
-                      Revoke
-                    </Button>
-                  </div>
-                ))}
+                  )
+                })}
                 {members.length <= 1 && (
                   <div className="md:col-span-2 py-10 text-center glass rounded-2xl border-dashed border-border-base">
                     <p className="text-[10px] font-black uppercase tracking-widest text-tx-muted opacity-40 italic">No secondary members connected</p>

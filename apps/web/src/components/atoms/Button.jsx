@@ -3,6 +3,9 @@ import React from 'react'
 export default function Button({ children, className = '', variant = 'primary', size = 'md', ...props }) {
   const variants = {
     primary: 'bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent-light',
+    accent: 'bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent-light',
+    success: 'bg-success text-white shadow-lg shadow-success/20 hover:opacity-90',
+    warning: 'bg-warning text-white shadow-lg shadow-warning/20 hover:opacity-90',
     secondary: 'bg-tx-primary/5 text-tx-secondary hover:bg-tx-primary/10 hover:text-tx-primary',
     outline: 'border border-border-base text-tx-secondary hover:bg-tx-primary/5 hover:text-tx-primary',
     danger: 'bg-danger text-white shadow-lg shadow-danger/20 hover:opacity-90',
