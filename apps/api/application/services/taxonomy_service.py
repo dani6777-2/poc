@@ -87,7 +87,17 @@ class TaxonomyService:
             raise ValueError("Category not found or access denied")
         
         if data.name is not None:
+            old_name = cat.name
             cat.name = data.name
+            # --- Synchronize linked Annual Matrix Rows ---
+            try:
+                linked_rows = self.db.query(models.ExpenseDetail).filter_by(category_id=category_id).all()
+                for row in linked_rows:
+                    if row.description == f"📦 {old_name}":
+                        row.description = f"📦 {data.name}"
+            except Exception as e:
+                print(f"Warning: Annual name sync failed: {e}")
+                
         if data.section_id is not None:
             cat.section_id = data.section_id
         if data.sort_order is not None:

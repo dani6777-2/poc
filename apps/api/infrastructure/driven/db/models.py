@@ -126,6 +126,7 @@ class InventoryBlockA(Base):
     unit_price = Column(Float, nullable=True, default=0)
     subtotal = Column(Float, nullable=True, default=0)
     prev_month_price = Column(Float, nullable=True)
+    status = Column(String, nullable=True, default="Planned")
 
     category = relationship("TaxonomyCategory")
     unit = relationship("TaxonomyUnit")
@@ -148,6 +149,7 @@ class InventoryBlockB(Base):
     subtotal = Column(Float, nullable=True, default=0)
     prev_month_price = Column(Float, nullable=True)
     price_delta = Column(Float, nullable=True, default=0)
+    status = Column(String, nullable=True, default="Planned")
 
     category = relationship("TaxonomyCategory")
     channel = relationship("TaxonomyChannel")
@@ -222,6 +224,8 @@ class ExpenseDetail(Base):
     actual_card_dec = Column(Float, nullable=True, default=0)
 
     section = relationship("TaxonomySection")
+    category = relationship("TaxonomyCategory")
+    category_id = Column(Integer, ForeignKey("taxonomy_categories.id"), nullable=True, index=True)
 
     __table_args__ = (
         UniqueConstraint('tenant_id', 'year', 'section_id', 'description', name='uix_tenant_year_section_description'),

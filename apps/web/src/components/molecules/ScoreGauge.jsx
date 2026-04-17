@@ -22,7 +22,18 @@ const ScoreGauge = ({ score, level }) => {
           {/* Track background */}
           <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round" className="text-tx-primary/5" />
           {/* Score arc */}
-          <path d={describeArc(100, 100, 80, 0, angle)} fill="none" stroke={cfg.color} strokeWidth="14" strokeLinecap="round" className="transition-all duration-1000 ease-out" style={{ filter: `drop-shadow(0 0 12px ${cfg.color}88)` }} />
+          <path 
+            d={describeArc(100, 100, 80, 0, angle)} 
+            fill="none" 
+            stroke="var(--cfg-color)" 
+            strokeWidth="14" 
+            strokeLinecap="round" 
+            className="transition-all duration-1000 ease-out drop-shadow-[var(--cfg-shadow)]" 
+            style={{ 
+              '--cfg-color': cfg.color,
+              '--cfg-shadow': `0 0 12px ${cfg.color}88` 
+            }} 
+          />
           {/* Center text */}
           <text x="100" y="85" textAnchor="middle" fill="currentColor" className="text-[36px] font-black text-tx-primary drop-shadow-sm">{score}%</text>
         </svg>

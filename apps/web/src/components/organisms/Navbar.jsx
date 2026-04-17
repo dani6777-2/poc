@@ -141,7 +141,7 @@ export default function Navbar() {
                       flex items-center gap-3.5 py-3 px-4 rounded-2xl font-bold text-[13px] transition-all duration-300 group relative overflow-hidden
                       ${
                         isActive
-                          ? "bg-accent text-white shadow-lg glow-accent scale-[1.02]"
+                          ? "bg-accent text-white shadow-lg shadow-glow-accent scale-[1.02]"
                           : "text-tx-secondary hover:bg-tx-primary/5 hover:text-tx-primary hover:translate-x-1"
                       }
                     `}

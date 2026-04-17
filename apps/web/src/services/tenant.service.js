@@ -13,4 +13,16 @@ export const tenantService = {
     const { data } = await api.post(`tenants/join?code=${code}`);
     return data;
   },
+  getMembers: async () => {
+    const { data } = await api.get("tenants/members");
+    return data;
+  },
+  revokeAccess: async (userId) => {
+    const { data } = await api.delete(`tenants/members/${userId}`);
+    return data;
+  },
+  leaveHome: async () => {
+    const { data } = await api.delete("tenants/leave");
+    return data;
+  },
 };

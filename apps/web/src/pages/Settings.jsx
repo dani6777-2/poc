@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { tenantService } from '../services/tenant.service'
 import { financeService } from '../services/finance.service'
+import { expenseService } from '../services/expense.service'
 import { Card, Button, Input, Select, Badge } from '../components/atoms'
 
 export default function Settings() {
@@ -13,19 +14,26 @@ export default function Settings() {
   const { activeTenant } = useAuth()
   
   const [loading, setLoading] = useState(false)
+  const [annualRows, setAnnualRows] = useState([])
   const [activeTab, setActiveTab] = useState('invites') // invites | sections | categories | channels
   const [inviteCode, setInviteCode] = useState('')
   const [joinCode, setJoinCode] = useState('')
+  const [members, setMembers] = useState([])
   const isGuest = activeTenant?.role === 'guest'
 
   // Forms
   const [secForm, setSecForm] = useState({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })
-  const [catForm, setCatForm] = useState({ id: null, name: '', section_id: '', sort_order: 0 })
+  const [catForm, setCatForm] = useState({ id: null, name: '', section_id: '', sort_order: 0, sync_annual: true })
   const [chanForm, setChanForm] = useState({ id: null, name: '' })
 
   const loadData = async () => {
     setLoading(true)
     await fetchTaxonomies()
+    try {
+      const currentYear = new Date().getFullYear()
+      const annualData = await expenseService.getAnnualExpenses(currentYear)
+      setAnnualRows(annualData)
+    } catch (e) {}
     setLoading(false)
   }
 
@@ -37,9 +45,18 @@ export default function Settings() {
     } catch (e) {}
   }
 
+  const loadMembers = async () => {
+    if (activeTenant?.role !== 'owner') return
+    try {
+      const data = await tenantService.getMembers()
+      setMembers(data)
+    } catch (e) {}
+  }
+
   useEffect(() => {
     loadData()
     loadInviteCode()
+    loadMembers()
   }, [activeTenant])
 
   // --- Sections CRUD ---
@@ -93,10 +110,28 @@ export default function Settings() {
         await financeService.updateCategory(catForm.id, { name: catForm.name, section_id: Number(catForm.section_id), sort_order: Number(catForm.sort_order) })
         addToast("Category updated", "success")
       } else {
-        await financeService.createCategory({ name: catForm.name, section_id: Number(catForm.section_id), sort_order: Number(catForm.sort_order) })
+        const category = await financeService.createCategory({ name: catForm.name, section_id: Number(catForm.section_id), sort_order: Number(catForm.sort_order) })
+        
+        // --- Automatically inject annual concept if requested ---
+        if (catForm.sync_annual) {
+          const currentYear = new Date().getFullYear()
+          try {
+            await expenseService.createExpenseDetail({
+              year: currentYear,
+              section_id: Number(catForm.section_id),
+              category_id: category.id,
+              description: `📦 ${catForm.name}`,
+              sort_order: 99
+            })
+            addToast("Annual budget row initialized", "info")
+          } catch (err) {
+            console.error("Auto-sync failed:", err)
+          }
+        }
+        
         addToast("Category created", "success")
       }
-      setCatForm({ id: null, name: '', section_id: '', sort_order: 0 })
+      setCatForm({ id: null, name: '', section_id: '', sort_order: 0, sync_annual: true })
       await loadData()
     } catch (e) {
       addToast(e.response?.data?.detail || "Error saving category", "danger")
@@ -176,6 +211,34 @@ export default function Settings() {
       addToast("Invite code sequence updated", "success")
     } catch (e) {
       addToast("Failed to refresh code", "danger")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRevoke = async (userId) => {
+    if (!confirm("Are you sure you want to revoke access?")) return
+    try {
+      setLoading(true)
+      await tenantService.revokeAccess(userId)
+      addToast("Access revoked", "success")
+      await loadMembers()
+    } catch (e) {
+      addToast("Failed to revoke access", "danger")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLeave = async () => {
+    if (!confirm("Are you sure you want to leave this household? You will lose access immediately.")) return
+    try {
+      setLoading(true)
+      await tenantService.leaveHome()
+      addToast("You have left the household", "success")
+      window.location.href = "/" // Hard redirect to reset context/session
+    } catch (e) {
+      addToast("Failed to leave home", "danger")
     } finally {
       setLoading(false)
     }
@@ -261,6 +324,50 @@ export default function Settings() {
               </Button>
             </div>
           </Card>
+
+          {activeTenant?.role === 'owner' && (
+            <Card className="p-8 border-none shadow-premium bg-tx-primary/[0.02] lg:col-span-2">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-black tracking-tighter">Household <span className="text-accent italic font-light">Members</span></h3>
+                  <p className="text-[10px] font-bold text-tx-muted uppercase tracking-[0.2em] opacity-60">Manage permissions and access vectors</p>
+                </div>
+                <Badge variant="accent" glow>{members.length} Active</Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {members.filter(m => m.user_id !== activeTenant.user_id).map(member => (
+                  <div key={member.user_id} className="p-4 rounded-2xl bg-secondary/50 border border-border-base/40 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-tx-primary">{member.email}</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-tx-muted opacity-40">{member.role}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-danger hover:bg-danger/10" onClick={() => handleRevoke(member.user_id)}>
+                      Revoke
+                    </Button>
+                  </div>
+                ))}
+                {members.length <= 1 && (
+                  <div className="md:col-span-2 py-10 text-center glass rounded-2xl border-dashed border-border-base">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-tx-muted opacity-40 italic">No secondary members connected</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {isGuest && (
+             <Card className="p-8 border-none shadow-premium bg-danger/5 border border-danger/20 flex flex-col justify-center text-center lg:col-span-2">
+                <div className="w-16 h-16 rounded-full bg-danger/10 text-danger flex items-center justify-center text-3xl mx-auto mb-6">🚪</div>
+                <h3 className="text-xl font-black tracking-tighter mb-2">Leave <span className="text-danger italic font-light">Household</span></h3>
+                <p className="text-[10px] font-bold text-tx-muted uppercase tracking-[0.2em] mb-8 opacity-60">Disconnect from {activeTenant.name}. You will need a new invite to return.</p>
+                <div className="max-w-xs mx-auto w-full">
+                  <Button variant="danger" className="w-full h-14 shadow-glow-danger" onClick={handleLeave}>
+                    CONFIRM EXIT
+                  </Button>
+                </div>
+             </Card>
+          )}
         </div>
       )}
 
@@ -359,6 +466,20 @@ export default function Settings() {
                     <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
                     <Input type="number" value={catForm.sort_order} onChange={e => setCatForm({ ...catForm, sort_order: e.target.value })} />
                   </div>
+                  {!catForm.id && (
+                    <div className="flex items-center gap-3 p-4 bg-accent/5 rounded-2xl border border-accent/10">
+                      <input 
+                        type="checkbox" 
+                        id="sync_annual" 
+                        checked={catForm.sync_annual} 
+                        onChange={e => setCatForm({...catForm, sync_annual: e.target.checked})}
+                        className="w-5 h-5 accent-accent"
+                      />
+                      <label htmlFor="sync_annual" className="text-[10px] font-black text-accent uppercase tracking-widest cursor-pointer select-none">
+                        📌 Sync with Annual Planner
+                      </label>
+                    </div>
+                  )}
                   <div className="pt-4 flex gap-3">
                     <Button variant="accent" className="flex-1" onClick={handleSaveCategory}>💾 Save</Button>
                     {catForm.id && <Button variant="ghost" onClick={() => setCatForm({ id: null, name: '', section_id: '', sort_order: 0 })}>Cancel</Button>}
@@ -395,6 +516,16 @@ export default function Settings() {
                             ) : (
                               <Badge variant="success" size="sm">Custom</Badge>
                             )}
+                          </td>
+                          <td className="p-5">
+                            {(() => {
+                              const isLinked = annualRows.some(r => r.category_id === cat.id);
+                              return isLinked ? (
+                                <Badge variant="accent" size="sm" glow>SYNCED</Badge>
+                              ) : (
+                                <Badge variant="info" size="sm" className="opacity-40">READY</Badge>
+                              );
+                            })()}
                           </td>
                           <td className="p-5 text-right">
                               <div className="flex justify-end gap-2">

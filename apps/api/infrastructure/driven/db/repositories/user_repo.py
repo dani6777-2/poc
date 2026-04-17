@@ -98,3 +98,17 @@ class SQLTenantRepository(TenantRepositoryPort):
         acc = self.db.query(models.TenantAccess)\
             .filter(models.TenantAccess.user_id == user_id, models.TenantAccess.tenant_id == tenant_id).first()
         return acc.role if acc else None
+
+    def get_tenant_members(self, tenant_id: int) -> list:
+        # Returns list of {user_id, email, role}
+        members = self.db.query(models.TenantAccess, models.User)\
+            .join(models.User, models.TenantAccess.user_id == models.User.id)\
+            .filter(models.TenantAccess.tenant_id == tenant_id).all()
+        return [{"user_id": u.id, "email": u.email, "role": ta.role} for ta, u in members]
+
+    def remove_user_access(self, user_id: int, tenant_id: int) -> None:
+        acc = self.db.query(models.TenantAccess)\
+            .filter(models.TenantAccess.user_id == user_id, models.TenantAccess.tenant_id == tenant_id).first()
+        if acc:
+            self.db.delete(acc)
+            self.db.commit()

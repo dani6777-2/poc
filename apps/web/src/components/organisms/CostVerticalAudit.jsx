@@ -70,8 +70,8 @@ const CostVerticalAudit = ({
                         className="hover:bg-tx-primary/[0.01] transition-colors group"
                       >
                         <td
-                          className="p-5 pl-10 border-l-4 transition-all"
-                          style={{ borderLeftColor: nColor || "transparent" }}
+                          className="p-5 pl-10 border-l-4 transition-all border-l-[var(--n-col)]"
+                          style={{ "--n-col": nColor || "transparent" }}
                         >
                           <div className="text-sm font-bold text-tx-primary group-hover:translate-x-1 transition-transform">
                             {r.section}
@@ -138,8 +138,8 @@ const CostVerticalAudit = ({
                                   {NIVEL_ICON[sSec.level]}
                                 </span>
                                 <span
-                                  className="text-[10px] font-black"
-                                  style={{ color: nColor }}
+                                  className="text-[10px] font-black text-[var(--n-col)]"
+                                  style={{ "--n-col": nColor }}
                                 >
                                   {sSec.revenue_pct}%
                                 </span>

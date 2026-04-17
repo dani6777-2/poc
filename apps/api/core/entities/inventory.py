@@ -18,6 +18,7 @@ class InventoryItemA(BaseModel):
     unit_price: float = 0.0
     subtotal: float = 0.0
     prev_month_price: Optional[float] = None
+    status: str = "Planned"
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -38,6 +39,7 @@ class InventoryItemB(BaseModel):
     subtotal: float = 0.0
     prev_month_price: Optional[float] = None
     price_delta: float = 0.0
+    status: str = "Planned"
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,6 +52,7 @@ class InventoryItemACreate(BaseModel):
     channel_id: Optional[int] = None
     unit_price: float = 0.0
     prev_month_price: Optional[float] = None
+    status: str = "Planned"
 
 class InventoryItemBCreate(BaseModel):
     month: str
@@ -59,3 +62,4 @@ class InventoryItemBCreate(BaseModel):
     unit_id: Optional[int] = None
     price_per_kg: float = 0.0
     prev_month_price: Optional[float] = None
+    status: str = "Planned"

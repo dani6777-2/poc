@@ -34,7 +34,7 @@ export default function AnnualExpenses() {
   const [saving, setSaving]   = useState({})
   const [modal, setModal]     = useState(false)
   const [confirmId, setConfirmId] = useState(null)
-  const [form, setForm] = useState({ section_id: '', description: '' })
+  const [form, setForm] = useState({ section_id: '', category_id: '', description: '' })
   const [loading, setLoading] = useState(true)
   const saveTimers = useRef({})
 
@@ -90,12 +90,13 @@ export default function AnnualExpenses() {
       await expenseService.createExpenseDetail({ 
         year, 
         section_id: parseInt(form.section_id), 
+        category_id: form.category_id ? parseInt(form.category_id) : null,
         description: form.description.trim(), 
         sort_order: rows.length 
       })
       addToast('Concept added successfully', 'success')
       setModal(false)
-      setForm({ section_id: '', description: '' })
+      setForm({ section_id: '', category_id: '', description: '' })
       fetchData()
     } catch (e) { addToast('Error adding concept', 'danger') }
   }
@@ -145,6 +146,12 @@ export default function AnnualExpenses() {
   }, [rows])
 
   const sectionOptions = useMemo(() => ctxSections.map(s => ({ value: s.id, label: s.name })), [ctxSections])
+
+  const { categories: ctxCategories } = useFinance()
+  const filteredCategories = useMemo(() => {
+    if (!form.section_id) return []
+    return ctxCategories.filter(c => c.section_id === parseInt(form.section_id))
+  }, [ctxCategories, form.section_id])
 
   return (
     <DashboardTemplate
@@ -306,6 +313,24 @@ export default function AnnualExpenses() {
                   onChange={e => setForm(f => ({ ...f, section_id: e.target.value }))}
                   options={[{ value: '', label: '— Select Domain —' }, ...sectionOptions]}
                   className="h-14 rounded-2xl font-bold bg-tx-primary/5 border-border-base/40 text-[14px]"
+                />
+              </div>
+              <div className="space-y-4">
+                <label className="text-[11px] font-black text-tx-muted uppercase tracking-[0.3em] ml-2 opacity-50">Operational Category (Linking)</label>
+                <Select
+                  value={form.category_id}
+                  onChange={e => {
+                    const catId = e.target.value;
+                    const cat = ctxCategories.find(c => c.id === parseInt(catId));
+                    setForm(f => ({ 
+                      ...f, 
+                      category_id: catId,
+                      description: cat ? `📦 ${cat.name}` : f.description
+                    }))
+                  }}
+                  options={[{ value: '', label: '— No Linking —' }, ...filteredCategories.map(c => ({ value: c.id, label: c.name }))]}
+                  className="h-14 rounded-2xl font-bold bg-tx-primary/5 border-border-base/40 text-[14px]"
+                  disabled={!form.section_id}
                 />
               </div>
               <div className="space-y-4">

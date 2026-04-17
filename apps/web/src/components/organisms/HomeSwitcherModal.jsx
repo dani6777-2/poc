@@ -35,7 +35,6 @@ const HomeSwitcherModal = ({ isOpen, onClose }) => {
       {/* Modal */}
       <Card
         className="relative w-full max-w-lg bg-secondary/90 border-accent/20 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-0"
-        border={true}
       >
          <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-accent via-purple to-accent animate-shimmer" />
         

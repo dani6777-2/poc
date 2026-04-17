@@ -75,8 +75,8 @@ const AnalysisKpiGrid = ({ kpis }) => {
           </div>
           <div className="h-1.5 bg-tx-primary/5 rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all duration-1000 ${kpis.executed_pct >= 100 ? "bg-danger shadow-glow-danger" : "bg-purple shadow-glow-purple"}`}
-              style={{ width: `${Math.min(kpis.executed_pct || 0, 100)}%` }}
+              className={`h-full transition-all duration-1000 w-[var(--pct)] ${kpis.executed_pct >= 100 ? "bg-danger shadow-glow-danger" : "bg-purple shadow-glow-purple"}`}
+              style={{ '--pct': `${Math.min(kpis.executed_pct || 0, 100)}%` }}
             />
           </div>
         </div>

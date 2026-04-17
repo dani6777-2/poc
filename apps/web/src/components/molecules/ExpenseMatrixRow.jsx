@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Badge from "../atoms/Badge";
 import Button from "../atoms/Button";
 import VarBadge from "../molecules/VarBadge";
@@ -20,6 +21,8 @@ const ExpenseMatrixRow = ({
   const cardV = parseFloat(row[cardMonthKey]) || 0;
   const totalExec = actualV + cardV;
 
+  const isCategoryLinked = !!row.category_id;
+
   return (
     <tr
       className={`hover:bg-tx-primary/[0.04] transition-all group ${auto ? "bg-accent/[0.03]" : ""} h-14`}
@@ -32,22 +35,33 @@ const ExpenseMatrixRow = ({
             <div className="w-3 h-3 rounded-full bg-tx-primary/10 group-hover:bg-accent/40" />
           )}
           <div className="flex flex-col">
-            <span
-              className={`text-base font-black tracking-tight leading-none uppercase group-hover:text-accent transition-colors ${auto ? "italic text-tx-muted mb-1" : "text-tx-primary"}`}
-            >
-              {row.description}
-            </span>
+            {isCategoryLinked ? (
+              <Link 
+                to={`/registry?category_id=${row.category_id}`}
+                className="text-base font-black tracking-tight leading-none uppercase text-accent hover:underline flex items-center gap-2"
+                title="View in Registry"
+              >
+                {row.description}
+                <span className="opacity-40 text-[10px]">🔗</span>
+              </Link>
+            ) : (
+              <span
+                className={`text-base font-black tracking-tight leading-none uppercase group-hover:text-accent transition-colors ${auto ? "italic text-tx-muted mb-1" : "text-tx-primary"}`}
+              >
+                {row.description}
+              </span>
+            )}
             <span className="text-[8px] font-black text-tx-muted uppercase tracking-[0.2em] opacity-30 mt-1.5">
-              {auto ? "SYNC_STREAM_ACTIVE" : "MANUAL_ENTRY_IO"}
+              {isCategoryLinked ? "CATEGORY_SYNC_ACTIVE" : (auto ? "SYSTEM_SYNC_STREAM" : "MANUAL_ENTRY_IO")}
             </span>
           </div>
-          {auto && (
+          {(auto || isCategoryLinked) && (
             <Badge
               variant="accent"
               glow
               className="scale-75 origin-left font-black tracking-widest text-[8px] px-2 py-0.5 shadow-glow-accent/20"
             >
-              AUT
+              {isCategoryLinked ? "SYNCED" : "AUT"}
             </Badge>
           )}
         </div>

@@ -54,50 +54,85 @@ class AnnualExpenseService:
         card_config = self.card_repo.get_config(tenant_id)
         card_channel_id = card_config.channel_id if card_config and (card_config.total_limit or 0) > 0 else None
 
+        # 1. Map categories to sections for section-wide aggregations
         cat_to_sec = {}
+        cat_map = {}
         if self.taxonomy_service:
             cats = self.taxonomy_service.get_categories(tenant_id)
             cat_to_sec = {c.id: c.section_id for c in cats}
+            cat_map = {c.id: c.name for c in cats}
 
-        # per_section_gen tracks generic "📝 Registry: ..." rows
-        # Structure: {section_id: {month_key: {total: 0, card: 0, budget: 0, plan: 0}}}
+        # per_section_gen tracks generic "📝 Registry: ..." rows (for unlinked categories)
         per_section_gen: Dict[int, Dict[str, Dict[str, float]]] = {}
+        # per_category_gen tracks rows explicitly linked via category_id
+        per_category_gen: Dict[int, Dict[str, Dict[str, float]]] = {}
+
+        # 2. Get list of category_ids that are explicitly linked in annual matrix
+        linked_category_ids = {r.category_id for r in existing_rows if r.category_id}
 
         for month_idx, mk in enumerate(MONTHS):
             month_str = f"{year}-{str(month_idx + 1).zfill(2)}"
             
-            # 1. Budget sync for this month (sum of category budgets per section)
+            # 3. Budget sync (sum category budgets)
             sec_budget_map = {}
+            cat_budget_map = {}
             if self.budget_repo:
                 budgets = self.budget_repo.get_by_month(tenant_id, month_str)
                 for b in budgets:
-                    s_id = cat_to_sec.get(b.category_id)
-                    if s_id:
-                        sec_budget_map[s_id] = sec_budget_map.get(s_id, 0.0) + (b.budget or 0.0)
+                    # If this category is explicitly linked, track it separately
+                    if b.category_id in linked_category_ids:
+                        cat_budget_map[b.category_id] = b.budget or 0.0
+                    else:
+                        # Otherwise, add to section-wide total
+                        s_id = cat_to_sec.get(b.category_id)
+                        if s_id:
+                            sec_budget_map[s_id] = sec_budget_map.get(s_id, 0.0) + (b.budget or 0.0)
 
-            # 2. Real spending sync
+            # 4. Real spending sync
             items = self.expense_repo.get_all(tenant_id, month_str)
             for item in items:
-                if not item.section_id: continue
-                sec_id = item.section_id
                 sub = item.subtotal or 0.0
+                is_card = item.payment_method == "credit" or (card_channel_id and item.channel_id == card_channel_id)
                 
-                target = per_section_gen.setdefault(sec_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
-                
-                if item.status == "Bought":
-                    is_card = item.payment_method == "credit" or (card_channel_id and item.channel_id == card_channel_id)
-                    target[mk]['total'] += sub
-                    if is_card:
-                        target[mk]['card'] += sub
-                elif item.status == "Planned":
-                    target[mk]['plan'] += sub
+                # Determine where to aggregate: specific category row or section row
+                if item.category_id and item.category_id in linked_category_ids:
+                    # Aggregate to Category logic
+                    target = per_category_gen.setdefault(item.category_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
+                    if item.status == "Bought":
+                        target[mk]['total'] += sub
+                        if is_card: target[mk]['card'] += sub
+                    elif item.status == "Planned":
+                        target[mk]['plan'] += sub
+                elif item.section_id:
+                    # Aggregate to Section logic (legacy/generic)
+                    sec_id = item.section_id
+                    target = per_section_gen.setdefault(sec_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
+                    if item.status == "Bought":
+                        target[mk]['total'] += sub
+                        if is_card: target[mk]['card'] += sub
+                    elif item.status == "Planned":
+                        target[mk]['plan'] += sub
 
-            # 3. Apply Budget map to target
+            # 5. Apply Budget values to targets
+            for c_id, b_val in cat_budget_map.items():
+                target = per_category_gen.setdefault(c_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
+                target[mk]['budget'] = b_val
             for s_id, b_val in sec_budget_map.items():
                 target = per_section_gen.setdefault(s_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
                 target[mk]['budget'] = b_val
 
-        # Update generic "Registry" rows per section
+        # 6. Update category-linked rows
+        for c_id, month_totals in per_category_gen.items():
+            row = next((r for r in existing_rows if r.category_id == c_id), None)
+            if row:
+                updates = {}
+                for mk, data in month_totals.items():
+                    updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 0)
+                    updates[f"actual_{mk}"] = round(data['total'], 0)
+                    updates[f"actual_card_{mk}"] = round(data['card'], 0)
+                self.annual_repo.set_values(row.id, updates)
+
+        # 7. Update generic "Registry" rows per section
         for sec_id, month_totals in per_section_gen.items():
             sec_name = "Various"
             any_row = next((r for r in existing_rows if r.section_id == sec_id), None)
@@ -120,7 +155,6 @@ class AnnualExpenseService:
             self.annual_repo.set_values(row.id, updates)
 
     def sync_card_to_debts_for_month(self, tenant_id: int, month_str: str) -> None:
-        # DEACTIVATED: User wants manual entry for previous month debt
         pass
 
     def get_summary(self, tenant_id: int, year: int) -> Dict:

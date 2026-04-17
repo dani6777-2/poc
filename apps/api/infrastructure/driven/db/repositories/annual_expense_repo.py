@@ -12,7 +12,8 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         q = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.tenant_id == tenant_id,
             models.ExpenseDetail.year == year
-        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id)
+        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id)\
+         .outerjoin(models.TaxonomyCategory, models.ExpenseDetail.category_id == models.TaxonomyCategory.id)
         
         if section_id:
             q = q.filter(models.ExpenseDetail.section_id == section_id)
@@ -24,7 +25,8 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         row = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.id == expense_id,
             models.ExpenseDetail.tenant_id == tenant_id
-        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id).first()
+        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id)\
+         .outerjoin(models.TaxonomyCategory, models.ExpenseDetail.category_id == models.TaxonomyCategory.id).first()
         return self._to_entity(row) if row else None
 
     def create(self, tenant_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
@@ -90,6 +92,8 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
             section_name=row.section.name if row.section else None,
             description=row.description,
             sort_order=row.sort_order,
+            category_id=row.category_id,
+            category_name=row.category.name if row.category else None,
             jan=row.jan, feb=row.feb, mar=row.mar, apr=row.apr, may=row.may, jun=row.jun,
             jul=row.jul, aug=row.aug, sep=row.sep, oct=row.oct, nov=row.nov, dec=row.dec,
             actual_jan=row.actual_jan, actual_feb=row.actual_feb, actual_mar=row.actual_mar, actual_apr=row.actual_apr, 

@@ -17,6 +17,13 @@
   --color-tx-muted: var(--tx-muted);
 
   --shadow-premium: var(--shadow-base);
+  --shadow-glow-accent: 0 0 20px var(--color-accent-glow);
+  --shadow-glow-success: 0 0 20px var(--color-success-glow);
+  --shadow-glow-danger: 0 0 20px var(--color-danger-glow);
+  --shadow-glow-purple: 0 0 20px var(--color-purple-glow);
+  --shadow-glow-warning: 0 0 20px var(--color-warning-glow);
+  --shadow-glow-muted: 0 0 15px rgba(100, 116, 139, 0.4);
+  --drop-shadow-glow-muted: 0 0 8px rgba(148, 163, 184, 0.4);
   
   /* Base Palette with functional variants */
   --color-accent: #6366f1;
@@ -140,6 +147,14 @@
   @apply hover:bg-tx-primary/5 hover:shadow-premium hover:-translate-y-1 transition-all duration-300;
 }
 
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility custom-scrollbar {
   &::-webkit-scrollbar {
     width: 6px;
@@ -175,8 +190,22 @@ input[type=number] {
   100% { transform: translateY(0px); }
 }
 
-@utility glow-accent {
-  box-shadow: 0 0 20px var(--color-accent-glow);
+
+@utility shimmer {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 2.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 @utility card-premium {

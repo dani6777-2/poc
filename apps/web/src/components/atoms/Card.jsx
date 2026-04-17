@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function Card({ children, className = '', interactive = false, ...props }) {
+export default function Card({ children, className = '', interactive = false, border = true, glow = false, ...props }) {
   return (
     <div {...props} className={`
       w-full min-w-0 max-w-full

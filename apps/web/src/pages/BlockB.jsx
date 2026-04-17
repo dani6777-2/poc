@@ -105,6 +105,20 @@ export default function BlockB() {
     }
   };
 
+  const handleToggleStatus = useCallback(async (item) => {
+    const newStatus = item.status === 'Bought' ? 'Planned' : 'Bought'
+    try {
+      await expenseService.updateInventoryItem('block-b', item.id, {
+        ...item,
+        status: newStatus
+      })
+      addToast(`Item marked as ${newStatus}`, 'success')
+      fetchData()
+    } catch (e) {
+      addToast('Failed to update status', 'error')
+    }
+  }, [fetchData, addToast])
+
   const totalSubtotal = useMemo(
     () => items.reduce((s, i) => s + (i.subtotal || 0), 0),
     [items],
@@ -184,10 +198,12 @@ export default function BlockB() {
       <InventorySummaryCard
         totalValue={totalSubtotal}
         itemCount={items.length}
+        items={items}
         fmt={fmt}
         variant="success"
         label="Fresh Produce Expense"
         diversityLabel="Perishable Diversity"
+        performanceLabel="Shopping Progress"
         unitLabel="REG. UNITS"
       />
 
@@ -204,20 +220,40 @@ export default function BlockB() {
             secItems={sectionsWithItems[secName]}
             onEdit={openEdit}
             onDelete={handleDelete}
+            onToggleStatus={handleToggleStatus}
             fmt={fmt}
             type="block-b"
           />
         ))}
 
         {items.length === 0 && (
-          <Card
-            border={false}
-            className="py-40 flex flex-col items-center justify-center text-center opacity-20 bg-tx-primary/[0.01]"
-          >
-            <span className="text-6xl mb-6">🥗</span>
-            <p className="text-xs font-black uppercase tracking-[0.5em]">
-              Block B matrix is empty
-            </p>
+          <Card border={false} className="py-32 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-tx-primary/[0.02] backdrop-blur-[2px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-success/5 rounded-full blur-[80px] pointer-events-none" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-24 h-24 glass rounded-3xl flex items-center justify-center text-5xl mb-8 shadow-2xl animate-float group-hover:scale-110 transition-transform duration-700">
+                🥗
+              </div>
+              <h4 className="text-sm font-black text-tx-primary uppercase tracking-[0.4em] mb-3 opacity-80">
+                Block B Matrix <span className="text-success">Standby</span>
+              </h4>
+              <p className="max-w-xs text-[10px] font-bold text-tx-muted uppercase tracking-widest leading-relaxed opacity-40 mb-10">
+                The perishable vector matrix currently holds no active price deltas for this index. 
+                Synchronize the market data to reveal insights.
+              </p>
+              <Button 
+                onClick={() => openNew()} 
+                variant="success" 
+                className="px-10 py-4 h-auto text-[10px] font-black uppercase tracking-[0.3em] shadow-glow-success group-hover:scale-105 transition-all text-primary"
+              >
+                + Register First Item
+              </Button>
+            </div>
+
+            {/* Decorative nodes */}
+            <div className="absolute top-20 right-20 w-1.5 h-1.5 rounded-full bg-success/30 animate-pulse" />
+            <div className="absolute bottom-20 left-20 w-1.5 h-1.5 rounded-full bg-success/30 animate-pulse delay-500" />
           </Card>
         )}
       </div>

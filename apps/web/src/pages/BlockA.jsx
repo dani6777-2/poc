@@ -96,6 +96,20 @@ export default function BlockA() {
     }
   }
 
+  const handleToggleStatus = useCallback(async (item) => {
+    const newStatus = item.status === 'Bought' ? 'Planned' : 'Bought'
+    try {
+      await expenseService.updateInventoryItem('block-a', item.id, {
+        ...item,
+        status: newStatus
+      })
+      addToast(`Item marked as ${newStatus}`, 'success')
+      fetchData()
+    } catch (e) {
+      addToast('Failed to update status', 'error')
+    }
+  }, [fetchData, addToast])
+
   const subtotalValue = useMemo(() =>
     (parseFloat(form.quantity) || 0) * (parseFloat(form.unit_price) || 0),
     [form.quantity, form.unit_price]
@@ -158,7 +172,9 @@ export default function BlockA() {
       <InventorySummaryCard
         totalValue={totalGeneral}
         itemCount={items.length}
+        items={items}
         fmt={fmt}
+        performanceLabel="Shopping Progress"
       />
 
         <div className="space-y-16">
@@ -170,15 +186,40 @@ export default function BlockA() {
               secItems={sectionsWithItems[secName]}
               onEdit={openEdit}
               onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus}
               fmt={fmt}
               type="block-a"
             />
           ))}
 
           {items.length === 0 && (
-            <Card border={false} className="py-40 flex flex-col items-center justify-center text-center opacity-20 bg-tx-primary/[0.01]">
-              <span className="text-6xl mb-6">📦</span>
-              <p className="text-xs font-black uppercase tracking-[0.5em]">Block A vault is empty</p>
+            <Card border={false} className="py-32 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-tx-primary/[0.02] backdrop-blur-[2px]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-24 h-24 glass rounded-3xl flex items-center justify-center text-5xl mb-8 shadow-2xl animate-float group-hover:scale-110 transition-transform duration-700">
+                  📦
+                </div>
+                <h4 className="text-sm font-black text-tx-primary uppercase tracking-[0.4em] mb-3 opacity-80">
+                  Block A Vault <span className="text-accent">Offline</span>
+                </h4>
+                <p className="max-w-xs text-[10px] font-bold text-tx-muted uppercase tracking-widest leading-relaxed opacity-40 mb-10">
+                  The inventory matrix currently contains no active data vectors for this period. 
+                  Initialize the vault to start tracking assets.
+                </p>
+                <Button 
+                  onClick={() => openNew()} 
+                  variant="accent" 
+                  className="px-10 py-4 h-auto text-[10px] font-black uppercase tracking-[0.3em] shadow-glow-accent group-hover:scale-105 transition-all"
+                >
+                  + Initialize Matrix
+                </Button>
+              </div>
+
+              {/* Decorative nodes */}
+              <div className="absolute top-10 left-10 w-2 h-2 rounded-full bg-accent/20 animate-pulse" />
+              <div className="absolute bottom-10 right-10 w-2 h-2 rounded-full bg-accent/20 animate-pulse delay-700" />
             </Card>
           )}
         </div>

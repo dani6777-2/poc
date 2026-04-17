@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from core.entities.auth import TenantEntity, TenantAccessEntity
+from core.entities.auth import TenantEntity, TenantAccessEntity, TenantMemberEntity
 from infrastructure.config.dependencies import get_db
 from infrastructure.driving.api.auth import get_current_user
 from infrastructure.driven.db.repositories.user_repo import SQLTenantRepository
@@ -49,3 +49,40 @@ def join_tenant(
     # Add as guest
     repo.add_user_access(user_context.user_id, tenant.id, "guest")
     return TenantAccessEntity(id=tenant.id, name=tenant.name, role="guest")
+
+@router.get("/members", response_model=List[TenantMemberEntity])
+def get_tenant_members(
+    user_context = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Only owners can see members
+    if user_context.role != "owner":
+        raise HTTPException(status_code=403, detail="Only owners can view member lists.")
+    
+    repo = SQLTenantRepository(db)
+    return repo.get_tenant_members(user_context.tenant_id)
+
+@router.delete("/members/{user_id}")
+def revoke_member_access(
+    user_id: int,
+    user_context = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if user_context.role != "owner":
+        raise HTTPException(status_code=403, detail="Only owners can revoke access.")
+    
+    repo = SQLTenantRepository(db)
+    repo.remove_user_access(user_id, user_context.tenant_id)
+    return {"status": "success"}
+
+@router.delete("/leave")
+def leave_tenant(
+    user_context = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if user_context.role == "owner":
+        raise HTTPException(status_code=400, detail="Owners cannot leave their own home. Hand over ownership or delete tenant instead.")
+    
+    repo = SQLTenantRepository(db)
+    repo.remove_user_access(user_context.user_id, user_context.tenant_id)
+    return {"status": "success"}

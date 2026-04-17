@@ -26,8 +26,8 @@ const RuleBar = ({ label, icon, pct, meta, level, total }) => {
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-4">
             <span
-              className="text-2xl font-black tabular-nums tracking-tighter"
-              style={{ color: cfg.color }}
+              className="text-2xl font-black tabular-nums tracking-tighter text-[var(--cfg-col)]"
+              style={{ "--cfg-col": cfg.color }}
             >
               {pct !== undefined && pct !== null ? `${pct}%` : "—"}
             </span>
@@ -52,17 +52,16 @@ const RuleBar = ({ label, icon, pct, meta, level, total }) => {
       </div>
       <div className="h-2.5 bg-tx-primary/5 rounded-full overflow-hidden relative p-[1px]">
         <div
-          className="h-full rounded-full transition-all duration-1000 ease-out shadow-premium"
+          className="h-full rounded-full transition-all duration-1000 ease-out shadow-[var(--cfg-sh)] bg-[var(--cfg-col)] w-[var(--cfg-w)]"
           style={{
-            width: `${fill}%`,
-            background: cfg.color,
-            boxShadow: `0 0 20px ${cfg.color}44`,
+            "--cfg-w": `${fill}%`,
+            "--cfg-col": cfg.color,
+            "--cfg-sh": `0 0 20px ${cfg.color}44`,
           }}
         />
         {/* Meta marker */}
-        <div
-          className="absolute top-0 w-1 h-full bg-tx-primary/10 shadow-glow transition-all duration-700"
-          style={{ left: `${(1 / 1.5) * 100}%` }}
+        <div 
+          className="absolute top-0 w-1 h-full bg-tx-primary/10 shadow-glow transition-all duration-700 left-[calc(100%/1.5)]" 
         />
       </div>
     </div>

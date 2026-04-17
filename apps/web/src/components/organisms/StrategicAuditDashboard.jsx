@@ -14,7 +14,7 @@ const StrategicAuditDashboard = ({
   card,
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:p-10">
+    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
       <Card className="p-6 lg:p-10 flex flex-col items-center justify-center gap-6 md:p-12 relative overflow-hidden group shadow-premium border-none">
         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-accent/30 to-transparent" />
         <ScoreGauge score={score} level={level} />

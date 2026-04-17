@@ -167,10 +167,10 @@ export default function Dashboard() {
       }
     >
       <div className="space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-5 md:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr] gap-5 px-0 md:px-2">
           <Card
             interactive
-            className="p-6 lg:p-8 flex flex-col xl:flex-row items-center justify-center gap-6 border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] overflow-hidden group"
+            className="p-6 lg:p-10 flex flex-col xl:flex-row items-center justify-center gap-8 border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] overflow-hidden group"
           >
             <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-30" />
             <HealthScore score={forecast?.health_score || 0} />
@@ -205,11 +205,11 @@ export default function Dashboard() {
               className="flex-1"
             >
               <div className="absolute top-0 right-0 w-40 h-40 bg-success/5 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none" />
-              <div className="border-t border-border-base/40 pt-4">
-                <label className="text-[10px] uppercase text-tx-muted font-black tracking-[0.3em] mb-2 opacity-30 block">
-                  Operational Expense Rate
+              <div className="border-t border-border-base/40 pt-3 mt-1">
+                <label className="text-[9px] uppercase text-tx-muted font-black tracking-[0.25em] mb-1 opacity-40 block">
+                  Operational Balance
                 </label>
-                <div className="text-3xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-sm">
+                <div className="text-xl font-black text-tx-primary tabular-nums tracking-tighter drop-shadow-sm">
                   {fmt(kpis.actual_expense)}
                 </div>
               </div>
@@ -220,14 +220,16 @@ export default function Dashboard() {
               variant={kpis.cash_balance < 0 ? "danger" : "accent"}
               glow={kpis.cash_balance < 0}
               value={fmt(kpis.cash_balance)}
-              className="flex-1"
+              className="flex-1 relative overflow-hidden"
             >
-              <Badge
-                variant={kpis.cash_balance < 0 ? "danger" : "success"}
-                className="absolute bottom-10 right-10 font-black uppercase tracking-widest text-[8px]"
-              >
-                {kpis.cash_balance < 0 ? "Deficit" : "Surplus"}
-              </Badge>
+              <div className="absolute top-2 right-4">
+                <Badge
+                  variant={kpis.cash_balance < 0 ? "danger" : "success"}
+                  className="font-black uppercase tracking-widest text-[8px] px-3 shadow-sm border-white/10"
+                >
+                  {kpis.cash_balance < 0 ? "Deficit" : "Surplus"}
+                </Badge>
+              </div>
             </KpiCard>
           </div>
 
@@ -250,10 +252,8 @@ export default function Dashboard() {
                 </div>
                 <div className="h-2 bg-tx-primary/5 rounded-full overflow-hidden p-[1px]">
                   <div
-                    className="h-full bg-accent rounded-full shadow-glow-accent transition-all duration-1000"
-                    style={{
-                      width: `${forecast?.kpis_detail?.essential_ratio || 0}%`,
-                    }}
+                    className="h-full bg-accent rounded-full shadow-glow-accent transition-all duration-1000 w-[var(--ratio)]"
+                    style={{ '--ratio': `${forecast?.kpis_detail?.essential_ratio || 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -268,10 +268,8 @@ export default function Dashboard() {
                 </div>
                 <div className="h-2 bg-tx-primary/5 rounded-full overflow-hidden p-[1px]">
                   <div
-                    className="h-full bg-purple rounded-full shadow-glow-purple transition-all duration-1000"
-                    style={{
-                      width: `${forecast?.kpis_detail?.vulnerability || 0}%`,
-                    }}
+                    className="h-full bg-purple rounded-full shadow-glow-purple transition-all duration-1000 w-[var(--ratio)]"
+                    style={{ '--ratio': `${forecast?.kpis_detail?.vulnerability || 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -282,7 +280,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:p-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 px-0 md:px-2">
           <Card className="p-6 lg:p-8 flex flex-col justify-between border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 rounded-[2rem] h-full overflow-hidden">
             <div className="flex items-center justify-between mb-12 px-2">
               <div>
@@ -293,13 +291,13 @@ export default function Dashboard() {
                   Historical trend of 12 cyclic periods
                 </p>
               </div>
-              <div className="flex gap-5 md:p-8 text-[11px] font-black text-tx-muted uppercase tracking-[0.3em] opacity-50">
-                <span className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-success shadow-glow-success"></span>{" "}
+              <div className="flex gap-6 items-center text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] opacity-60">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-success shadow-glow-success border border-white/20"></span>
                   Inflow
                 </span>
-                <span className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-danger shadow-glow-danger"></span>{" "}
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-danger shadow-glow-danger border border-white/20"></span>
                   Outflow
                 </span>
               </div>
@@ -343,7 +341,7 @@ export default function Dashboard() {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:p-8 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative z-10 px-0 md:px-2">
             {analysis?.category_chart?.slice(0, 8).map((c) => {
               const ratio = c.budget > 0 ? (c.actual / c.budget) * 100 : 0;
               return (
@@ -368,11 +366,11 @@ export default function Dashboard() {
                   </div>
                   <div className="h-2 bg-tx-primary/5 rounded-full overflow-hidden p-[1px]">
                     <div
-                      className="h-full transition-all duration-1000 rounded-full"
+                      className="h-full transition-all duration-1000 rounded-full w-[var(--ratio)] bg-[var(--bg)] shadow-[var(--sh)]"
                       style={{
-                        width: `${Math.min(ratio, 100)}%`,
-                        background: ratio > 100 ? "#ef4444" : "#6366f1",
-                        boxShadow: `0 0 10px ${ratio > 100 ? "rgba(239,68,68,0.3)" : "rgba(99,102,241,0.3)"}`,
+                        '--ratio': `${Math.min(ratio, 100)}%`,
+                        '--bg': ratio > 100 ? "#ef4444" : "#6366f1",
+                        '--sh': `0 0 10px ${ratio > 100 ? "rgba(239,68,68,0.3)" : "rgba(99,102,241,0.3)"}`,
                       }}
                     ></div>
                   </div>
@@ -381,10 +379,10 @@ export default function Dashboard() {
             })}
             {(!analysis?.category_chart ||
               analysis.category_chart.length === 0) && (
-              <div className="col-span-full py-20 text-center opacity-20 grayscale uppercase font-black tracking-[0.4em] text-xs">
-                No data segmentation available
-              </div>
-            )}
+                <div className="col-span-full py-20 text-center opacity-20 grayscale uppercase font-black tracking-[0.4em] text-xs">
+                  No data segmentation available
+                </div>
+              )}
           </div>
         </Card>
       </div>

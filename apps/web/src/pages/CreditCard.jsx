@@ -169,8 +169,11 @@ export default function CreditCard() {
               </div>
               <div className="h-3 bg-tx-primary/5 rounded-full overflow-hidden p-[2px]">
                 <div 
-                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-glow-${colorVariant}`}
-                  style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: barColor }} 
+                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-glow-${colorVariant} w-[var(--pct)] bg-[var(--bg)]`}
+                  style={{ 
+                    '--pct': `${Math.min(pct, 100)}%`,
+                    '--bg': barColor 
+                  }} 
                 />
               </div>
             </div>
@@ -291,8 +294,8 @@ export default function CreditCard() {
                     <div className="flex items-center gap-6">
                       <div className="flex-1 h-3 bg-tx-primary/5 rounded-full overflow-hidden p-[2px]">
                         <div 
-                          className={`h-full transition-all duration-1000 rounded-full ${h.used_pct > 80 ? 'bg-danger shadow-glow-danger' : 'bg-accent shadow-glow-accent'}`}
-                          style={{ width: `${Math.min(h.used_pct, 100)}%` }} 
+                          className={`h-full transition-all duration-1000 rounded-full w-[var(--pct)] ${h.used_pct > 80 ? 'bg-danger shadow-glow-danger' : 'bg-accent shadow-glow-accent'}`}
+                          style={{ '--pct': `${Math.min(h.used_pct, 100)}%` }} 
                         />
                       </div>
                       <span className={`text-sm font-black tabular-nums w-14 text-right ${h.used_pct > 80 ? 'text-danger' : 'text-tx-secondary'}`}>{h.used_pct}%</span>

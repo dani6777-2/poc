@@ -43,7 +43,8 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             channel_id=item_dto.channel_id,
             unit_price=item_dto.unit_price,
             subtotal=subtotal,
-            prev_month_price=item_dto.prev_month_price
+            prev_month_price=item_dto.prev_month_price,
+            status=item_dto.status
         )
         self.db.add(row)
         self.db.commit()
@@ -60,6 +61,7 @@ class SQLInventoryRepository(InventoryRepositoryPort):
         row.unit_price = item_dto.unit_price
         row.subtotal = subtotal
         row.prev_month_price = item_dto.prev_month_price
+        row.status = item_dto.status
         self.db.commit()
         return self.get_by_id_a(tenant_id, item_id)
 
@@ -104,7 +106,8 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             price_per_kg=item_dto.price_per_kg,
             subtotal=subtotal,
             prev_month_price=item_dto.prev_month_price,
-            price_delta=0.0
+            price_delta=0.0,
+            status=item_dto.status
         )
         self.db.add(row)
         self.db.commit()
@@ -120,6 +123,7 @@ class SQLInventoryRepository(InventoryRepositoryPort):
         row.price_per_kg = item_dto.price_per_kg
         row.subtotal = subtotal
         row.prev_month_price = item_dto.prev_month_price
+        row.status = item_dto.status
         if row.prev_month_price and row.price_per_kg:
             row.price_delta = row.price_per_kg - row.prev_month_price
         self.db.commit()
@@ -148,7 +152,8 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             channel_name=row.channel.name if row.channel else None,
             unit_price=row.unit_price,
             subtotal=row.subtotal,
-            prev_month_price=row.prev_month_price
+            prev_month_price=row.prev_month_price,
+            status=row.status or "Planned"
         )
 
     def _to_entity_b(self, row: models.InventoryBlockB) -> InventoryItemB:
@@ -168,5 +173,6 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             price_per_kg=row.price_per_kg,
             subtotal=row.subtotal,
             prev_month_price=row.prev_month_price,
-            price_delta=row.price_delta
+            price_delta=row.price_delta,
+            status=row.status or "Planned"
         )

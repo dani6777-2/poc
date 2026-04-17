@@ -14,14 +14,14 @@ const HealthBanner = ({ health }) => {
       glow={health.global_level !== "ok"}
     >
       <div
-        className="absolute top-0 right-0 w-96 h-96 opacity-[0.05] -translate-y-1/2 translate-x-1/2 rounded-full blur-[100px] pointer-events-none"
-        style={{ backgroundColor: NIVEL_COLOR[health.global_level] }}
+        className="absolute top-0 right-0 w-96 h-96 opacity-[0.05] -translate-y-1/2 translate-x-1/2 rounded-full blur-[100px] pointer-events-none bg-[var(--health-color)]"
+        style={{ '--health-color': NIVEL_COLOR[health.global_level] }}
       />
 
       <div className="relative flex flex-col md:flex-row items-center gap-6 lg:p-10">
         <div
-          className="text-6xl font-black tabular-nums tracking-tighter"
-          style={{ color: NIVEL_COLOR[health.global_level] }}
+          className="text-6xl font-black tabular-nums tracking-tighter text-[var(--h-col)]"
+          style={{ '--h-col': NIVEL_COLOR[health.global_level] }}
         >
           {health.global_score}
           <span className="text-2xl opacity-40">%</span>
@@ -59,11 +59,11 @@ const HealthBanner = ({ health }) => {
           </div>
           <div className="h-2.5 bg-tx-primary/5 rounded-full overflow-hidden p-[1px]">
             <div
-              className="h-full rounded-full transition-all duration-1000 ease-out shadow-glow"
+              className="h-full rounded-full transition-all duration-1000 ease-out shadow-[var(--h-sh)] bg-[var(--h-col)] w-[var(--h-pct)]"
               style={{
-                width: `${health.global_score}%`,
-                backgroundColor: NIVEL_COLOR[health.global_level],
-                boxShadow: `0 0 15px ${NIVEL_COLOR[health.global_level]}44`,
+                '--h-pct': `${health.global_score}%`,
+                '--h-col': NIVEL_COLOR[health.global_level],
+                '--h-sh': `0 0 15px ${NIVEL_COLOR[health.global_level]}44`,
               }}
             />
           </div>

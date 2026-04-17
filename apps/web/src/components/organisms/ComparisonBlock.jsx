@@ -29,8 +29,8 @@ const ComparisonBlock = ({
     return (
       <Card
         key={sec.id}
-        className="overflow-hidden border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500"
-        style={{ borderLeft: `6px solid ${color}` }}
+        className="overflow-hidden border border-border-base shadow-md relative bg-secondary hover:shadow-lg transition-all duration-500 border-l-[6px] border-l-[var(--sec-col)]"
+        style={{ "--sec-col": color }}
       >
         <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
@@ -63,10 +63,7 @@ const ComparisonBlock = ({
             </div>
             <VarBadge plan={plannedTotal} actual={actualTotal} />
             <span
-              className="text-tx-muted opacity-20 px-4 transition-transform duration-500"
-              style={{
-                transform: collapsed[sec.id] ? "rotate(0deg)" : "rotate(90deg)",
-              }}
+              className={`text-tx-muted opacity-20 px-4 transition-transform duration-500 ${collapsed[sec.id] ? "rotate-0" : "rotate-90"}`}
             >
               <svg
                 width="16"

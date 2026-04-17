@@ -16,19 +16,20 @@ const HealthScore = ({ score }) => {
           fill="transparent" 
         />
         <circle
-          className="transition-all duration-1000 ease-out"
+          className="transition-all duration-1000 ease-out stroke-[var(--score-col)] drop-shadow-[var(--score-sh)]"
           cx="50" 
           cy="50" 
           r="42"
-          stroke={color}
           strokeWidth="10"
           strokeLinecap="round"
           fill="transparent"
           style={{
             strokeDasharray: '263.9',
-            strokeDashoffset: 263.9 - (263.9 * score) / 100,
-            filter: `drop-shadow(0 0 12px ${color}66)`
+            '--score-off': 263.9 - (263.9 * score) / 100,
+            '--score-col': color,
+            '--score-sh': `0 0 12px ${color}66`
           }}
+          strokeDashoffset="var(--score-off)"
         />
       </svg>
       <div className="absolute flex flex-col items-center">

@@ -7,6 +7,8 @@ class AnnualExpenseEntity(BaseModel):
     year: int
     section_id: int
     section_name: Optional[str] = None
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
     description: str
     sort_order: Optional[int] = 0
     is_automatic: bool = False
@@ -63,6 +65,7 @@ class AnnualExpenseEntity(BaseModel):
 class AnnualExpenseCreateDto(BaseModel):
     year: int
     section_id: int
+    category_id: Optional[int] = None
     description: str
     sort_order: Optional[int] = 0
     jan: float = 0.0

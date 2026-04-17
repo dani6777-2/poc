@@ -115,6 +115,18 @@ const InventoryEditorModal = ({
               />
             </InventoryField>
 
+            <InventoryField label="Shopping Status">
+              <Select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                options={[
+                  { id: "Planned", name: "📋 Planned" },
+                  { id: "Bought", name: "✅ Bought" },
+                ]}
+              />
+            </InventoryField>
+
             {type === "block-a" ? (
               <>
                 <InventoryField label="Load Quota (Quantity)">

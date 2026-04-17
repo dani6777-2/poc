@@ -60,8 +60,8 @@ const BudgetKpiCard = ({
       {progress !== null && (
         <div className="h-2 bg-tx-primary/5 rounded-full overflow-hidden mt-3">
           <div
-            className={`h-full transition-all duration-1000 ${progress >= 100 ? "bg-danger" : `bg-${progressVariant}`}`}
-            style={{ width: `${Math.min(progress, 100)}%` }}
+            className={`h-full transition-all duration-1000 w-[var(--pct)] ${progress >= 100 ? "bg-danger" : `bg-${progressVariant}`}`}
+            style={{ '--pct': `${Math.min(progress, 100)}%` }}
           />
         </div>
       )}

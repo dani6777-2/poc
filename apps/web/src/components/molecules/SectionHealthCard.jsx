@@ -14,12 +14,12 @@ const SectionHealthCard = ({ sec }) => {
     <Card
       interactive
       border={false}
-      className="p-5 md:p-8 group shadow-premium relative overflow-hidden transition-all hover:-translate-y-1"
-      style={{ borderTop: `4px solid ${cfg.color}` }}
+      className="p-5 md:p-8 group shadow-premium relative overflow-hidden transition-all hover:-translate-y-1 border-t-[4px] border-[var(--cfg-col)]"
+      style={{ "--cfg-col": cfg.color }}
     >
       <div
-        className="absolute top-0 right-0 w-32 h-32 opacity-[0.03] group-hover:opacity-10 transition-all blur-3xl pointer-events-none"
-        style={{ backgroundColor: cfg.color }}
+        className="absolute top-0 right-0 w-32 h-32 opacity-[0.03] group-hover:opacity-10 transition-all blur-3xl pointer-events-none bg-[var(--cfg-col)]"
+        style={{ "--cfg-col": cfg.color }}
       />
 
       <div className="flex justify-between items-start mb-8">
@@ -46,8 +46,8 @@ const SectionHealthCard = ({ sec }) => {
       <div className="space-y-6">
         <div className="flex justify-between items-end">
           <div
-            className="text-5xl font-black tabular-nums tracking-tighter transition-transform group-hover:scale-110 origin-left"
-            style={{ color: cfg.color }}
+            className="text-5xl font-black tabular-nums tracking-tighter transition-transform group-hover:scale-110 origin-left text-[var(--cfg-col)]"
+            style={{ "--cfg-col": cfg.color }}
           >
             {pct !== undefined && pct !== null ? `${pct}%` : "—"}
           </div>
@@ -64,11 +64,11 @@ const SectionHealthCard = ({ sec }) => {
         <div className="h-2 bg-tx-primary/5 rounded-full overflow-hidden p-[1px]">
           {pct !== null && (
             <div
-              className="h-full rounded-full transition-all duration-1000 ease-out"
+              className="h-full rounded-full transition-all duration-1000 ease-out w-[var(--cfg-w)] bg-[var(--cfg-col)] shadow-[var(--cfg-sh)]"
               style={{
-                width: `${Math.min((pct / (maxRef * 1.5)) * 100, 100)}%`,
-                backgroundColor: cfg.color,
-                boxShadow: `0 0 15px ${cfg.color}33`,
+                "--cfg-w": `${Math.min((pct / (maxRef * 1.5)) * 100, 100)}%`,
+                "--cfg-col": cfg.color,
+                "--cfg-sh": `0 0 15px ${cfg.color}33`,
               }}
             />
           )}
@@ -89,8 +89,8 @@ const SectionHealthCard = ({ sec }) => {
 
       <div className="mt-8 pt-6 border-t border-border-base relative">
         <div
-          className={`text-[12px] font-medium leading-relaxed ${sec.level === "no_data" ? "text-tx-muted italic opacity-30 text-[11px]" : ""}`}
-          style={{ color: sec.level === "no_data" ? undefined : cfg.color }}
+          className={`text-[12px] font-medium leading-relaxed ${sec.level === "no_data" ? "text-tx-muted italic opacity-30 text-[11px]" : "text-[var(--cfg-col)]"}`}
+          style={{ "--cfg-col": sec.level === "no_data" ? undefined : cfg.color }}
         >
           {sec.level === "no_data"
             ? "Database without active records for this period"

@@ -81,8 +81,8 @@ const BudgetTableRow = ({
         <div className="flex items-center gap-3 min-w-[140px]">
           <div className="flex-1 h-1.5 bg-tx-primary/5 rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all duration-1000 ${rowPct >= 100 ? "bg-danger" : "bg-accent"}`}
-              style={{ width: `${Math.min(rowPct, 100)}%` }}
+              className={`h-full transition-all duration-1000 w-[var(--pct)] ${rowPct >= 100 ? "bg-danger" : "bg-accent"}`}
+              style={{ '--pct': `${Math.min(rowPct, 100)}%` }}
             ></div>
           </div>
           <span

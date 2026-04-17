@@ -44,7 +44,7 @@ class InventoryService:
 
     def _sync_a_to_expenses(self, tenant_id: int, item: InventoryItemA) -> None:
         source = f"BA:{item.id}"
-        status = "Bought" if (item.subtotal or 0) > 0 else "Planned"
+        status = item.status
         existing_expense = self.expense_repo.get_by_source(tenant_id, source)
         
         if not existing_expense:
@@ -101,7 +101,7 @@ class InventoryService:
 
     def _sync_b_to_expenses(self, tenant_id: int, item: InventoryItemB) -> None:
         source = f"BB:{item.id}"
-        status = "Bought" if (item.subtotal or 0) > 0 else "Planned"
+        status = item.status
         existing_expense = self.expense_repo.get_by_source(tenant_id, source)
         
         if not existing_expense:

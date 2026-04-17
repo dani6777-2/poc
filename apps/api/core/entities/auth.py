@@ -34,3 +34,8 @@ class TenantAccessEntity(BaseModel):
     id: int
     name: str
     role: str
+
+class TenantMemberEntity(BaseModel):
+    user_id: int
+    email: str
+    role: str

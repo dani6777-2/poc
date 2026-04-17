@@ -2,12 +2,13 @@
  * Default states and static options for application forms.
  */
 
+// --- Legacy (generic) blank state ---
 export const REGISTRY_BLANK_STATE = { 
   name: '', 
   date: '',
   category_id: '', 
   channel_id: '', 
-  payment_method: 'debit',
+  payment_method: 'cash',
   unit_id: '', 
   quantity: 1, 
   unit_price: 0, 
@@ -15,11 +16,40 @@ export const REGISTRY_BLANK_STATE = {
   status: 'Planned' 
 };
 
+// --- Despensa: consumo doméstico recurrente ---
+// Supermercado, Frutas y verduras, Abarrotes, Artículos de aseo
+export const DESPENSA_BLANK_STATE = {
+  name: '',
+  date: '',
+  category_id: '',
+  channel_id: '',
+  payment_method: 'cash',
+  unit_id: '',
+  quantity: 1,
+  unit_price: 0,
+  prev_month_price: '',
+  status: 'Bought', // Despensa usually bought immediately
+};
+
+// --- Servicios: gastos fijos/cuentas del hogar ---
+// Luz, Agua, Internet, Gas, Otros
+export const SERVICIOS_BLANK_STATE = {
+  name: '',
+  date: '',
+  category_id: '',
+  channel_id: '',
+  payment_method: 'cash',
+  unit_id: '',
+  quantity: 1,     // always 1 for services
+  unit_price: 0,   // total amount
+  prev_month_price: '',
+  status: 'Bought',
+};
+
+// Payment methods per spec: cash (descuenta saldo) / credit (acumula deuda)
 export const PAYMENT_METHOD_OPTIONS = [
-  { value: 'debit', label: 'Debit' },
-  { value: 'credit', label: 'Credit Card' },
-  { value: 'cash', label: 'Cash' },
-  { value: 'transfer', label: 'Transfer' }
+  { value: 'cash', label: '💵 Efectivo' },
+  { value: 'credit', label: '💳 Tarjeta de Crédito' },
 ];
 
 export const INVENTORY_BLOCK_A_DEFAULT = (month, category_id = '') => ({
