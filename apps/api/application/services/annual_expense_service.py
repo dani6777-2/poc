@@ -62,7 +62,7 @@ class AnnualExpenseService:
             return 
         self.annual_repo.delete(tenant_id, expense_id)
 
-    def sync_registry_to_expenses(self, tenant_id: int, year: int) -> Dict[str, any]:
+    def sync_registry_to_expenses(self, tenant_id: int, year: int, dry_run: bool = False) -> Dict[str, any]:
         existing_rows = self.annual_repo.get_all_by_year(tenant_id, year)
         
         # Build "before" snapshot for auditing trace
@@ -164,7 +164,8 @@ class AnnualExpenseService:
                 
                 if has_diff:
                     affected_count += 1
-                self.annual_repo.set_values(row.id, updates)
+                if not dry_run:
+                    self.annual_repo.set_values(row.id, updates)
 
         # 7. Update generic "Registry" rows per section
         for sec_id, month_totals in per_section_gen.items():
@@ -178,7 +179,10 @@ class AnnualExpenseService:
 
             if not row:
                 dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, description=description, sort_order=999, is_automatic=True)
-                row = self.annual_repo.create(tenant_id, dto)
+                if not dry_run:
+                    row = self.annual_repo.create(tenant_id, dto)
+                else:
+                    row = AnnualExpenseEntity(id=999999 + sec_id, description=description, section_id=sec_id)
             
             updates = {}
             for mk, data in month_totals.items():
@@ -198,9 +202,26 @@ class AnnualExpenseService:
             if has_diff:
                 affected_count += 1
             
-            self.annual_repo.set_values(row.id, updates)
+            if not dry_run and row.id < 999999:
+                self.annual_repo.set_values(row.id, updates)
             
-        logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}.")
+        logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}. Dry run: {dry_run}")
+        
+        if not dry_run and affected_count > 0:
+            if hasattr(self.annual_repo, 'create_snapshot'):
+                import json
+                after_rows = self.annual_repo.get_all_by_year(tenant_id, year)
+                snapshot_after = {}
+                for r in after_rows:
+                    snapshot_after[r.id] = {m: getattr(r, m) for m in MONTHS}
+                    snapshot_after[r.id].update({f"actual_{m}": getattr(r, f"actual_{m}") for m in MONTHS})
+                self.annual_repo.create_snapshot(
+                    tenant_id, year, affected_count,
+                    json.dumps(snapshot_before),
+                    json.dumps(snapshot_after)
+                )
+                logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Snapshot recorded.")
+
         return {
             "affected_records": affected_count,
             "differences": trace_differences

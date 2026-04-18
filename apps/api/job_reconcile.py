@@ -13,7 +13,7 @@ from application.services.taxonomy_service import TaxonomyService
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("reconcile_job")
 
-def run_job(tenant_id: int, year: int):
+def run_job(tenant_id: int, year: int, dry_run: bool = False):
     # Setup dependencies
     db = SessionLocal()
     try:
@@ -31,8 +31,9 @@ def run_job(tenant_id: int, year: int):
             taxonomy_service=tax_service
         )
         
-        logger.info(f"Starting background reconciliation job for Tenant {tenant_id}, Year {year}")
-        trace = service.sync_registry_to_expenses(tenant_id, year)
+        mode_str = "[DRY-RUN ANALYSIS]" if dry_run else "[EXECUTION]"
+        logger.info(f"Starting {mode_str} background reconciliation job for Tenant {tenant_id}, Year {year}")
+        trace = service.sync_registry_to_expenses(tenant_id, year, dry_run=dry_run)
         
         logger.info(f"Reconciliation completed. Affected matrix clusters: {trace.get('affected_records')}")
         if trace.get('differences'):
@@ -48,10 +49,11 @@ def run_job(tenant_id: int, year: int):
         db.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python job_reconcile.py <tenant_id> <year>")
-        sys.exit(1)
-        
-    tid = int(sys.argv[1])
-    yr = int(sys.argv[2])
-    run_job(tid, yr)
+    import argparse
+    parser = argparse.ArgumentParser(description="FinOps Reconciliation Job")
+    parser.add_argument("tenant_id", type=int, help="Tenant ID")
+    parser.add_argument("year", type=int, help="Fiscal Year")
+    parser.add_argument("--dry-run", action="store_true", help="Run without persisting changes")
+    
+    args = parser.parse_args()
+    run_job(args.tenant_id, args.year, dry_run=args.dry_run)

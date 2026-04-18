@@ -1,5 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+from decimal import Decimal
 
 class ItemEntity(BaseModel):
     id: int
@@ -44,6 +45,13 @@ class ItemCreateDto(BaseModel):
     payment_method: str = "debit"
     override_duplicate: Optional[bool] = False
 
+    @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
+    @classmethod
+    def _sanitize_float(cls, v):
+        if v is not None:
+            return float(Decimal(str(v)).quantize(Decimal("0.01")))
+        return v
+
 class ItemUpdateDto(BaseModel):
     month: str
     date: Optional[str] = None
@@ -57,3 +65,10 @@ class ItemUpdateDto(BaseModel):
     status: str
     source: Optional[str] = None
     payment_method: str = "debit"
+
+    @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
+    @classmethod
+    def _sanitize_float(cls, v):
+        if v is not None:
+            return float(Decimal(str(v)).quantize(Decimal("0.01")))
+        return v

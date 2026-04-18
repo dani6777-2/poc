@@ -23,6 +23,9 @@ class AnnualExpenseRepositoryPort(ABC):
     def delete(self, tenant_id: int, expense_id: int) -> None:
         pass
 
+    def create_snapshot(self, tenant_id: int, year: int, affected_records: int, before_state_json: str, after_state_json: str) -> None:
+        pass
+
     @abstractmethod
     def get_by_concept(self, tenant_id: int, year: int, section_id: int, description: str) -> Optional[AnnualExpenseEntity]:
         pass

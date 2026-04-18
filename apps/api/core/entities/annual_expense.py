@@ -1,5 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+from decimal import Decimal
 
 class AnnualExpenseEntity(BaseModel):
     id: Optional[int] = None
@@ -105,3 +106,15 @@ class AnnualExpenseCreateDto(BaseModel):
     actual_card_oct: float = 0.0
     actual_card_nov: float = 0.0
     actual_card_dec: float = 0.0
+
+    @field_validator(
+        "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+        "actual_jan", "actual_feb", "actual_mar", "actual_apr", "actual_may", "actual_jun", "actual_jul", "actual_aug", "actual_sep", "actual_oct", "actual_nov", "actual_dec",
+        "actual_card_jan", "actual_card_feb", "actual_card_mar", "actual_card_apr", "actual_card_may", "actual_card_jun", "actual_card_jul", "actual_card_aug", "actual_card_sep", "actual_card_oct", "actual_card_nov", "actual_card_dec",
+        mode="before", check_fields=False
+    )
+    @classmethod
+    def _sanitize_finance(cls, v):
+        if v is not None:
+            return float(Decimal(str(v)).quantize(Decimal("0.01")))
+        return v

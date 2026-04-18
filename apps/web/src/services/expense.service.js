@@ -27,8 +27,8 @@ export const expenseService = {
     return data
   },
 
-  reconcileSystem: async (year) => {
-    const { data } = await api.post('expense-details/system/reconcile', { year })
+  reconcileSystem: async (year, dry_run = false) => {
+    const { data } = await api.post('expense-details/system/reconcile', { year, dry_run })
     return data
   },
 

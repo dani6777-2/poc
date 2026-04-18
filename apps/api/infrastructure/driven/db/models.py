@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Boolean, UniqueConstraint, event
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Boolean, UniqueConstraint, event, DateTime
 from sqlalchemy.orm import relationship
+import datetime
 from .config import Base
 
 class Tenant(Base):
@@ -268,3 +269,23 @@ class CardMonthlyState(Base):
     __table_args__ = (
         UniqueConstraint('tenant_id', 'month', name='uix_card_monthly_state'),
     )
+
+class SystemHealthLog(Base):
+    __tablename__ = "system_health_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    status = Column(String)
+    delta = Column(Float)
+    duplicate_clusters = Column(Integer)
+
+class ReconciliationSnapshot(Base):
+    __tablename__ = "reconciliation_snapshots"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True)
+    year = Column(Integer)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    affected_records = Column(Integer)
+    before_state_json = Column(String)  # Serialized payload
+    after_state_json = Column(String)   # Serialized payload
+

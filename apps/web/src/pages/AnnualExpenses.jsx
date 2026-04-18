@@ -37,6 +37,7 @@ export default function AnnualExpenses() {
   const [form, setForm] = useState({ section_id: '', category_id: '', description: '' })
   const [loading, setLoading] = useState(true)
   const [health, setHealth] = useState(null)
+  const [isDryRun, setIsDryRun] = useState(true)
   const [traceModal, setTraceModal] = useState(null)
   const saveTimers = useRef({})
 
@@ -118,12 +119,14 @@ export default function AnnualExpenses() {
   const handleReconcile = async () => {
     setLoading(true)
     try {
-      const res = await expenseService.reconcileSystem(year)
-      addToast('System mathematical integrity reconciled', 'success')
+      const res = await expenseService.reconcileSystem(year, isDryRun)
+      addToast(isDryRun ? 'Dry-Run Analysis Evaluated' : 'System mathematical integrity reconciled', 'success')
       if (res.trace && res.trace.affected_records > 0) {
-        setTraceModal(res.trace)
+        setTraceModal({ ...res.trace, IS_DRY_RUN: isDryRun })
+      } else if (res.trace?.affected_records === 0 && isDryRun) {
+        addToast('Matrix verified: 0 discrepancies.', 'success')
       }
-      fetchData(true)
+      if (!isDryRun) fetchData(true)
     } catch (e) {
       addToast('Error reconciling system', 'danger')
     } finally {
@@ -191,6 +194,10 @@ export default function AnnualExpenses() {
               {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
             </select>
           </div>
+          <div className="flex items-center gap-2 mr-4 bg-primary/20 px-3 py-2 rounded-xl">
+             <label className="text-[10px] font-black uppercase text-tx-secondary tracking-widest whitespace-nowrap cursor-pointer">Dry Run Preview</label>
+             <input type="checkbox" className="toggle-checkbox" checked={isDryRun} onChange={(e) => setIsDryRun(e.target.checked)} />
+          </div>
           <Button onClick={handleReconcile} variant="secondary" size="sm" className="px-5 font-black uppercase tracking-[0.2em] h-12 shadow-md bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20">
              🔄 Reconcile Data
           </Button>
@@ -211,7 +218,9 @@ export default function AnnualExpenses() {
       {traceModal && (
         <div className="fixed inset-0 bg-primary/95 backdrop-blur-2xl flex items-center justify-center p-6 z-[2000] animate-in fade-in duration-500" onClick={e => e.target === e.currentTarget && setTraceModal(null)}>
           <Card className="max-w-[700px] w-full p-6 md:p-10 rounded-[3rem] border-none shadow-premium relative bg-secondary max-h-[80vh] overflow-y-auto no-scrollbar">
-            <h3 className="text-2xl font-black text-tx-primary uppercase tracking-tighter mb-4">Reconciliation Audit Trace</h3>
+            <h3 className="text-2xl font-black text-tx-primary uppercase tracking-tighter mb-4">
+              Reconciliation Audit Trace {traceModal.IS_DRY_RUN && <span className="text-warning text-sm bg-warning/10 px-3 py-1 rounded-full">[SIMULATION]</span>}
+            </h3>
             <p className="text-tx-muted text-sm mb-6 uppercase tracking-widest font-black opacity-50">Affected matrix vectors: <span className="text-warning">{traceModal.affected_records}</span></p>
             <div className="bg-primary/50 rounded-2xl p-4 font-mono text-[10px] sm:text-[12px] text-tx-secondary space-y-2">
               {traceModal.differences?.map((diff, i) => (

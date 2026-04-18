@@ -48,7 +48,7 @@ def sync_manual(year: int, service: AnnualExpenseService = Depends(get_annual_ex
     return {"ok": True, "year": year, "message": "Registry to Annual Expenses synchronization completed"}
 
 @router.get("/system/health")
-def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expense_service), tr_svc: ExpenseService = Depends(get_expense_service), current_user: models.User = Depends(get_current_user)):
+def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expense_service), tr_svc: ExpenseService = Depends(get_expense_service), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     from core.constants import MONTHS
     # Imbalance calculation
     items = tr_svc.expense_repo.get_all(current_user.tenant_id, None)
@@ -59,9 +59,14 @@ def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expe
     
     delta = round(abs(total_bought_items - total_matrix_actuals), 2)
     duplicates = tr_svc.expense_repo.get_duplicate_clusters_count(current_user.tenant_id)
+    status = "warning" if delta > 0.05 or duplicates > 0 else "healthy"
     
+    log = models.SystemHealthLog(tenant_id=current_user.tenant_id, status=status, delta=delta, duplicate_clusters=duplicates)
+    db.add(log)
+    db.commit()
+
     return {
-        "status": "warning" if delta > 0.05 or duplicates > 0 else "healthy",
+        "status": status,
         "duplicate_clusters": duplicates,
         "imbalance_delta": delta,
         "metrics": {"total_transactions_sum": total_bought_items, "matrix_actuals_sum": total_matrix_actuals}
@@ -69,8 +74,9 @@ def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expe
 
 class ReconcileRequest(BaseModel):
     year: int
+    dry_run: bool = False
 
 @router.post("/system/reconcile")
 def reconcile_system(req: ReconcileRequest, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
-    trace = service.sync_registry_to_expenses(current_user.tenant_id, req.year)
-    return {"status": "success", "message": "Data reconciled correctly against Source of Truth (Items)", "audited_year": req.year, "trace": trace}
+    trace = service.sync_registry_to_expenses(current_user.tenant_id, req.year, dry_run=req.dry_run)
+    return {"status": "success", "message": "Reconciliation Trace Analyzed", "audited_year": req.year, "trace": trace, "dry_run": req.dry_run}
