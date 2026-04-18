@@ -131,5 +131,6 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
             actual_sep=row.actual_sep, actual_oct=row.actual_oct, actual_nov=row.actual_nov, actual_dec=row.actual_dec,
             actual_card_jan=row.actual_card_jan, actual_card_feb=row.actual_card_feb, actual_card_mar=row.actual_card_mar, actual_card_apr=row.actual_card_apr, 
             actual_card_may=row.actual_card_may, actual_card_jun=row.actual_card_jun, actual_card_jul=row.actual_card_jul, actual_card_aug=row.actual_card_aug, 
-            actual_card_sep=row.actual_card_sep, actual_card_oct=row.actual_card_oct, actual_card_nov=row.actual_card_nov, actual_card_dec=row.actual_card_dec
+            actual_card_sep=row.actual_card_sep, actual_card_oct=row.actual_card_oct, actual_card_nov=row.actual_card_nov, actual_card_dec=row.actual_card_dec,
+            version_id=row.version_id
         )

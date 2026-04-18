@@ -5,6 +5,8 @@ import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, ORJSONResponse
+from sqlalchemy.orm.exc import StaleDataError
+from core.exceptions import DomainException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from infrastructure.driven.db.config import engine, Base
@@ -83,6 +85,29 @@ ROUTERS = [
 # Centralized versioned routes (v3)
 for r in ROUTERS:
     app.include_router(r, prefix=API_PREFIX)
+
+
+@app.exception_handler(StaleDataError)
+async def stale_data_exception_handler(request: Request, exc: StaleDataError):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "detail": "CONFLICTO_OCC: El registro ha sido modificado por otro usuario. Por favor, recargue e intente nuevamente.",
+            "code": "OCC_CONFLICT",
+        },
+    )
+
+
+@app.exception_handler(DomainException)
+async def domain_exception_handler(request: Request, exc: DomainException):
+    status_code = 400
+    if "DUPLICATE_409" in str(exc) or "CONFLICT_409" in str(exc):
+        status_code = 409
+    return JSONResponse(
+        status_code=status_code,
+        content={"detail": str(exc), "code": "DOMAIN_ERROR"},
+    )
+
 
 
 @app.middleware("http")

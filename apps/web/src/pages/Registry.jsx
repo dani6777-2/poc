@@ -121,20 +121,42 @@ export default function Registry() {
     setProcessing(true);
     setDuplicateWarning(false);
     try {
-      const payload = {
+      // 1. Prepare raw payload
+      const rawPayload = {
         ...form,
         month,
-        section_id: categories.find((c) => c.id === parseInt(form.category_id))
-          ?.section_id,
         override_duplicate: overrideDuplicate
       };
 
+      // 2. Sanitize for v5.0 Hardened Core Contract
+      const sanitizedPayload = Object.keys(rawPayload).reduce((acc, key) => {
+        let val = rawPayload[key];
+        
+        // IDs and optional strings -> null if empty
+        if (val === "" && ["category_id", "channel_id", "unit_id", "prev_month_price", "date", "source"].includes(key)) {
+          val = null;
+        }
+
+        // Forced numeric fields -> 0 if empty (satisfies float type in Pydantic)
+        if (val === "" && ["quantity", "unit_price"].includes(key)) {
+          val = 0;
+        }
+
+        // Ensure IDs are integers
+        if (["category_id", "channel_id", "unit_id"].includes(key) && val !== null) {
+          val = parseInt(val);
+        }
+
+        acc[key] = val;
+        return acc;
+      }, {});
+
       if (editId) {
-        await expenseService.updateExpense(editId, payload);
-        addToast("Registry updated", "success");
+        await expenseService.updateExpense(editId, sanitizedPayload);
+        addToast("Registro actualizado", "success");
       } else {
-        await expenseService.createExpense(payload);
-        addToast("Item registered successfully", "success");
+        await expenseService.createExpense(sanitizedPayload);
+        addToast("Ítem registrado con éxito", "success");
       }
 
       setEditId(null);
@@ -146,13 +168,13 @@ export default function Registry() {
       if (err.status === 409) {
         if (typeof err.message === 'string' && err.message.includes("DUPLICATE_409")) {
           setDuplicateWarning(true);
-          addToast("Posible registro duplicado detectado.", "warning");
+          addToast("⚠️ Posible duplicado detectado.", "warning");
         } else {
-          addToast("⚠️ CONFLICTO: El registro fue modificado por otra sesión. Recargando...", "warning");
+          addToast("🚨 CONFLICTO: El registro fue modificado por otro usuario. Recargando datos...", "danger");
           fetchData();
         }
       } else {
-        addToast("Failed to save registry", "danger");
+        addToast(`Error 422/500: Verifique los campos obligatorios.`, "danger");
       }
     } finally {
       setProcessing(false);

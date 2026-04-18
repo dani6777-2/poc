@@ -137,6 +137,11 @@ class InventoryBlockA(Base):
     category = relationship("TaxonomyCategory")
     unit = relationship("TaxonomyUnit")
     channel = relationship("TaxonomyChannel")
+    version_id = Column(Integer, nullable=False, default=1)
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
 
 class InventoryBlockB(Base):
     """Fresh market list — Perishables"""
@@ -160,6 +165,11 @@ class InventoryBlockB(Base):
     category = relationship("TaxonomyCategory")
     channel = relationship("TaxonomyChannel")
     unit = relationship("TaxonomyUnit")
+    version_id = Column(Integer, nullable=False, default=1)
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
 
 class Revenue(Base):
     __tablename__ = "revenues"

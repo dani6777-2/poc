@@ -117,6 +117,6 @@ class AnnualExpenseCreateDto(BaseModel):
     )
     @classmethod
     def _sanitize_finance(cls, v):
-        if v is not None:
+        if v is not None and str(v).strip() != "":
             return float(Decimal(str(v)).quantize(Decimal("0.01")))
-        return v
+        return None

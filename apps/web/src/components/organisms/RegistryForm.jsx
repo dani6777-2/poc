@@ -165,11 +165,11 @@ const RegistryForm = ({
                 onClick={(e) => handleSave(e, true)} 
                 disabled={processing}
               >
-                ⚠️ Forzar Guardado
+                ⚠️ Confirmar Duplicado
               </Button>
             ) : (
-              <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e, false)} disabled={processing}>
-                {isEditing ? '✓ Confirmar Cambios' : '+ Registrar en Despensa'}
+              <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e)} disabled={processing}>
+                {isEditing ? '✓ Confirmar Cambios' : '+ Añadir a Despensa'}
               </Button>
             )}
             {isEditing && (
@@ -225,10 +225,10 @@ const RegistryForm = ({
                  onClick={(e) => handleSave(e, true)} 
                  disabled={processing}
                >
-                 ⚠️ Forzar Guardado
+                 ⚠️ Confirmar Duplicado
                </Button>
              ) : (
-               <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e, false)} disabled={processing}>
+               <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e)} disabled={processing}>
                  {isEditing ? '✓ Confirmar Cambios' : '+ Registrar Servicio'}
                </Button>
              )}

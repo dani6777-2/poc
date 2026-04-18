@@ -1,8 +1,10 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 from infrastructure.driven.db import models
 from core.entities.inventory import InventoryItemA, InventoryItemB, InventoryItemACreate, InventoryItemBCreate
 from core.ports.secondary.inventory_repository import InventoryRepositoryPort
+from core.exceptions import DomainException
 
 class SQLInventoryRepository(InventoryRepositoryPort):
     def __init__(self, db: Session):
@@ -51,19 +53,31 @@ class SQLInventoryRepository(InventoryRepositoryPort):
         return self.get_by_id_a(tenant_id, row.id)
 
     def update_a(self, tenant_id: int, item_id: int, item_dto: InventoryItemACreate, subtotal: float) -> InventoryItemA:
-        row = self.db.query(models.InventoryBlockA).filter(models.InventoryBlockA.id == item_id).first()
-        row.month = item_dto.month
-        row.category_id = item_dto.category_id
-        row.name = item_dto.name
-        row.unit_id = item_dto.unit_id
-        row.quantity = item_dto.quantity
-        row.channel_id = item_dto.channel_id
-        row.unit_price = item_dto.unit_price
-        row.subtotal = subtotal
-        row.prev_month_price = item_dto.prev_month_price
-        row.status = item_dto.status
-        self.db.commit()
-        return self.get_by_id_a(tenant_id, item_id)
+        MAX_RETRIES = 3
+        for attempt in range(MAX_RETRIES):
+            row = self.db.query(models.InventoryBlockA).filter(models.InventoryBlockA.id == item_id).first()
+            if not row: return None
+            row.month = item_dto.month
+            row.category_id = item_dto.category_id
+            row.name = item_dto.name
+            row.unit_id = item_dto.unit_id
+            row.quantity = item_dto.quantity
+            row.channel_id = item_dto.channel_id
+            row.unit_price = item_dto.unit_price
+            row.subtotal = subtotal
+            row.prev_month_price = item_dto.prev_month_price
+            row.status = item_dto.status
+            
+            if item_dto.version_id:
+                row.version_id = item_dto.version_id
+            
+            try:
+                self.db.commit()
+                return self.get_by_id_a(tenant_id, item_id)
+            except StaleDataError:
+                self.db.rollback()
+                if attempt == MAX_RETRIES - 1:
+                    raise DomainException("CONFLICT_409: El registro de inventario ya fue modificado o eliminado (Optimistic Lock).")
 
     def delete_a(self, tenant_id: int, item_id: int) -> None:
         row = self.db.query(models.InventoryBlockA).filter(models.InventoryBlockA.id == item_id).first()
@@ -114,20 +128,32 @@ class SQLInventoryRepository(InventoryRepositoryPort):
         return self.get_by_id_b(tenant_id, row.id)
 
     def update_b(self, tenant_id: int, item_id: int, item_dto: InventoryItemBCreate, subtotal: float) -> InventoryItemB:
-        row = self.db.query(models.InventoryBlockB).filter(models.InventoryBlockB.id == item_id).first()
-        row.month = item_dto.month
-        row.category_id = item_dto.category_id
-        row.name = item_dto.name
-        row.channel_id = item_dto.channel_id
-        row.unit_id = item_dto.unit_id
-        row.price_per_kg = item_dto.price_per_kg
-        row.subtotal = subtotal
-        row.prev_month_price = item_dto.prev_month_price
-        row.status = item_dto.status
-        if row.prev_month_price and row.price_per_kg:
-            row.price_delta = row.price_per_kg - row.prev_month_price
-        self.db.commit()
-        return self.get_by_id_b(tenant_id, item_id)
+        MAX_RETRIES = 3
+        for attempt in range(MAX_RETRIES):
+            row = self.db.query(models.InventoryBlockB).filter(models.InventoryBlockB.id == item_id).first()
+            if not row: return None
+            row.month = item_dto.month
+            row.category_id = item_dto.category_id
+            row.name = item_dto.name
+            row.channel_id = item_dto.channel_id
+            row.unit_id = item_dto.unit_id
+            row.price_per_kg = item_dto.price_per_kg
+            row.subtotal = subtotal
+            row.prev_month_price = item_dto.prev_month_price
+            row.status = item_dto.status
+            if row.prev_month_price and row.price_per_kg:
+                row.price_delta = row.price_per_kg - row.prev_month_price
+            
+            if item_dto.version_id:
+                row.version_id = item_dto.version_id
+            
+            try:
+                self.db.commit()
+                return self.get_by_id_b(tenant_id, item_id)
+            except StaleDataError:
+                self.db.rollback()
+                if attempt == MAX_RETRIES - 1:
+                    raise DomainException("CONFLICT_409: El registro de inventario B ya fue modificado o eliminado (Optimistic Lock).")
 
     def delete_b(self, tenant_id: int, item_id: int) -> None:
         row = self.db.query(models.InventoryBlockB).filter(models.InventoryBlockB.id == item_id).first()
@@ -153,7 +179,8 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             unit_price=row.unit_price,
             subtotal=row.subtotal,
             prev_month_price=row.prev_month_price,
-            status=row.status or "Planned"
+            status=row.status or "Planned",
+            version_id=row.version_id
         )
 
     def _to_entity_b(self, row: models.InventoryBlockB) -> InventoryItemB:
@@ -174,5 +201,6 @@ class SQLInventoryRepository(InventoryRepositoryPort):
             subtotal=row.subtotal,
             prev_month_price=row.prev_month_price,
             price_delta=row.price_delta,
-            status=row.status or "Planned"
+            status=row.status or "Planned",
+            version_id=row.version_id
         )

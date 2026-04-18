@@ -60,9 +60,12 @@ export default function BlockA() {
 
   const handleSubmit = async e => {
     e.preventDefault()
+    
+    // Sanitize for v5.0 Contract
     const payload = {
       ...form,
-      category_id: parseInt(form.category_id),
+      month,
+      category_id: parseInt(form.category_id) || null,
       unit_id: parseInt(form.unit_id) || null,
       channel_id: parseInt(form.channel_id) || null,
       quantity: parseFloat(form.quantity) || 0,
@@ -73,21 +76,20 @@ export default function BlockA() {
     try {
       if (editing) {
         await expenseService.updateInventoryItem('block-a', editing, payload)
-        addToast('Registry updated in the matrix', 'success')
+        addToast("Matriz actualizada con éxito", "success")
       } else {
         await expenseService.createInventoryItem('block-a', payload)
-        addToast('New asset registered in Block A', 'success')
+        addToast("Nuevo activo registrado en Bloque A", "success")
       }
       setModal(false)
       fetchData()
     } catch (e) {
       if (e.status === 409) {
-        addToast('⚠️ CONFLICT: Vault was updated by someone else. Synchronizing...', 'warning')
+        addToast("🚨 CONFLICTO: El registro fue actualizado por otro usuario. Resincronizando...", "danger")
+        fetchData()
       } else {
-        addToast('Failure in data persistence', 'error')
+        addToast("Error de persistencia: Verifique los campos obligatorios.", "error")
       }
-    } finally {
-      fetchData()
     }
   }
 

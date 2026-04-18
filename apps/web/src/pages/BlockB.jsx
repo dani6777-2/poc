@@ -68,9 +68,12 @@ export default function BlockB() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Sanitize for v5.0 Contract (Hardened Core)
     const payload = {
       ...form,
-      category_id: parseInt(form.category_id),
+      month,
+      category_id: parseInt(form.category_id) || null,
       channel_id: parseInt(form.channel_id) || null,
       unit_id: parseInt(form.unit_id) || null,
       price_per_kg: parseFloat(form.price_per_kg) || 0,
@@ -82,21 +85,20 @@ export default function BlockB() {
     try {
       if (editing) {
         await expenseService.updateInventoryItem("block-b", editing, payload);
-        addToast("Registry optimization completed", "success");
+        addToast("Optimización guardada en Matriz B", "success");
       } else {
         await expenseService.createInventoryItem("block-b", payload);
-        addToast("New perishable asset registered", "success");
+        addToast("Nuevo activo perecible registrado", "success");
       }
       setModal(false);
       fetchData();
     } catch (e) {
       if (e.status === 409) {
-        addToast('⚠️ CONFLICT: Vault was updated by someone else. Synchronizing...', 'warning')
+        addToast("🚨 CONFLICTO: Bóveda actualizada externamente. Resincronizando...", "danger");
+        fetchData();
       } else {
-        addToast("Error in Block B persistence", "error");
+        addToast("Error de integridad en Bloque B: Revise campos obligatorios.", "error");
       }
-    } finally {
-      fetchData()
     }
   };
 

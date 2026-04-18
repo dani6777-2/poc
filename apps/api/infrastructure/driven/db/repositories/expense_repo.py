@@ -163,6 +163,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             status=row.status,
             source=row.source,
             payment_method=row.payment_method or "debit",
+            version_id=row.version_id
         )
 
 class LegacyExpenseSyncAdapter(ExpenseSyncPort):
