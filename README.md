@@ -1,88 +1,82 @@
-# 🛡️ FinOps v4.5: Strategic Fiscal OS
-> **Proactive Intelligence & Multi-Layer Capital Resilience**
+# 🛡️ FinOps v5.0: The Hardened Core
+> **Enterprise-Grade Integrity, Atomic Concurrency & Structural Resilience**
 
-FinOps 4.5 is a professional-grade Financial Operations platform designed to transition from passive expense recording to a **proactive, state-aware management ecosystem**. It combines AI biometric diagnosis, structural liability monitoring, and multi-tenant household governance into a high-fidelity "Glassmorphism" interface.
+FinOps 5.0 marks the transition to a **mission-critical financial ecosystem**. Beyond the glassmorphism aesthetics of v4.5, this version introduces a high-fidelity reconciliation engine, strict mathematical rigor, and optimistic concurrency controls to handle multi-user household management with zero data loss.
 
 ---
 
-## 💎 The Four Core Engines
+## 💎 The Five Core Engines
 
 ### 1. 🧠 Intelligence & Biometrics (`ai_service`)
-The system analyzes spending velocity and patterns to generate high-frequency insights:
-- **Daily Run Rate (DRR)**: Velocity-based projections that calculate the end-of-month landing zone.
-- **Vulnerability Metric**: Quantitative analysis of discretionary vs. essential spending ratios.
-- **Anomaly Detection**: Real-time identification of transactional outliers.
-- **Inflation Monitor**: Month-over-month unit price variance tracking at the line-item level.
+High-frequency analysis of spending habits and fiscal health:
+- **Daily Run Rate (DRR)**: Velocity-based landing zone projections.
+- **Vulnerability Metric**: Quantitative analysis of discretionary vs. essential ratios.
+- **Inflation Monitor**: Line-item tracking for unit price variance (MoM).
 
 ### 2. 💳 Structural Liability Engine (`card_service`)
-Advanced management of revolving credit and debt cycles:
-- **Saturation Vectors**: Real-time monitoring of "Liability Usage Ratios" (Debt-to-Limit).
-- **Manual Settlement Bridge**: A strategic logic layer that allows for the manual deduction of previous month CC debt from current month liquidity.
-- **Cycle Orchestration**: Dynamic tracking of closing days and payment deadlines.
+Advanced management of revolving debt and liquidity cycles:
+- **Manual Settlement Bridge**: Strategic logic allowing for deduction of CC debt from current month liquidity.
+- **Cycle Orchestration**: Dynamic payment deadline tracking and liability usage monitoring.
 
-### 3. 👥 Multi-Household Ecosystem (`tenant_service`)
-Designed for collaborative fiscal management:
-- **Secret Invite Protocols**: One-time-use join codes for secure household expansion.
-- **Governance Roles**: Owner/Guest permission layers with access revocation capabilities.
-- **Isolated Taxonomies**: Custom domains (Sections) and classes (Categories) per household.
+### 3. 👥 Multi-Household Governance (`tenant_service`)
+Enterprise-grade isolation for collaborative management:
+- **Secret Invite Protocols**: Secure household expansion via one-time-use codes.
+- **Governance Roles**: Granular Owner/Guest permission layers.
 
-### 4. 📊 Deep Sync Strategic Budgeting (`expense_service`)
-Integrated annual planning with dual-layered visualization:
-- **The Concept Injector**: Automatic synchronization between new category creation and annual budget placeholder rows.
-- **Matrix Views**: Single-toggle navigation between Current Month audit, Annual 12-month Plan, and Delta Variance comparison.
-- **Net Liquidity Matrix**: Precise cash flow calculation: `Revenue - Cash Expenses - Manual CC Settlement`.
+### 4. 🔗 Deep Sync Strategic Budgeting (`expense_service`)
+Synchronization between monthly operations and annual planning:
+- **The Concept Injector**: Real-time alignment between new categories and annual matrix rows.
+- **Matrix Views**: Unified navigation for 12-month planning and variance auditing.
+
+### 5. 🛠️ Reconciliation & Integrity Engine (`annual_expense_service`) [NEW - Phase 9/10]
+The system's mathematical heart, ensuring structural consistency:
+- **Semantic Drift Correction**: Automates the alignment between "System Totals" and "Matrix Records," ignoring technical noise (0 vs Null).
+- **Dry-Run Simulations**: Risk-free auditing with visual change previews before persistence.
+- **Integrity Badges**: Real-time system health monitoring (`✅ Sin drift` vs `⚠️ Inconsistencias detectadas`).
 
 ---
 
-## 🏗️ Technical Architecture (Hexagonal)
+## 🛡️ Trust & Reliability Layers
+
+### 🔒 Optimistic Concurrency Control (OCC)
+Multi-user protection via **Version Identification**. The system prevents "Lost Updates" in high-frequency collaboration environments:
+- **Conflict Interceptors**: UI-level handling of **HTTP 409 (Conflict)** errors.
+- **Automated Resync**: Silent state recovery via `fetchData()` upon detection of stale data.
+
+### 📐 Null-Safe Mathematical Architecture
+Strict distinction between data states to preserve financial history:
+- **null (—)**: Unknown or undefined state—prevents artificial inflation of category averages.
+- **0.0 ($0)**: Explicitly validated zero value.
+- **Decimal Precision**: Backend forced 2-decimal quantization for all currency-related operations.
+
+---
+
+## 🏗️ Technical Architecture
 
 ```mermaid
 erDiagram
     HOUSEHOLD ||--o{ USER : "Gov. Rules"
-    HOUSEHOLD ||--o{ ACCOUNT : "Channels"
-    HOUSEHOLD ||--o{ CATEGORY : "Taxonomy"
+    HOUSEHOLD ||--o{ TENANT_CONFIG : "Isolation"
     
-    ACCOUNT ||--o{ TRANSACTION : "Passive Feed"
-    ACCOUNT ||--o{ CREDIT_CONFIG : "Settlement Logic"
+    CATEGORY ||--o{ ANNUAL_PLAN : "Atomic Versioning"
+    CATEGORY ||--o{ TRANSACTION : "Audit Trail"
     
-    CATEGORY ||--o{ ANNUAL_PLAN : "Deep Sync"
-    CATEGORY ||--o{ INVENTORY : "Shopping List"
+    ANNUAL_PLAN }|--|| RECONCILE_ENGINE : "Drift Correction"
+    RECONCILE_ENGINE ||--o{ DIFF_SNAPSHOT : "Audit Trace"
     
-    TRANSACTION }|--|| HEALTH_ENGINE : "Biometrics"
-    ANNUAL_PLAN }|--|| AI_FORECASTER : "Velocity Audit"
-    
-    INVENTORY ||--|| STATUS : "Planned/Bought"
+    TRANSACTION }|--|| OCC_PROTECTOR : "Concurrency (vID)"
 ```
 
 ### Stack & Infrastructure
-- **Frontend**: React 18 (Vite) + Tailwind CSS v4 (Design System: Atomic Glassmorphism).
-- **Backend**: FastAPI + SQLAlchemy 2.0 (PostgreSQL).
-- **Intelligence**: Custom AI/Health services for 50/30/20 rule enforcement.
-- **Deployment**: Worker-ready architecture (OCR, Async Tasks).
+- **Frontend**: React 18 (Vite) + Tailwind CSS v4 (Atomic Design).
+- **Backend**: FastAPI (Python 3.9+) + SQLAlchemy 2.0 (PostgreSQL).
+- **Persistence**: Strict relational integrity with transactional versioning.
+- **AI/OCR**: Pattern-matching engine for automated expense ingestion.
 
 ---
 
-## 📂 Structural Mapping
-
-```bash
-├── apps/api/              # FastAPI Hexagonal Core
-│   ├── application/       # Logic Layer
-│   │   ├── services/      # [NEW] AI, Health, Card, Tenant, Inventory
-│   ├── domain/            # Entities & Value Objects
-│   └── infrastructure/    # DB Repositories & Driven adapters
-├── apps/web/              # React High-Fidelity Client
-│   ├── src/components/    # Atomic Design (Atoms/Molecules/Organisms)
-│   ├── src/pages/         # [UPDATED] FinancialHealth, CreditCard, AnnualExpenses
-│   └── src/context/       # Global State (Finance, Toast, Theme)
-└── README.md              # Global Protocol
-```
+## 🚀 Vision: Zero-Error Financial Governance
+With Phase 10, FinOps moves from a "Tracking App" to a **"Financial Operating System"**. Every transaction is audited, every structural change is simulated, and every concurrent edit is protected.
 
 ---
-
-## 🚀 Vision: Proactive shopping & Fiscal Health
-Version 4.5 introduces the **"Proactive Shopping List"** workflow. Inventory items are no longer just entries; they are states:
-1. **Planned**: Items in the matrix with no financial impact.
-2. **Bought**: Transitions to a "Locked" state, injecting the delta into the category total and updating the **Saturation Vector**.
-
----
-**FinOps 4.5** | *Architecture by Design*
+**FinOps 5.0** | *Precision by Architecture*
