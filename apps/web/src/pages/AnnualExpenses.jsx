@@ -36,17 +36,21 @@ export default function AnnualExpenses() {
   const [confirmId, setConfirmId] = useState(null)
   const [form, setForm] = useState({ section_id: '', category_id: '', description: '' })
   const [loading, setLoading] = useState(true)
+  const [health, setHealth] = useState(null)
+  const [traceModal, setTraceModal] = useState(null)
   const saveTimers = useRef({})
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [rowsData, revData] = await Promise.all([
+      const [rowsData, revData, healthData] = await Promise.all([
         expenseService.getAnnualExpenses(year),
-        revenueService.getRevenueSummary(year).catch(() => ({ by_month: {}, annual_total: 0 }))
+        revenueService.getRevenueSummary(year).catch(() => ({ by_month: {}, annual_total: 0 })),
+        expenseService.getSystemHealth(year).catch(() => null)
       ])
       setRows(rowsData)
       setRevenues(revData)
+      setHealth(healthData)
     } finally {
       if (!silent) setLoading(false)
     }
@@ -114,11 +118,15 @@ export default function AnnualExpenses() {
   const handleReconcile = async () => {
     setLoading(true)
     try {
-      await expenseService.reconcileSystem(year)
+      const res = await expenseService.reconcileSystem(year)
       addToast('System mathematical integrity reconciled', 'success')
+      if (res.trace && res.trace.affected_records > 0) {
+        setTraceModal(res.trace)
+      }
       fetchData(true)
     } catch (e) {
       addToast('Error reconciling system', 'danger')
+    } finally {
       setLoading(false)
     }
   }
@@ -170,7 +178,7 @@ export default function AnnualExpenses() {
       title={<>Annual <span className="text-accent italic font-light">Expenses Manager</span></>}
       subtitle="Multi-layer control and structural flow management"
       icon="📋"
-      badge={`Fiscal Year ${year} Operational`}
+      badge={`Fiscal Year ${year} Operational ${health?.status === 'warning' ? '⚠️ Integrity Warning' : (health ? '✅ Zero Drift' : '')}`}
       loading={loading || ctxLoading}
       loadingText="Scanning structural flows..."
       headerAction={
@@ -198,6 +206,21 @@ export default function AnnualExpenses() {
           onConfirm={handleDeleteConfirm}
           onCancel={() => setConfirmId(null)}
         />
+      )}
+
+      {traceModal && (
+        <div className="fixed inset-0 bg-primary/95 backdrop-blur-2xl flex items-center justify-center p-6 z-[2000] animate-in fade-in duration-500" onClick={e => e.target === e.currentTarget && setTraceModal(null)}>
+          <Card className="max-w-[700px] w-full p-6 md:p-10 rounded-[3rem] border-none shadow-premium relative bg-secondary max-h-[80vh] overflow-y-auto no-scrollbar">
+            <h3 className="text-2xl font-black text-tx-primary uppercase tracking-tighter mb-4">Reconciliation Audit Trace</h3>
+            <p className="text-tx-muted text-sm mb-6 uppercase tracking-widest font-black opacity-50">Affected matrix vectors: <span className="text-warning">{traceModal.affected_records}</span></p>
+            <div className="bg-primary/50 rounded-2xl p-4 font-mono text-[10px] sm:text-[12px] text-tx-secondary space-y-2">
+              {traceModal.differences?.map((diff, i) => (
+                <div key={i} className="border-b border-border-base/10 pb-2 mb-2 last:border-0">{diff}</div>
+              ))}
+            </div>
+            <Button onClick={() => setTraceModal(null)} className="w-full mt-8 py-5 uppercase font-black tracking-widest">Acknowledge</Button>
+          </Card>
+        </div>
       )}
 
       <div className="flex gap-3 p-1.5 glass w-full sm:w-fit rounded-2xl overflow-x-auto no-scrollbar shadow-premium">

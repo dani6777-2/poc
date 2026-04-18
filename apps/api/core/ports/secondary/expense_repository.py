@@ -35,6 +35,10 @@ class ExpenseRepositoryPort(ABC):
     def delete_by_source(self, tenant_id: int, source: str) -> None:
         pass
 
+    @abstractmethod
+    def get_duplicate_clusters_count(self, tenant_id: int) -> int:
+        pass
+
 class ExpenseSyncPort(ABC):
     """Port to handle downstream synchronizations (hexagonal outbound event)"""
     @abstractmethod

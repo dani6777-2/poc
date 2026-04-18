@@ -32,6 +32,12 @@ export const expenseService = {
     return data
   },
 
+  getSystemHealth: async (year) => {
+    const { data } = await api.get(`expense-details/system/health?year=${year}`)
+    return data
+  },
+
+
   // Registry (Transactional Expenses)
   getExpenses: async ({ month }) => {
     const { data } = await api.get(`expenses/?month=${month}`)

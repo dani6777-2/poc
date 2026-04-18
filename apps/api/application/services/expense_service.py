@@ -4,6 +4,7 @@ from core.entities.expenses import ItemEntity, ItemCreateDto, ItemUpdateDto
 from core.ports.secondary.expense_repository import ExpenseRepositoryPort, ExpenseSyncPort
 from core.ports.secondary.card_repository import CardRepositoryPort
 from core.exceptions import DomainException
+from decimal import Decimal, ROUND_HALF_UP
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,10 @@ class ExpenseService:
         return bool(source and any(source.startswith(p) for p in AUTO_SOURCES))
 
     def _calc_subtotal(self, quantity: float, unit_price: float) -> float:
-        return round((quantity or 0) * (unit_price or 0), 2)
+        q = Decimal(str(quantity or 0.0))
+        p = Decimal(str(unit_price or 0.0))
+        sub = q * p
+        return float(sub.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
     def _get_cc_channel_id(self, tenant_id: int) -> Optional[int]:
         """Returns the channel_id configured as the CC channel, if any."""

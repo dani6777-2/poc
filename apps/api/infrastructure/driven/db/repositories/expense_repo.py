@@ -107,6 +107,22 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             self.db.delete(row)
             self.db.commit()
 
+    def get_duplicate_clusters_count(self, tenant_id: int) -> int:
+        from sqlalchemy import func
+        subq = self.db.query(
+            models.Item.date,
+            models.Item.category_id,
+            models.Item.subtotal
+        ).filter(
+            models.Item.tenant_id == tenant_id
+        ).group_by(
+            models.Item.date,
+            models.Item.category_id,
+            models.Item.subtotal
+        ).having(func.count(models.Item.id) > 1).subquery()
+        count = self.db.query(func.count()).select_from(subq).scalar()
+        return count or 0
+
     def _to_entity(self, row: models.Item) -> ItemEntity:
         return ItemEntity(
             id=row.id,

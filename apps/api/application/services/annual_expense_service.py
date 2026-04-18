@@ -7,6 +7,7 @@ from core.ports.secondary.card_repository import CardRepositoryPort
 from core.ports.secondary.budget_repository import BudgetRepositoryPort
 from application.services.taxonomy_service import TaxonomyService
 from core.constants import MONTHS, ACTUAL_MONTHS, CARD_MONTHS, REGISTRY_DESCRIPTION_PREFIX, AUTO_PREFIXES
+from decimal import Decimal, ROUND_HALF_UP
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +62,14 @@ class AnnualExpenseService:
             return 
         self.annual_repo.delete(tenant_id, expense_id)
 
-    def sync_registry_to_expenses(self, tenant_id: int, year: int) -> None:
+    def sync_registry_to_expenses(self, tenant_id: int, year: int) -> Dict[str, any]:
         existing_rows = self.annual_repo.get_all_by_year(tenant_id, year)
+        
+        # Build "before" snapshot for auditing trace
+        snapshot_before = {}
+        for r in existing_rows:
+            snapshot_before[r.id] = {m: getattr(r, m) for m in MONTHS}
+            snapshot_before[r.id].update({f"actual_{m}": getattr(r, f"actual_{m}") for m in MONTHS})
         
         card_config = self.card_repo.get_config(tenant_id)
         card_channel_id = card_config.channel_id if card_config and (card_config.total_limit or 0) > 0 else None
@@ -104,13 +111,13 @@ class AnnualExpenseService:
             # 4. Real spending sync
             items = self.expense_repo.get_all(tenant_id, month_str)
             for item in items:
-                sub = item.subtotal or 0.0
+                sub = Decimal(str(item.subtotal or 0.0))
                 is_card = item.payment_method == "credit" or (card_channel_id and item.channel_id == card_channel_id)
                 
                 # Determine where to aggregate: specific category row or section row
                 if item.category_id and item.category_id in linked_category_ids:
                     # Aggregate to Category logic
-                    target = per_category_gen.setdefault(item.category_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
+                    target = per_category_gen.setdefault(item.category_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
                     if item.status == "Bought":
                         target[mk]['total'] += sub
                         if is_card: target[mk]['card'] += sub
@@ -119,7 +126,7 @@ class AnnualExpenseService:
                 elif item.section_id:
                     # Aggregate to Section logic (legacy/generic)
                     sec_id = item.section_id
-                    target = per_section_gen.setdefault(sec_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
+                    target = per_section_gen.setdefault(sec_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
                     if item.status == "Bought":
                         target[mk]['total'] += sub
                         if is_card: target[mk]['card'] += sub
@@ -128,11 +135,14 @@ class AnnualExpenseService:
 
             # 5. Apply Budget values to targets
             for c_id, b_val in cat_budget_map.items():
-                target = per_category_gen.setdefault(c_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
-                target[mk]['budget'] = b_val
+                target = per_category_gen.setdefault(c_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
+                target[mk]['budget'] = Decimal(str(b_val))
             for s_id, b_val in sec_budget_map.items():
-                target = per_section_gen.setdefault(s_id, {m: {'total': 0.0, 'card': 0.0, 'budget': 0.0, 'plan': 0.0} for m in MONTHS})
-                target[mk]['budget'] = b_val
+                target = per_section_gen.setdefault(s_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
+                target[mk]['budget'] = Decimal(str(b_val))
+
+        affected_count = 0
+        trace_differences = []
 
         # 6. Update category-linked rows
         for c_id, month_totals in per_category_gen.items():
@@ -140,9 +150,20 @@ class AnnualExpenseService:
             if row:
                 updates = {}
                 for mk, data in month_totals.items():
-                    updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 2)
-                    updates[f"actual_{mk}"] = round(data['total'], 2)
-                    updates[f"actual_card_{mk}"] = round(data['card'], 2)
+                    val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
+                    updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                    updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                    updates[f"actual_card_{mk}"] = float(data['card'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                
+                # Compare before setting to trace delta
+                has_diff = False
+                for k,v in updates.items():
+                    if snapshot_before[row.id].get(k) != v:
+                        has_diff = True
+                        trace_differences.append(f"Row {row.id} ({row.description}) | Field {k} changed from {snapshot_before[row.id].get(k)} to {v}")
+                
+                if has_diff:
+                    affected_count += 1
                 self.annual_repo.set_values(row.id, updates)
 
         # 7. Update generic "Registry" rows per section
@@ -161,13 +182,29 @@ class AnnualExpenseService:
             
             updates = {}
             for mk, data in month_totals.items():
-                updates[mk] = round(data['budget'] if data['budget'] > 0 else data['plan'], 2)
-                updates[f"actual_{mk}"] = round(data['total'], 2)
-                updates[f"actual_card_{mk}"] = round(data['card'], 2)
+                val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
+                updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                updates[f"actual_card_{mk}"] = float(data['card'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+            
+            
+            has_diff = False
+            for k,v in updates.items():
+                if snapshot_before.get(row.id, {}).get(k) != v:
+                    has_diff = True
+                    # In Generic row we might not even have snapshot_before recorded if it was newly created
+                    prev_v = snapshot_before.get(row.id, {}).get(k, "New")
+                    trace_differences.append(f"Row {row.id} ({row.description}) | Field {k} changed from {prev_v} to {v}")
+            if has_diff:
+                affected_count += 1
             
             self.annual_repo.set_values(row.id, updates)
             
         logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}.")
+        return {
+            "affected_records": affected_count,
+            "differences": trace_differences
+        }
 
     def sync_card_to_debts_for_month(self, tenant_id: int, month_str: str) -> None:
         pass

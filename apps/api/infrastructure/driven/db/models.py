@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Boolean, UniqueConstraint, event
 from sqlalchemy.orm import relationship
 from .config import Base
 
@@ -231,6 +231,19 @@ class ExpenseDetail(Base):
     __table_args__ = (
         UniqueConstraint('tenant_id', 'year', 'section_id', 'description', name='uix_tenant_year_section_description'),
     )
+
+@event.listens_for(ExpenseDetail, 'before_update')
+def receive_expense_before_update(mapper, connection, target):
+    state = target._sa_instance_state
+    if 'is_automatic' in state.committed_state:
+        old_val = state.committed_state['is_automatic']
+        if old_val is True and target.is_automatic is False:
+            raise ValueError("Architectural Invariant Violation: Cannot unset 'is_automatic' flag.")
+
+@event.listens_for(ExpenseDetail, 'before_delete')
+def receive_expense_before_delete(mapper, connection, target):
+    if target.is_automatic:
+        raise ValueError("Architectural Invariant Violation: Cannot delete a system-managed entity.")
 
 class CardConfig(Base):
     __tablename__ = "card_configs"

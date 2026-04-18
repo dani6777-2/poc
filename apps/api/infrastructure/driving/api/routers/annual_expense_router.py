@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from core.entities.annual_expense import AnnualExpenseEntity, AnnualExpenseCreateDto
 from application.services.annual_expense_service import AnnualExpenseService
 from application.services.revenue_service import RevenueService
-from infrastructure.config.dependencies import get_annual_expense_service, get_revenue_service, get_db
+from infrastructure.config.dependencies import get_annual_expense_service, get_revenue_service, get_db, get_expense_service
+from application.services.expense_service import ExpenseService
 from sqlalchemy.orm import Session
 from infrastructure.driven.db import models
 from infrastructure.driving.api.auth import get_current_user
@@ -46,11 +47,30 @@ def sync_manual(year: int, service: AnnualExpenseService = Depends(get_annual_ex
     service.sync_registry_to_expenses(current_user.tenant_id, year)
     return {"ok": True, "year": year, "message": "Registry to Annual Expenses synchronization completed"}
 
+@router.get("/system/health")
+def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expense_service), tr_svc: ExpenseService = Depends(get_expense_service), current_user: models.User = Depends(get_current_user)):
+    from core.constants import MONTHS
+    # Imbalance calculation
+    items = tr_svc.expense_repo.get_all(current_user.tenant_id, None)
+    total_bought_items = sum(i.subtotal for i in items if i.status == "Bought" and str(i.month).startswith(str(year)))
+    
+    matrix = svc.annual_repo.get_all_by_year(current_user.tenant_id, year)
+    total_matrix_actuals = sum(sum(getattr(r, f"actual_{m}") or 0.0 for m in MONTHS) for r in matrix)
+    
+    delta = round(abs(total_bought_items - total_matrix_actuals), 2)
+    duplicates = tr_svc.expense_repo.get_duplicate_clusters_count(current_user.tenant_id)
+    
+    return {
+        "status": "warning" if delta > 0.05 or duplicates > 0 else "healthy",
+        "duplicate_clusters": duplicates,
+        "imbalance_delta": delta,
+        "metrics": {"total_transactions_sum": total_bought_items, "matrix_actuals_sum": total_matrix_actuals}
+    }
+
 class ReconcileRequest(BaseModel):
     year: int
 
 @router.post("/system/reconcile")
 def reconcile_system(req: ReconcileRequest, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
-    service.sync_registry_to_expenses(current_user.tenant_id, req.year)
-    # This acts as the explicit, auditable idempotency trigger.
-    return {"status": "success", "message": "Data reconciled correctly against Source of Truth (Items)", "audited_year": req.year}
+    trace = service.sync_registry_to_expenses(current_user.tenant_id, req.year)
+    return {"status": "success", "message": "Data reconciled correctly against Source of Truth (Items)", "audited_year": req.year, "trace": trace}
