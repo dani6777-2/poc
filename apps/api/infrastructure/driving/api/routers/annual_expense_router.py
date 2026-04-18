@@ -51,8 +51,8 @@ def get_monthly_net(year: int, service: AnnualExpenseService = Depends(get_annua
 
 @router.post("/{year}/sync")
 def sync_manual(year: int, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
-    service.sync_registry_to_expenses(current_user.tenant_id, year)
-    return {"ok": True, "year": year, "message": "Registry to Annual Expenses synchronization completed"}
+    trace = service.sync_registry_to_expenses(current_user.tenant_id, year, dry_run=False)
+    return {"ok": True, "year": year, "message": "Registry to Annual Expenses synchronization completed", "trace": trace}
 
 @router.get("/system/health")
 def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expense_service), tr_svc: ExpenseService = Depends(get_expense_service), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -81,9 +81,9 @@ def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expe
 
 class ReconcileRequest(BaseModel):
     year: int
-    dry_run: bool = False
+    dry_run: bool = True
 
 @router.post("/system/reconcile")
 def reconcile_system(req: ReconcileRequest, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
     trace = service.sync_registry_to_expenses(current_user.tenant_id, req.year, dry_run=req.dry_run)
-    return {"status": "success", "message": "Reconciliation Trace Analyzed", "audited_year": req.year, "trace": trace, "dry_run": req.dry_run}
+    return {"status": trace.get("status", "success"), "message": "Reconciliation Trace Analyzed", "audited_year": req.year, "trace": trace, "dry_run": req.dry_run}

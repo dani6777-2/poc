@@ -33,6 +33,14 @@ class AnnualExpenseService:
         entity.actual_card_annual_total = sum(getattr(entity, t) or 0.0 for t in CARD_MONTHS)
         return entity
 
+    @staticmethod
+    def _is_semantic_diff(old_val, new_val) -> bool:
+        v1 = Decimal(str(old_val)) if old_val is not None else Decimal('0.0')
+        v2 = Decimal(str(new_val)) if new_val is not None else Decimal('0.0')
+        v1_q = v1.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        v2_q = v2.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return v1_q != v2_q
+
     def get_annual_expenses(self, tenant_id: int, year: int, section_id: Optional[int] = None) -> List[AnnualExpenseEntity]:
         self.sync_registry_to_expenses(tenant_id, year)
         rows = self.annual_repo.get_all_by_year(tenant_id, year, section_id)
@@ -174,17 +182,17 @@ class AnnualExpenseService:
                     updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
                     updates[f"actual_card_{mk}"] = float(data['card'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
                 
-                # Compare before setting to trace delta
-                has_diff = False
+                clean_updates = {}
                 for k,v in updates.items():
-                    if snapshot_before[row.id].get(k) != v:
-                        has_diff = True
-                        trace_differences.append(f"Row {row.id} ({row.description}) | Field {k} changed from {snapshot_before[row.id].get(k)} to {v}")
+                    old_v = snapshot_before[row.id].get(k)
+                    if AnnualExpenseService._is_semantic_diff(old_v, v):
+                        clean_updates[k] = v
+                        trace_differences.append(f"Row {row.id} ({row.description}) | Field '{k}' changed logically from {old_v} to {v}")
                 
-                if has_diff:
+                if clean_updates:
                     affected_count += 1
-                if not dry_run:
-                    self.annual_repo.set_values(row.id, updates)
+                    if not dry_run:
+                        self.annual_repo.set_values(row.id, clean_updates)
 
         # 7. Update generic "Registry" rows per section
         for sec_id, month_totals in per_section_gen.items():
@@ -213,18 +221,19 @@ class AnnualExpenseService:
                 updates[f"actual_card_{mk}"] = float(data['card'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
             
             
-            has_diff = False
+            clean_updates = {}
             for k,v in updates.items():
-                if snapshot_before.get(row.id, {}).get(k) != v:
-                    has_diff = True
-                    # In Generic row we might not even have snapshot_before recorded if it was newly created
-                    prev_v = snapshot_before.get(row.id, {}).get(k, "New")
-                    trace_differences.append(f"Row {row.id} ({row.description}) | Field {k} changed from {prev_v} to {v}")
-            if has_diff:
+                old_v = snapshot_before.get(row.id, {}).get(k)
+                # In Generic row we might not even have snapshot_before recorded if it was newly created
+                if old_v is None and row.id > 999999: old_v = "New"
+                if old_v == "New" or AnnualExpenseService._is_semantic_diff(old_v, v):
+                    clean_updates[k] = v
+                    trace_differences.append(f"Row {row.id} ({row.description}) | Field '{k}' changed logically from {old_v} to {v}")
+
+            if clean_updates:
                 affected_count += 1
-            
-            if not dry_run and row.id < 999999:
-                self.annual_repo.set_values(row.id, updates)
+                if not dry_run and row.id < 999999:
+                    self.annual_repo.set_values(row.id, clean_updates)
             
         logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}. Dry run: {dry_run}")
         
@@ -250,7 +259,7 @@ class AnnualExpenseService:
                     row_diff = {}
                     for k, v_after in after_state.items():
                         v_before = before_state.get(k)
-                        if v_before != v_after:
+                        if AnnualExpenseService._is_semantic_diff(v_before, v_after):
                             row_diff[k] = [v_before, v_after]
                     if row_diff:
                         diff[str(r.id)] = row_diff
@@ -269,7 +278,9 @@ class AnnualExpenseService:
                 )
                 logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Compressed Diff Snapshot recorded.")
 
+        status = "CHANGES_DETECTED" if affected_count > 0 else "NO_CHANGES_DETECTED"
         return {
+            "status": status,
             "affected_records": affected_count,
             "differences": trace_differences
         }

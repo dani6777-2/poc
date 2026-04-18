@@ -70,37 +70,44 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
         return self.get_by_id(tenant_id, row.id)
 
     def update(self, tenant_id: int, item_id: int, dto: ItemUpdateDto, subtotal: float) -> ItemEntity:
-        row = self.db.query(models.Item).filter(models.Item.id == item_id).first()
-        if not row: return None
-        row.month = dto.month
-        row.date = dto.date
-        row.name = dto.name
-        row.category_id = dto.category_id
-        row.channel_id = dto.channel_id
-        row.unit_id = dto.unit_id
-        row.quantity = dto.quantity
-        row.unit_price = dto.unit_price
-        row.subtotal = round(subtotal, 2)
-        row.prev_month_price = dto.prev_month_price
-        row.status = dto.status
-        row.source = dto.source
-        row.payment_method = dto.payment_method or "debit"
-        try:
-            self.db.commit()
-        except StaleDataError:
-            self.db.rollback()
-            raise DomainException("CONFLICT_409: El registro de gasto cambió por otra operación (Optimistic Lock).")
-        return self.get_by_id(tenant_id, item_id)
+        MAX_RETRIES = 3
+        for attempt in range(MAX_RETRIES):
+            row = self.db.query(models.Item).filter(models.Item.id == item_id).first()
+            if not row: return None
+            row.month = dto.month
+            row.date = dto.date
+            row.name = dto.name
+            row.category_id = dto.category_id
+            row.channel_id = dto.channel_id
+            row.unit_id = dto.unit_id
+            row.quantity = dto.quantity
+            row.unit_price = dto.unit_price
+            row.subtotal = round(subtotal, 2)
+            row.prev_month_price = dto.prev_month_price
+            row.status = dto.status
+            row.source = dto.source
+            row.payment_method = dto.payment_method or "debit"
+            try:
+                self.db.commit()
+                return self.get_by_id(tenant_id, item_id)
+            except StaleDataError:
+                self.db.rollback()
+                if attempt == MAX_RETRIES - 1:
+                    raise DomainException("CONFLICT_409: El registro de gasto cambió por otra operación (Optimistic Lock) tras múltiples intentos locales.")
 
     def delete(self, tenant_id: int, item_id: int) -> None:
-        row = self.db.query(models.Item).filter(models.Item.id == item_id).first()
-        if row:
+        MAX_RETRIES = 3
+        for attempt in range(MAX_RETRIES):
+            row = self.db.query(models.Item).filter(models.Item.id == item_id).first()
+            if not row: return
             self.db.delete(row)
             try:
                 self.db.commit()
+                return
             except StaleDataError:
                 self.db.rollback()
-                raise DomainException("CONFLICT_409: El registro de gasto ya fue modificado o eliminado (Optimistic Lock).")
+                if attempt == MAX_RETRIES - 1:
+                    raise DomainException("CONFLICT_409: El registro de gasto ya fue modificado o eliminado (Optimistic Lock) tras m\u00faltiples intentos locales.")
 
     def get_by_source(self, tenant_id: int, source: str) -> Optional[ItemEntity]:
         row = self.db.query(models.Item).filter(
