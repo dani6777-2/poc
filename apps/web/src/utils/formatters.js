@@ -9,11 +9,14 @@
  * @returns {string} Formatted currency string.
  */
 export const fmt = (n, fractionDigits = 0) => {
+  if (n === null || n === undefined || n === '') return '—';
+  const val = typeof n === 'string' ? parseFloat(n) : n;
+  if (isNaN(val)) return '—';
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     maximumFractionDigits: fractionDigits,
-  }).format(n || 0);
+  }).format(val);
 };
 
 /**

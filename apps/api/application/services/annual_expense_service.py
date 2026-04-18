@@ -35,11 +35,33 @@ class AnnualExpenseService:
 
     @staticmethod
     def _is_semantic_diff(old_val, new_val) -> bool:
+        if old_val is None and new_val is None:
+            return False
+
+        # Safe float conversion to handle strings or Decimals correctly
+        try:
+            o_val = float(old_val) if old_val is not None else None
+            n_val = float(new_val) if new_val is not None else None
+        except (TypeError, ValueError):
+            return old_val != new_val
+
+        # Null equivalence matrix
+        if o_val is None and n_val == 0.0:
+            return False
+            
+        if o_val == 0.0 and n_val is None:
+            return False
+
+        if o_val is None and n_val not in (0.0, None):
+            return True
+
+        if o_val not in (0.0, None) and n_val is None:
+            return True
+
+        # Math comparison with strict decimal rounding
         v1 = Decimal(str(old_val)) if old_val is not None else Decimal('0.0')
         v2 = Decimal(str(new_val)) if new_val is not None else Decimal('0.0')
-        v1_q = v1.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        v2_q = v2.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        return v1_q != v2_q
+        return v1.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) != v2.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     def get_annual_expenses(self, tenant_id: int, year: int, section_id: Optional[int] = None) -> List[AnnualExpenseEntity]:
         self.sync_registry_to_expenses(tenant_id, year)

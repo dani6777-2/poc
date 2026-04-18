@@ -49,9 +49,9 @@ class ItemCreateDto(BaseModel):
     @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
     @classmethod
     def _sanitize_float(cls, v):
-        if v is not None:
+        if v is not None and str(v).strip() != "":
             return float(Decimal(str(v)).quantize(Decimal("0.01")))
-        return v
+        return None
 
 class ItemUpdateDto(BaseModel):
     month: str
@@ -71,6 +71,6 @@ class ItemUpdateDto(BaseModel):
     @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
     @classmethod
     def _sanitize_float(cls, v):
-        if v is not None:
+        if v is not None and str(v).strip() != "":
             return float(Decimal(str(v)).quantize(Decimal("0.01")))
-        return v
+        return None

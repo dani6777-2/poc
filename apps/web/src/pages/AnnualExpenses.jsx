@@ -39,6 +39,7 @@ export default function AnnualExpenses() {
   const [health, setHealth] = useState(null)
   const [isDryRun, setIsDryRun] = useState(true)
   const [traceModal, setTraceModal] = useState(null)
+  const [reconcileConfirm, setReconcileConfirm] = useState(false)
   const saveTimers = useRef({})
 
   const fetchData = useCallback(async (silent = false) => {
@@ -72,9 +73,11 @@ export default function AnnualExpenses() {
     const payload = { ...current }
     for (const key in payload) {
         if (key === 'id' || key === 'tenant_id' || key === 'section_name' || key === 'category_name') continue;
-        if (typeof payload[key] === 'string' && payload[key] === '' && key !== 'description') payload[key] = 0
-        else if (typeof payload[key] === 'string' && !isNaN(payload[key]) && key !== 'description' && key !== 'section') {
-            payload[key] = parseFloat(payload[key]) || 0
+        if (typeof payload[key] === 'string' && payload[key] === '' && key !== 'description') {
+            payload[key] = null;
+        } else if (typeof payload[key] === 'string' && !isNaN(payload[key]) && key !== 'description' && key !== 'section') {
+            payload[key] = parseFloat(payload[key]);
+            if (isNaN(payload[key])) payload[key] = null;
         }
     }
     setSaving(s => ({ ...s, [id]: true }))
@@ -122,11 +125,18 @@ export default function AnnualExpenses() {
   }
 
   const handleReconcile = async () => {
+    if (!isDryRun && !reconcileConfirm) {
+      setReconcileConfirm(true);
+      return;
+    }
+    setReconcileConfirm(false);
     setLoading(true)
     try {
       const res = await expenseService.reconcileSystem(year, isDryRun)
       addToast(isDryRun ? 'Dry-Run Analysis Evaluated' : 'System mathematical integrity reconciled', 'success')
-      if (res.trace && res.trace.affected_records > 0) {
+      if (res.status === 'NO_CHANGES_DETECTED') {
+        addToast(isDryRun ? 'Simulation complete: No real changes detected' : 'Finished: No Changes Detected', 'warning')
+      } else if (res.trace && res.trace.affected_records > 0) {
         setTraceModal({ ...res.trace, IS_DRY_RUN: isDryRun })
       } else if (res.trace?.affected_records === 0 && isDryRun) {
         addToast('Matrix verified: 0 discrepancies.', 'success')
@@ -186,7 +196,7 @@ export default function AnnualExpenses() {
       title={<>Annual <span className="text-accent italic font-light">Expenses Manager</span></>}
       subtitle="Multi-layer control and structural flow management"
       icon="📋"
-      badge={`Fiscal Year ${year} Operational ${health?.status === 'warning' ? '⚠️ Integrity Warning' : (health ? '✅ Zero Drift' : '')}`}
+      badge={`Fiscal Year ${year} Operational ${health?.status === 'warning' ? '⚠️ Inconsistencias detectadas' : (health ? '✅ Sin drift' : '')}`}
       loading={loading || ctxLoading}
       loadingText="Scanning structural flows..."
       headerAction={
@@ -217,6 +227,14 @@ export default function AnnualExpenses() {
           mensaje="Delete this concept? All planned and actual linked data will be deleted."
           onConfirm={handleDeleteConfirm}
           onCancel={() => setConfirmId(null)}
+        />
+      )}
+
+      {reconcileConfirm && (
+        <ConfirmModal
+          mensaje="Execute permanent database reconciliation? This will overwrite active matrix records according to backend rules."
+          onConfirm={handleReconcile}
+          onCancel={() => setReconcileConfirm(false)}
         />
       )}
 

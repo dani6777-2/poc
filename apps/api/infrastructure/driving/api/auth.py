@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from infrastructure.driven.db.config import get_db
 from infrastructure.driven.db import models
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super_secret_dev_key_4.0")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super_secret_dev_key_4.0_for_local_dev_only")
 ALGORITHM = "HS256"
 
 class UserContext(BaseModel):

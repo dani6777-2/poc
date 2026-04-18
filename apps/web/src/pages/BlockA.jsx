@@ -81,7 +81,13 @@ export default function BlockA() {
       setModal(false)
       fetchData()
     } catch (e) {
-      addToast('Failure in data persistence', 'error')
+      if (e.status === 409) {
+        addToast('⚠️ CONFLICT: Vault was updated by someone else. Synchronizing...', 'warning')
+      } else {
+        addToast('Failure in data persistence', 'error')
+      }
+    } finally {
+      fetchData()
     }
   }
 
@@ -92,7 +98,13 @@ export default function BlockA() {
       addToast('Asset removed from inventory', 'warning')
       fetchData()
     } catch (e) {
-      addToast('Error processing deletion', 'error')
+      if (e.status === 409) {
+        addToast('⚠️ CONFLICT: Registry was modified externally.', 'warning')
+      } else {
+        addToast('Error processing deletion', 'error')
+      }
+    } finally {
+      fetchData()
     }
   }
 
@@ -106,7 +118,13 @@ export default function BlockA() {
       addToast(`Item marked as ${newStatus}`, 'success')
       fetchData()
     } catch (e) {
-      addToast('Failed to update status', 'error')
+      if (e.status === 409) {
+        addToast('⚠️ CONFLICT: State out of sync.', 'warning')
+      } else {
+        addToast('Failed to update status', 'error')
+      }
+    } finally {
+      fetchData()
     }
   }, [fetchData, addToast])
 
