@@ -63,15 +63,6 @@ def system_health(year: int, svc: AnnualExpenseService = Depends(get_annual_expe
     
     log = models.SystemHealthLog(tenant_id=current_user.tenant_id, status=status, delta=delta, duplicate_clusters=duplicates)
     db.add(log)
-    
-    # 30-day retention policy enforcement
-    from datetime import datetime, timedelta
-    cutoff = datetime.utcnow() - timedelta(days=30)
-    db.query(models.SystemHealthLog).filter(
-        models.SystemHealthLog.tenant_id == current_user.tenant_id,
-        models.SystemHealthLog.created_at < cutoff
-    ).delete()
-    
     db.commit()
 
     return {

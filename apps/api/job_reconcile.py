@@ -42,6 +42,19 @@ def run_job(tenant_id: int, year: int, dry_run: bool = False):
         else:
             logger.info(" -> Zero drift. (Data is fully synchronized)")
             
+        if not dry_run:
+            from datetime import datetime, timedelta
+            from infrastructure.driven.db import models
+            cutoff = datetime.utcnow() - timedelta(days=180)
+            deleted_logs = db.query(models.SystemHealthLog).filter(
+                models.SystemHealthLog.tenant_id == tenant_id,
+                models.SystemHealthLog.timestamp < cutoff
+            ).delete()
+            db.commit()
+            if deleted_logs > 0:
+                logger.info(f"Purged {deleted_logs} outdated health logs (> 180 days).")
+            
+            
     except Exception as e:
         logger.error(f"Reconciliation Job failed: {str(e)}")
         sys.exit(1)

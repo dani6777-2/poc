@@ -42,5 +42,5 @@ class ExpenseRepositoryPort(ABC):
 class ExpenseSyncPort(ABC):
     """Port to handle downstream synchronizations (hexagonal outbound event)"""
     @abstractmethod
-    def post_sync(self, month: str, prev_status: Optional[str], new_status: Optional[str], tenant_id: int) -> None:
+    def post_sync(self, month: str, prev_status: Optional[str], new_status: Optional[str], tenant_id: int, prev_month: Optional[str] = None) -> None:
         pass

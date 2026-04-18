@@ -106,6 +106,7 @@ class ExpenseService:
         self._validate_expense_dto(dto)
 
         prev_status = existing.status
+        prev_month = existing.month
         
         # Auto-normalize payment method based on channel config
         dto.payment_method = self._normalize_payment_method(tenant_id, dto.channel_id, dto.payment_method)
@@ -116,7 +117,7 @@ class ExpenseService:
         dto.source = None 
 
         updated = self.expense_repo.update(tenant_id, item_id, dto, subtotal)
-        self.sync_port.post_sync(updated.month, prev_status, updated.status, tenant_id)
+        self.sync_port.post_sync(updated.month, prev_status, updated.status, tenant_id, prev_month=prev_month)
         return updated
 
     def delete_expense(self, tenant_id: int, item_id: int) -> None:
@@ -133,4 +134,4 @@ class ExpenseService:
         self.expense_repo.delete(tenant_id, item_id)
         
         # Always sync to update both Budget (Planned) and Actuals (Bought)
-        self.sync_port.post_sync(month, prev_status, None, tenant_id)
+        self.sync_port.post_sync(month, prev_status, None, tenant_id, prev_month=month)

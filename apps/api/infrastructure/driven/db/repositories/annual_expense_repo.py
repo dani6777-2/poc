@@ -91,7 +91,25 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
             self.db.flush()
 
     def commit_transaction(self) -> None:
-        self.db.commit()
+        from sqlalchemy.orm.exc import StaleDataError
+        from core.exceptions import DomainException
+        try:
+            self.db.commit()
+        except StaleDataError:
+            self.db.rollback()
+            raise DomainException("CONFLICT_409: Colisi\u00f3n concurrente en la Matriz Anual. Operaci\u00f3n cancelada por seguridad.")
+
+    def create_snapshot(self, tenant_id: int, year: int, affected_records: int, before_state_json: str, after_state_json: str, affected_records_ids: Optional[str] = None) -> None:
+        snap = models.ReconciliationSnapshot(
+            tenant_id=tenant_id,
+            year=year,
+            affected_records=affected_records,
+            affected_records_ids=affected_records_ids,
+            before_state_json=before_state_json,
+            after_state_json=after_state_json
+        )
+        self.db.add(snap)
+        self.db.flush()
 
     def _to_entity(self, row: models.ExpenseDetail) -> AnnualExpenseEntity:
         return AnnualExpenseEntity(

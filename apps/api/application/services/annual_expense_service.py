@@ -63,6 +63,15 @@ class AnnualExpenseService:
         self.annual_repo.delete(tenant_id, expense_id)
 
     def sync_registry_to_expenses(self, tenant_id: int, year: int, dry_run: bool = False, target_month: str = None) -> Dict[str, any]:
+        # Advisory locking for concurrency serialization
+        if hasattr(self.annual_repo, 'db') and self.annual_repo.db.bind.dialect.name == 'postgresql':
+            lock_id = tenant_id + (year * 100000)
+            from sqlalchemy import text
+            try:
+                self.annual_repo.db.execute(text(f"SELECT pg_advisory_xact_lock({lock_id})"))
+            except Exception as e:
+                logger.warning(f"Failed to acquire advisory lock: {e}")
+
         existing_rows = self.annual_repo.get_all_by_year(tenant_id, year, for_update=not dry_run)
         
         # Build "before" snapshot for auditing trace
@@ -246,13 +255,17 @@ class AnnualExpenseService:
                     if row_diff:
                         diff[str(r.id)] = row_diff
                 
+                affected_keys = list(diff.keys())
+                affected_ids_csv = ",".join(affected_keys) if affected_keys else None
+                
                 diff_json = json.dumps(diff)
                 compressed = base64.b64encode(zlib.compress(diff_json.encode('utf-8'))).decode('utf-8')
                 
                 self.annual_repo.create_snapshot(
                     tenant_id, year, affected_count,
                     "DIFF_ZLIB_B64",
-                    compressed
+                    compressed,
+                    affected_ids_csv
                 )
                 logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Compressed Diff Snapshot recorded.")
 

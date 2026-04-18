@@ -1,7 +1,9 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 from core.ports.secondary.expense_repository import ExpenseRepositoryPort, ExpenseSyncPort
 from core.entities.expenses import ItemEntity, ItemCreateDto, ItemUpdateDto
+from core.exceptions import DomainException
 from infrastructure.driven.db import models
 
 from core.ports.secondary.annual_expense_repository import AnnualExpenseRepositoryPort
@@ -83,14 +85,22 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
         row.status = dto.status
         row.source = dto.source
         row.payment_method = dto.payment_method or "debit"
-        self.db.commit()
+        try:
+            self.db.commit()
+        except StaleDataError:
+            self.db.rollback()
+            raise DomainException("CONFLICT_409: El registro de gasto cambió por otra operación (Optimistic Lock).")
         return self.get_by_id(tenant_id, item_id)
 
     def delete(self, tenant_id: int, item_id: int) -> None:
         row = self.db.query(models.Item).filter(models.Item.id == item_id).first()
         if row:
             self.db.delete(row)
-            self.db.commit()
+            try:
+                self.db.commit()
+            except StaleDataError:
+                self.db.rollback()
+                raise DomainException("CONFLICT_409: El registro de gasto ya fue modificado o eliminado (Optimistic Lock).")
 
     def get_by_source(self, tenant_id: int, source: str) -> Optional[ItemEntity]:
         row = self.db.query(models.Item).filter(
@@ -154,8 +164,15 @@ class LegacyExpenseSyncAdapter(ExpenseSyncPort):
         self.db = db
         self.annual_service = AnnualExpenseService(annual_repo, SQLExpenseRepository(db), card_repo)
 
-    def post_sync(self, month: str, prev_status: Optional[str], new_status: Optional[str], tenant_id: int) -> None:
+    def post_sync(self, month: str, prev_status: Optional[str], new_status: Optional[str], tenant_id: int, prev_month: Optional[str] = None) -> None:
         year = int(month[:4])
+        
+        if prev_month and prev_month != month:
+            prev_year = int(prev_month[:4])
+            if prev_status == "Bought":
+                self.annual_service.sync_registry_to_expenses(tenant_id, prev_year, dry_run=False, target_month=prev_month)
+                self.annual_service.sync_card_to_debts_for_month(tenant_id, prev_month)
+                
         if new_status == "Bought" or prev_status == "Bought":
             self.annual_service.sync_registry_to_expenses(tenant_id, year, dry_run=False, target_month=month)
             self.annual_service.sync_card_to_debts_for_month(tenant_id, month)

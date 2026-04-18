@@ -23,7 +23,7 @@ class AnnualExpenseRepositoryPort(ABC):
     def delete(self, tenant_id: int, expense_id: int) -> None:
         pass
 
-    def create_snapshot(self, tenant_id: int, year: int, affected_records: int, before_state_json: str, after_state_json: str) -> None:
+    def create_snapshot(self, tenant_id: int, year: int, affected_records: int, before_state_json: str, after_state_json: str, affected_records_ids: Optional[str] = None) -> None:
         pass
 
     def commit_transaction(self) -> None:

@@ -88,10 +88,15 @@ class Item(Base):
     status = Column(String, nullable=True, default="Planned")
     source = Column(String, nullable=True, index=True)
     payment_method = Column(String, nullable=True, default="debit")
+    version_id = Column(Integer, nullable=False, default=1)
 
     category = relationship("TaxonomyCategory")
     channel = relationship("TaxonomyChannel")
     unit = relationship("TaxonomyUnit")
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
 
 class Budget(Base):
     """Monthly budget by category"""
@@ -228,6 +233,11 @@ class ExpenseDetail(Base):
     section = relationship("TaxonomySection")
     category = relationship("TaxonomyCategory")
     category_id = Column(Integer, ForeignKey("taxonomy_categories.id"), nullable=True, index=True)
+    version_id = Column(Integer, nullable=False, default=1)
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
 
     __table_args__ = (
         UniqueConstraint('tenant_id', 'year', 'section_id', 'description', name='uix_tenant_year_section_description'),
@@ -286,6 +296,7 @@ class ReconciliationSnapshot(Base):
     year = Column(Integer)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     affected_records = Column(Integer)
+    affected_records_ids = Column(String, nullable=True) # CSV of row IDs
     before_state_json = Column(String)  # Serialized payload
     after_state_json = Column(String)   # Serialized payload
 
