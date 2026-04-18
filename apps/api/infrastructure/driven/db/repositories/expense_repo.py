@@ -46,6 +46,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
         return self._to_entity(row) if row else None
 
     def create(self, tenant_id: int, dto: ItemCreateDto, subtotal: float) -> ItemEntity:
+        subtotal = round(subtotal, 2)
         row = models.Item(
             tenant_id=tenant_id,
             month=dto.month,
@@ -77,7 +78,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
         row.unit_id = dto.unit_id
         row.quantity = dto.quantity
         row.unit_price = dto.unit_price
-        row.subtotal = subtotal
+        row.subtotal = round(subtotal, 2)
         row.prev_month_price = dto.prev_month_price
         row.status = dto.status
         row.source = dto.source
@@ -156,5 +157,5 @@ class LegacyExpenseSyncAdapter(ExpenseSyncPort):
     def post_sync(self, month: str, prev_status: Optional[str], new_status: Optional[str], tenant_id: int) -> None:
         year = int(month[:4])
         if new_status == "Bought" or prev_status == "Bought":
-            self.annual_service.sync_registry_to_expenses(tenant_id, year)
+            self.annual_service.sync_registry_to_expenses(tenant_id, year, dry_run=False, target_month=month)
             self.annual_service.sync_card_to_debts_for_month(tenant_id, month)

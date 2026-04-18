@@ -62,8 +62,8 @@ class AnnualExpenseService:
             return 
         self.annual_repo.delete(tenant_id, expense_id)
 
-    def sync_registry_to_expenses(self, tenant_id: int, year: int, dry_run: bool = False) -> Dict[str, any]:
-        existing_rows = self.annual_repo.get_all_by_year(tenant_id, year)
+    def sync_registry_to_expenses(self, tenant_id: int, year: int, dry_run: bool = False, target_month: str = None) -> Dict[str, any]:
+        existing_rows = self.annual_repo.get_all_by_year(tenant_id, year, for_update=not dry_run)
         
         # Build "before" snapshot for auditing trace
         snapshot_before = {}
@@ -90,7 +90,15 @@ class AnnualExpenseService:
         # 2. Get list of category_ids that are explicitly linked in annual matrix
         linked_category_ids = {r.category_id for r in existing_rows if r.category_id}
 
+        try:
+            target_month_idx = int(target_month.split('-')[1]) - 1 if target_month else None
+        except:
+            target_month_idx = None
+
         for month_idx, mk in enumerate(MONTHS):
+            if target_month_idx is not None and month_idx != target_month_idx:
+                continue
+                
             month_str = f"{year}-{str(month_idx + 1).zfill(2)}"
             
             # 3. Budget sync (sum category budgets)
@@ -150,6 +158,8 @@ class AnnualExpenseService:
             if row:
                 updates = {}
                 for mk, data in month_totals.items():
+                    if target_month_idx is not None and mk != MONTHS[target_month_idx]:
+                        continue
                     val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
                     updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
                     updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
@@ -186,6 +196,8 @@ class AnnualExpenseService:
             
             updates = {}
             for mk, data in month_totals.items():
+                if target_month_idx is not None and mk != MONTHS[target_month_idx]:
+                    continue
                 val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
                 updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
                 updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
@@ -207,20 +219,42 @@ class AnnualExpenseService:
             
         logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}. Dry run: {dry_run}")
         
-        if not dry_run and affected_count > 0:
+        if not dry_run:
+            if hasattr(self.annual_repo, 'commit_transaction'):
+                self.annual_repo.commit_transaction()
+        
+        if not dry_run and affected_count > 0 and not target_month:
             if hasattr(self.annual_repo, 'create_snapshot'):
                 import json
+                import base64
+                import zlib
+                
                 after_rows = self.annual_repo.get_all_by_year(tenant_id, year)
-                snapshot_after = {}
+                
+                # Diffing logic
+                diff = {}
                 for r in after_rows:
-                    snapshot_after[r.id] = {m: getattr(r, m) for m in MONTHS}
-                    snapshot_after[r.id].update({f"actual_{m}": getattr(r, f"actual_{m}") for m in MONTHS})
+                    after_state = {m: getattr(r, m) for m in MONTHS}
+                    after_state.update({f"actual_{m}": getattr(r, f"actual_{m}") for m in MONTHS})
+                    
+                    before_state = snapshot_before.get(r.id, {})
+                    row_diff = {}
+                    for k, v_after in after_state.items():
+                        v_before = before_state.get(k)
+                        if v_before != v_after:
+                            row_diff[k] = [v_before, v_after]
+                    if row_diff:
+                        diff[str(r.id)] = row_diff
+                
+                diff_json = json.dumps(diff)
+                compressed = base64.b64encode(zlib.compress(diff_json.encode('utf-8'))).decode('utf-8')
+                
                 self.annual_repo.create_snapshot(
                     tenant_id, year, affected_count,
-                    json.dumps(snapshot_before),
-                    json.dumps(snapshot_after)
+                    "DIFF_ZLIB_B64",
+                    compressed
                 )
-                logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Snapshot recorded.")
+                logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Compressed Diff Snapshot recorded.")
 
         return {
             "affected_records": affected_count,

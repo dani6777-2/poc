@@ -4,7 +4,7 @@ from core.entities.annual_expense import AnnualExpenseEntity, AnnualExpenseCreat
 
 class AnnualExpenseRepositoryPort(ABC):
     @abstractmethod
-    def get_all_by_year(self, tenant_id: int, year: int, section: Optional[str] = None) -> List[AnnualExpenseEntity]:
+    def get_all_by_year(self, tenant_id: int, year: int, section_id: Optional[int] = None, for_update: bool = False) -> List[AnnualExpenseEntity]:
         pass
 
     @abstractmethod
@@ -24,6 +24,9 @@ class AnnualExpenseRepositoryPort(ABC):
         pass
 
     def create_snapshot(self, tenant_id: int, year: int, affected_records: int, before_state_json: str, after_state_json: str) -> None:
+        pass
+
+    def commit_transaction(self) -> None:
         pass
 
     @abstractmethod

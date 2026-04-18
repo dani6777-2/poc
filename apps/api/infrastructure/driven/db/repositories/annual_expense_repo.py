@@ -8,11 +8,18 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all_by_year(self, tenant_id: int, year: int, section_id: Optional[int] = None) -> List[AnnualExpenseEntity]:
+    def get_all_by_year(self, tenant_id: int, year: int, section_id: Optional[int] = None, for_update: bool = False) -> List[AnnualExpenseEntity]:
         q = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.tenant_id == tenant_id,
             models.ExpenseDetail.year == year
-        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id)\
+        )
+        if for_update:
+            try:
+                q = q.with_for_update()
+            except:
+                pass # Fallback for non-supporting dialects
+                
+        q = q.outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id)\
          .outerjoin(models.TaxonomyCategory, models.ExpenseDetail.category_id == models.TaxonomyCategory.id)
         
         if section_id:
@@ -33,7 +40,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         row = models.ExpenseDetail(**data.model_dump())
         row.tenant_id = tenant_id
         self.db.add(row)
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(tenant_id, row.id)
 
     def update(self, tenant_id: int, expense_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
@@ -44,7 +51,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         if row:
             for k, v in data.model_dump().items():
                 setattr(row, k, v)
-            self.db.commit()
+            self.db.flush()
         return self.get_by_id(tenant_id, expense_id)
 
     def delete(self, tenant_id: int, expense_id: int) -> None:
@@ -54,7 +61,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         ).first()
         if row:
             self.db.delete(row)
-            self.db.commit()
+            self.db.flush()
 
     def get_by_concept(self, tenant_id: int, year: int, section_id: int, description: str) -> Optional[AnnualExpenseEntity]:
         row = self.db.query(models.ExpenseDetail).filter(
@@ -74,14 +81,17 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         for row in legacy:
             self.db.delete(row)
         if legacy:
-            self.db.commit()
+            self.db.flush()
 
     def set_values(self, entity_id: int, column_values: dict) -> None:
         row = self.db.query(models.ExpenseDetail).filter(models.ExpenseDetail.id == entity_id).first()
         if row:
             for k, v in column_values.items():
                 setattr(row, k, v)
-            self.db.commit()
+            self.db.flush()
+
+    def commit_transaction(self) -> None:
+        self.db.commit()
 
     def _to_entity(self, row: models.ExpenseDetail) -> AnnualExpenseEntity:
         return AnnualExpenseEntity(
