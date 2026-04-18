@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from core.entities.annual_expense import AnnualExpenseEntity, AnnualExpenseCreateDto
 from application.services.annual_expense_service import AnnualExpenseService
 from application.services.revenue_service import RevenueService
@@ -44,3 +45,12 @@ def get_monthly_net(year: int, service: AnnualExpenseService = Depends(get_annua
 def sync_manual(year: int, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
     service.sync_registry_to_expenses(current_user.tenant_id, year)
     return {"ok": True, "year": year, "message": "Registry to Annual Expenses synchronization completed"}
+
+class ReconcileRequest(BaseModel):
+    year: int
+
+@router.post("/system/reconcile")
+def reconcile_system(req: ReconcileRequest, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
+    service.sync_registry_to_expenses(current_user.tenant_id, req.year)
+    # This acts as the explicit, auditable idempotency trigger.
+    return {"status": "success", "message": "Data reconciled correctly against Source of Truth (Items)", "audited_year": req.year}

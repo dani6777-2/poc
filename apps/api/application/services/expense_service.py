@@ -1,8 +1,11 @@
 from typing import List, Optional
+import logging
 from core.entities.expenses import ItemEntity, ItemCreateDto, ItemUpdateDto
 from core.ports.secondary.expense_repository import ExpenseRepositoryPort, ExpenseSyncPort
 from core.ports.secondary.card_repository import CardRepositoryPort
 from core.exceptions import DomainException
+
+logger = logging.getLogger(__name__)
 
 class AutoSourceActionError(DomainException):
     def __init__(self, message: str = "Items from Block A/B must be managed from their respective lists"):
@@ -74,14 +77,13 @@ class ExpenseService:
         
         subtotal = self._calc_subtotal(dto.quantity, dto.unit_price)
 
-        # Check for potential duplicates (soft duplicate block)
-        existing_items = self.expense_repo.get_all(tenant_id, dto.month)
-        for item in existing_items:
-            if (item.category_id == dto.category_id and
-                item.date == dto.date and
-                item.payment_method == dto.payment_method and
-                item.subtotal == subtotal):
-                raise ValueError("Posible registro duplicado detectado: Ya existe un gasto idéntico (categoría, fecha, monto exacto y método de pago).")
+        # Check for potential duplicates using optimized query
+        duplicate = self.expense_repo.check_exact_duplicate(tenant_id, dto.date or "", dto.category_id or 0, subtotal)
+        if duplicate and duplicate.payment_method == dto.payment_method:
+            if not getattr(dto, 'override_duplicate', False):
+                # Throw a special message we can catch in router
+                raise DomainException("DUPLICATE_409: Posible registro duplicado detectado idéntico en categoría, fecha, monto exacto y método de pago.")
+            logger.warning(f"[DUPLICATE_WARNING] Tolerance applied: Duplicate permitted for tenant {tenant_id}, date {dto.date}, cat {dto.category_id}, amount {subtotal}")
 
         item = self.expense_repo.create(tenant_id, dto, subtotal)
         

@@ -1,4 +1,5 @@
 from typing import List, Dict, Optional
+import logging
 from core.entities.annual_expense import AnnualExpenseEntity, AnnualExpenseCreateDto
 from core.ports.secondary.annual_expense_repository import AnnualExpenseRepositoryPort
 from core.ports.secondary.expense_repository import ExpenseRepositoryPort
@@ -6,6 +7,8 @@ from core.ports.secondary.card_repository import CardRepositoryPort
 from core.ports.secondary.budget_repository import BudgetRepositoryPort
 from application.services.taxonomy_service import TaxonomyService
 from core.constants import MONTHS, ACTUAL_MONTHS, CARD_MONTHS, REGISTRY_DESCRIPTION_PREFIX, AUTO_PREFIXES
+
+logger = logging.getLogger(__name__)
 
 class AnnualExpenseService:
     def __init__(
@@ -36,11 +39,17 @@ class AnnualExpenseService:
 
     def create_annual_expense(self, tenant_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
         if data.is_automatic or (data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES)):
-            raise ValueError(f"No se pueden crear filas manuales con prefijos de sistema.")
+            raise ValueError(f"No se pueden crear filas manuales pre-marcadas como automáticas.")
         entity = self.annual_repo.create(tenant_id, data)
         return self._enrich(entity)
 
     def update_annual_expense(self, tenant_id: int, expense_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
+        existing = self.annual_repo.get_by_id(tenant_id, expense_id)
+        if not existing:
+            raise ValueError("Row not found")
+        if existing.is_automatic or any(existing.description.startswith(p) for p in AUTO_PREFIXES):
+            raise ValueError("Guard triggered: Cannot edit a system-generated row.")
+            
         if data.is_automatic or (data.description and any(data.description.startswith(p) for p in AUTO_PREFIXES)):
             raise ValueError(f"No se pueden utilizar prefijos de sistema en descripciones manuales.")
         entity = self.annual_repo.update(tenant_id, expense_id, data)
@@ -157,6 +166,8 @@ class AnnualExpenseService:
                 updates[f"actual_card_{mk}"] = round(data['card'], 2)
             
             self.annual_repo.set_values(row.id, updates)
+            
+        logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}.")
 
     def sync_card_to_debts_for_month(self, tenant_id: int, month_str: str) -> None:
         pass

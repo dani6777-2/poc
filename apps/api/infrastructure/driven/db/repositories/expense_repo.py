@@ -36,6 +36,15 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
          .first()
         return self._to_entity(row) if row else None
 
+    def check_exact_duplicate(self, tenant_id: int, date: str, category_id: int, subtotal: float) -> Optional[ItemEntity]:
+        row = self.db.query(models.Item).filter(
+            models.Item.tenant_id == tenant_id,
+            models.Item.date == date,
+            models.Item.category_id == category_id,
+            models.Item.subtotal == subtotal
+        ).first()
+        return self._to_entity(row) if row else None
+
     def create(self, tenant_id: int, dto: ItemCreateDto, subtotal: float) -> ItemEntity:
         row = models.Item(
             tenant_id=tenant_id,

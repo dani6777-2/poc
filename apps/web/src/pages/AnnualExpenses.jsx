@@ -111,6 +111,18 @@ export default function AnnualExpenses() {
     } catch (e) { addToast('Error deleting', 'danger') }
   }
 
+  const handleReconcile = async () => {
+    setLoading(true)
+    try {
+      await expenseService.reconcileSystem(year)
+      addToast('System mathematical integrity reconciled', 'success')
+      fetchData(true)
+    } catch (e) {
+      addToast('Error reconciling system', 'danger')
+      setLoading(false)
+    }
+  }
+
   const toggleCollapse = secId => setCollapsed(c => ({ ...c, [secId]: !c[secId] }))
 
   // Dashboard calculations
@@ -171,6 +183,9 @@ export default function AnnualExpenses() {
               {YEARS.map(y => <option key={y} value={y} className="bg-secondary">{y}</option>)}
             </select>
           </div>
+          <Button onClick={handleReconcile} variant="secondary" size="sm" className="px-5 font-black uppercase tracking-[0.2em] h-12 shadow-md bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20">
+             🔄 Reconcile Data
+          </Button>
           <Button onClick={() => setModal(true)} variant="accent" size="sm" className="px-8 font-black uppercase tracking-[0.2em] h-12 shadow-glow-accent">
               + Inject Concept
           </Button>

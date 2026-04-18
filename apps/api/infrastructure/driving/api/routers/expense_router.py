@@ -18,6 +18,8 @@ def create_expense(item: ItemCreateDto, expense_service: ExpenseService = Depend
     try:
         return expense_service.create_expense(current_user.tenant_id, item)
     except DomainException as e:
+        if "DUPLICATE_409" in str(e.message):
+            raise HTTPException(status_code=409, detail=str(e.message))
         raise HTTPException(status_code=400, detail=str(e.message))
 
 @router.put("/{item_id}", response_model=ItemEntity)

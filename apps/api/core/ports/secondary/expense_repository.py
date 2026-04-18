@@ -12,6 +12,10 @@ class ExpenseRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def check_exact_duplicate(self, tenant_id: int, date: str, category_id: int, subtotal: float) -> Optional[ItemEntity]:
+        pass
+
+    @abstractmethod
     def create(self, tenant_id: int, dto: ItemCreateDto, subtotal: float) -> ItemEntity:
         pass
 

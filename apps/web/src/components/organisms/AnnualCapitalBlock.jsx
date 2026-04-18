@@ -306,7 +306,7 @@ const AnnualCapitalBlock = ({
                             {fmt(totalPlannedRow(row))}
                           </td>
                           <td className="p-4 text-right">
-                            {!auto && (
+                            {!auto ? (
                               <Button
                                 variant="ghost"
                                 className="p-2 rounded-lg hover:bg-danger/10 text-tx-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-all"
@@ -325,6 +325,10 @@ const AnnualCapitalBlock = ({
                                   <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5h6m-6 4h6" />
                                 </svg>
                               </Button>
+                            ) : (
+                              <div className="p-2 flex justify-center text-tx-muted opacity-30 cursor-not-allowed group-hover:opacity-50 transition-all" title="System Managed Record">
+                                🔒
+                              </div>
                             )}
                           </td>
                         </tr>

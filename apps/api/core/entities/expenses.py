@@ -42,6 +42,7 @@ class ItemCreateDto(BaseModel):
     status: str = "Planned"
     source: Optional[str] = None
     payment_method: str = "debit"
+    override_duplicate: Optional[bool] = False
 
 class ItemUpdateDto(BaseModel):
     month: str

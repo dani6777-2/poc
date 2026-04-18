@@ -18,7 +18,9 @@ const RegistryForm = ({
   units,
   handleSave,
   onCancel,
-  processing
+  processing,
+  duplicateWarning,
+  setDuplicateWarning
 }) => {
   const { activeTenant } = useAuth();
   const isGuest = activeTenant?.role === 'guest';
@@ -92,6 +94,18 @@ const RegistryForm = ({
           : '💵 Efectivo — Descuenta directamente del saldo disponible.'}
       </div>
 
+      {duplicateWarning && (
+        <div className="mb-6 p-4 rounded-xl flex flex-col gap-2 bg-danger/10 text-danger border border-danger/20 animate-in slide-in-from-top-2">
+          <div className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+            <span>⚠️</span> Posible Duplicado
+          </div>
+          <div className="text-[10px] font-bold opacity-80 leading-relaxed uppercase tracking-widest">
+            Ya has registrado exactamente la misma cantidad para esta categoría en este día.
+            Si es un gasto legítimo separado, puedes forzar el guardado.
+          </div>
+        </div>
+      )}
+
       {/* === DESPENSA FORM === */}
       {isDespensa && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -145,9 +159,19 @@ const RegistryForm = ({
           />
 
           <div className="md:col-span-2 mt-4 flex gap-3">
-            <Button className="flex-1 py-5 shadow-2xl" onClick={handleSave} disabled={processing}>
-              {isEditing ? '✓ Confirmar Cambios' : '+ Registrar en Despensa'}
-            </Button>
+            {duplicateWarning ? (
+              <Button 
+                className="flex-1 py-5 shadow-2xl bg-danger hover:bg-danger-light" 
+                onClick={(e) => handleSave(e, true)} 
+                disabled={processing}
+              >
+                ⚠️ Forzar Guardado
+              </Button>
+            ) : (
+              <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e, false)} disabled={processing}>
+                {isEditing ? '✓ Confirmar Cambios' : '+ Registrar en Despensa'}
+              </Button>
+            )}
             {isEditing && (
               <Button variant="ghost" className="px-8" onClick={onCancel}>
                 Cancelar
@@ -195,9 +219,19 @@ const RegistryForm = ({
           />
 
           <div className="md:col-span-2 mt-4 flex gap-3">
-            <Button className="flex-1 py-5 shadow-2xl" onClick={handleSave} disabled={processing}>
-              {isEditing ? '✓ Confirmar Cambios' : '+ Registrar Servicio'}
-            </Button>
+            {duplicateWarning ? (
+               <Button 
+                 className="flex-1 py-5 shadow-2xl bg-danger hover:bg-danger-light" 
+                 onClick={(e) => handleSave(e, true)} 
+                 disabled={processing}
+               >
+                 ⚠️ Forzar Guardado
+               </Button>
+             ) : (
+               <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e, false)} disabled={processing}>
+                 {isEditing ? '✓ Confirmar Cambios' : '+ Registrar Servicio'}
+               </Button>
+             )}
             {isEditing && (
               <Button variant="ghost" className="px-8" onClick={onCancel}>
                 Cancelar

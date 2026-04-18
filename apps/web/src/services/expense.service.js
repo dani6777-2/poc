@@ -27,6 +27,11 @@ export const expenseService = {
     return data
   },
 
+  reconcileSystem: async (year) => {
+    const { data } = await api.post('expense-details/system/reconcile', { year })
+    return data
+  },
+
   // Registry (Transactional Expenses)
   getExpenses: async ({ month }) => {
     const { data } = await api.get(`expenses/?month=${month}`)

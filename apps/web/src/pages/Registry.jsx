@@ -58,6 +58,7 @@ export default function Registry() {
 
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [search, setSearch] = useState("");
   const [confirmData, setConfirmData] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -115,15 +116,17 @@ export default function Registry() {
   // --------------------------------------------------------
   // CRUD Handlers
   // --------------------------------------------------------
-  const handleSave = async (e) => {
+  const handleSave = async (e, overrideDuplicate = false) => {
     e?.preventDefault();
     setProcessing(true);
+    setDuplicateWarning(false);
     try {
       const payload = {
         ...form,
         month,
         section_id: categories.find((c) => c.id === parseInt(form.category_id))
           ?.section_id,
+        override_duplicate: overrideDuplicate
       };
 
       if (editId) {
@@ -139,8 +142,13 @@ export default function Registry() {
         formType === "servicios" ? SERVICIOS_BLANK_STATE : DESPENSA_BLANK_STATE
       );
       fetchData();
-    } catch {
-      addToast("Failed to save registry", "danger");
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setDuplicateWarning(true);
+        addToast("Posible registro duplicado detectado.", "warning");
+      } else {
+        addToast("Failed to save registry", "danger");
+      }
     } finally {
       setProcessing(false);
     }
@@ -288,6 +296,8 @@ export default function Registry() {
               );
             }}
             processing={processing}
+            duplicateWarning={duplicateWarning}
+            setDuplicateWarning={setDuplicateWarning}
           />
 
           {scanning && (
