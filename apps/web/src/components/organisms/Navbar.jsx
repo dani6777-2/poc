@@ -188,11 +188,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          <HomeSwitcherModal 
-            isOpen={showSwitcher} 
-            onClose={() => setShowSwitcher(false)} 
-          />
-
           <button
             onClick={() => {
               logout();
@@ -207,6 +202,11 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
+
+      <HomeSwitcherModal 
+        isOpen={showSwitcher} 
+        onClose={() => setShowSwitcher(false)} 
+      />
     </>
   );
 }

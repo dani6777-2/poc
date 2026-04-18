@@ -30,6 +30,7 @@ class TenantEntity(BaseModel):
     name: str
     invite_code: Optional[str] = None
 
+
 class TenantAccessEntity(BaseModel):
     id: int
     name: str

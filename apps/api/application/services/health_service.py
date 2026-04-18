@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+
 from core.entities.health import (
     HealthResponse, SectionAlert, Group503020, CardAlert
 )

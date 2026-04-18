@@ -33,6 +33,8 @@ class TenantRepositoryPort(ABC):
     def update_invite_code(self, tenant_id: int, code: str) -> None:
         pass
 
+
+
     @abstractmethod
     def get_user_access_list(self, user_id: int) -> list:
         pass

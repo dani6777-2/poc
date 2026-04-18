@@ -1,7 +1,7 @@
 export { default as AnalysisKpiGrid } from './AnalysisKpiGrid';
 export { default as AnnualCapitalBlock } from './AnnualCapitalBlock';
 export { default as AnnualExpenseTable } from './AnnualExpenseTable';
-export { default as AnnualPlanningBanner } from './AnnualPlanningBanner';
+
 export { default as AuditMatrixTable } from './AuditMatrixTable';
 export { default as BudgetKpiGrid } from './BudgetKpiGrid';
 export { default as BudgetLimitTable } from './BudgetLimitTable';
@@ -19,5 +19,6 @@ export { default as RegistryForm } from './RegistryForm';
 export { default as RegistryTable } from './RegistryTable';
 export { default as RevenueMatrixTable } from './RevenueMatrixTable';
 export { default as RevenueSourceModal } from './RevenueSourceModal';
-export { default as SegmentationRadarPanel } from './SegmentationRadarPanel';
+export { default as HomeSwitcherModal } from './HomeSwitcherModal';
+
 export { default as StrategicAuditDashboard } from './StrategicAuditDashboard';

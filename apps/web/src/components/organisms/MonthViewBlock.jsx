@@ -18,8 +18,6 @@ const MonthViewBlock = ({
   handleCellChange,
   handleSaveRow,
   setConfirmId,
-  setForm,
-  setModal,
   isAutoSync,
   fmt,
 }) => {
@@ -100,18 +98,7 @@ const MonthViewBlock = ({
               </div>
             )}
           </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="px-6 h-8 uppercase font-black text-[10px] tracking-widest bg-tx-primary/5 hover:bg-tx-primary/10 text-tx-primary hover:text-accent transition-colors shadow-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setForm({ section_id: sec.id, description: "" });
-              setModal(true);
-            }}
-          >
-            + Inject
-          </Button>
+
           <span
             className={`text-tx-muted opacity-20 px-4 transition-transform duration-500 ${collapsed[sec.id] ? "rotate-0" : "rotate-90"}`}
           >

@@ -1,15 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class TaxonomySectionBase(BaseModel):
+class TaxonomySectionCreate(BaseModel):
     name: str
     icon: Optional[str] = None
     color_bg: Optional[str] = None
     color_accent: Optional[str] = None
     sort_order: Optional[int] = 0
-
-class TaxonomySectionCreate(TaxonomySectionBase):
-    pass
 
 class TaxonomySectionUpdate(BaseModel):
     name: Optional[str] = None
@@ -18,45 +15,48 @@ class TaxonomySectionUpdate(BaseModel):
     color_accent: Optional[str] = None
     sort_order: Optional[int] = None
 
-class TaxonomySectionOut(TaxonomySectionBase):
+class TaxonomySectionOut(BaseModel):
     id: int
     tenant_id: Optional[int] = None
+    name: str
+    icon: Optional[str] = None
+    color_bg: Optional[str] = None
+    color_accent: Optional[str] = None
+    sort_order: Optional[int] = 0
     
     class Config:
         from_attributes = True
 
-class TaxonomyCategoryBase(BaseModel):
+class TaxonomyCategoryCreate(BaseModel):
     name: str
     section_id: int
     sort_order: Optional[int] = 0
-
-class TaxonomyCategoryCreate(TaxonomyCategoryBase):
-    pass
 
 class TaxonomyCategoryUpdate(BaseModel):
     name: Optional[str] = None
     section_id: Optional[int] = None
     sort_order: Optional[int] = None
 
-class TaxonomyCategoryOut(TaxonomyCategoryBase):
+class TaxonomyCategoryOut(BaseModel):
     id: int
     tenant_id: Optional[int] = None
+    name: str
+    section_id: int
+    sort_order: Optional[int] = 0
     
     class Config:
         from_attributes = True
 
-class TaxonomyChannelBase(BaseModel):
+class TaxonomyChannelCreate(BaseModel):
     name: str
-
-class TaxonomyChannelCreate(TaxonomyChannelBase):
-    pass
 
 class TaxonomyChannelUpdate(BaseModel):
     name: Optional[str] = None
 
-class TaxonomyChannelOut(TaxonomyChannelBase):
+class TaxonomyChannelOut(BaseModel):
     id: int
     tenant_id: Optional[int] = None
+    name: str
     
     class Config:
         from_attributes = True

@@ -1,4 +1,4 @@
-from typing import List
+
 import re
 from fastapi import APIRouter, Depends, HTTPException
 from core.entities.card import CardConfigEntity, CardBalanceEntity

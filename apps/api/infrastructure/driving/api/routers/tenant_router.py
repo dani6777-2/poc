@@ -1,4 +1,4 @@
-import uuid
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from core.entities.auth import TenantEntity, TenantAccessEntity, TenantMemberEntity
@@ -9,31 +9,33 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/tenants", tags=["Tenants"])
 
+
+
+
+
+
+
 @router.get("/access", response_model=List[TenantAccessEntity])
-def get_my_access(
+def get_user_tenants(
     user_context = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     repo = SQLTenantRepository(db)
     return repo.get_user_access_list(user_context.user_id)
 
-@router.post("/invite-code", response_model=TenantEntity)
-def get_or_generate_invite_code(
+@router.post("/invite-code")
+def generate_invite_code(
     user_context = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    repo = SQLTenantRepository(db)
-    # Only owners can manage invite codes
     if user_context.role != "owner":
         raise HTTPException(status_code=403, detail="Only owners can manage invite codes.")
     
-    tenant = repo.get_by_id(user_context.tenant_id)
-    if not tenant.invite_code:
-        new_code = str(uuid.uuid4())[:8].upper()
-        repo.update_invite_code(tenant.id, new_code)
-        tenant.invite_code = new_code
-    
-    return tenant
+    import uuid
+    code = str(uuid.uuid4())[:8].upper()
+    repo = SQLTenantRepository(db)
+    repo.update_invite_code(user_context.tenant_id, code)
+    return {"code": code}
 
 @router.post("/join", response_model=TenantAccessEntity)
 def join_tenant(
@@ -49,6 +51,16 @@ def join_tenant(
     # Add as guest
     repo.add_user_access(user_context.user_id, tenant.id, "guest")
     return TenantAccessEntity(id=tenant.id, name=tenant.name, role="guest")
+
+@router.delete("/leave/{tenant_id}")
+def leave_tenant(
+    tenant_id: int,
+    user_context = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    repo = SQLTenantRepository(db)
+    repo.remove_user_access(user_context.user_id, tenant_id)
+    return {"status": "success"}
 
 @router.get("/members", response_model=List[TenantMemberEntity])
 def get_tenant_members(
@@ -75,14 +87,4 @@ def revoke_member_access(
     repo.remove_user_access(user_id, user_context.tenant_id)
     return {"status": "success"}
 
-@router.delete("/leave")
-def leave_tenant(
-    user_context = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    if user_context.role == "owner":
-        raise HTTPException(status_code=400, detail="Owners cannot leave their own home. Hand over ownership or delete tenant instead.")
-    
-    repo = SQLTenantRepository(db)
-    repo.remove_user_access(user_context.user_id, user_context.tenant_id)
-    return {"status": "success"}
+

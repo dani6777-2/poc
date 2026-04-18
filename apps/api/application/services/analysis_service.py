@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+
 from core.entities.analysis import (
     AnalysisResponse, AnalysisKpis, CanalStat, InflationStat, 
     CategoryChartItem, PlanVsRealItem

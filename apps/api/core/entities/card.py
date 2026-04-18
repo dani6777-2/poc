@@ -14,13 +14,7 @@ class CardConfigEntity(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
-class CardMonthlyStateEntity(BaseModel):
-    id: Optional[int] = None
-    tenant_id: int
-    month: str
-    manual_payment: float = 0.0
 
-    model_config = ConfigDict(from_attributes=True)
 
 class CardTransactionEntity(BaseModel):
     name: str

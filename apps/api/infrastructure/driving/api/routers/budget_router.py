@@ -20,6 +20,4 @@ def create_budget(data: BudgetCreateDto, budget_service: BudgetService = Depends
 def update_budget(budget_id: int, data: BudgetCreateDto, budget_service: BudgetService = Depends(get_budget_service), current_user: models.User = Depends(get_current_user)):
     return budget_service.update_budget(current_user.tenant_id, budget_id, data)
 
-@router.get("/history/{category}", response_model=List[BudgetEntity])
-def get_history(category: str, budget_service: BudgetService = Depends(get_budget_service), current_user: models.User = Depends(get_current_user)):
-    return budget_service.get_historial(current_user.tenant_id, category)
+

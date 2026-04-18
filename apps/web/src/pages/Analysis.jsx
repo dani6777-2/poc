@@ -14,16 +14,13 @@ import {
   Legend,
 } from "chart.js";
 
-import Card from "../components/atoms/Card";
-import Button from "../components/atoms/Button";
-import { Link } from "react-router-dom";
 import { DashboardTemplate } from "../components/templates";
 
 // Organisms
 import HealthBanner from "../components/organisms/HealthBanner";
 import AnalysisKpiGrid from "../components/organisms/AnalysisKpiGrid";
 import CostVerticalAudit from "../components/organisms/CostVerticalAudit";
-import SegmentationRadarPanel from "../components/organisms/SegmentationRadarPanel";
+
 
 ChartJS.register(
   CategoryScale,
@@ -213,12 +210,7 @@ export default function Analysis() {
         chartOptions={chartOptions}
       />
 
-      <SegmentationRadarPanel
-        data={data}
-        channelsChart={channelsChart}
-        chartOptions={chartOptions}
-        fmt={fmt}
-      />
+
     </DashboardTemplate>
   );
 }

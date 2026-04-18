@@ -8,10 +8,10 @@ import { useToast } from "../context/ToastContext";
 import { DashboardTemplate } from "../components/templates";
 
 // Atoms & Molecules
-import Card from "../components/atoms/Card";
+
 
 // Organisms
-import AnnualPlanningBanner from "../components/organisms/AnnualPlanningBanner";
+
 import BudgetKpiGrid from "../components/organisms/BudgetKpiGrid";
 import BudgetLimitTable from "../components/organisms/BudgetLimitTable";
 
@@ -151,12 +151,7 @@ export default function Budget() {
         </div>
       }
     >
-      <AnnualPlanningBanner
-        sectionsWithRef={sectionsWithRef}
-        refSection={refSection}
-        month={month}
-        fmt={fmt}
-      />
+
 
       {totalRevenue > 0 && (
         <div className="p-4 bg-success/5 border border-success/10 rounded-2xl flex items-center gap-4">

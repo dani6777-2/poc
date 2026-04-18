@@ -1,6 +1,6 @@
 from datetime import date
 import calendar
-from typing import List, Dict, Optional
+
 from core.entities.ai_forecast import AIForecastEntity, AIInsight
 from core.ports.secondary.expense_repository import ExpenseRepositoryPort
 from core.ports.secondary.revenue_repository import RevenueRepositoryPort

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { revenueService } from "../services";
 import { MONTH_KEYS, MONTH_LABELS } from "../constants/finance";
 import { fmt } from "../utils/formatters";

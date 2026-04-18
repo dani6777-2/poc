@@ -6,7 +6,7 @@ import { RECENT_MONTHS } from '../constants/time'
 import { fmt } from '../utils/formatters'
 import { DashboardTemplate } from '../components/templates'
 import Card from '../components/atoms/Card'
-import Badge from '../components/atoms/Badge'
+
 import Button from '../components/atoms/Button'
 
 // Organisms

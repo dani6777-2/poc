@@ -121,13 +121,13 @@ class AnnualExpenseService:
             cat_to_sec = {c.id: c.section_id for c in cats}
             cat_map = {c.id: c.name for c in cats}
 
-        # per_section_gen tracks generic "📝 Registry: ..." rows (for unlinked categories)
-        per_section_gen: Dict[int, Dict[str, Dict[str, float]]] = {}
-        # per_category_gen tracks rows explicitly linked via category_id
-        per_category_gen: Dict[int, Dict[str, Dict[str, float]]] = {}
+        # per_category_gen tracks totals (Budget, Actual, Card, Plan) keyed by category_id
+        # Both explicitly linked rows and unlinked "generic" spending will be tracked here.
+        per_category_tracker: Dict[int, Dict[str, Dict[str, Decimal]]] = {}
 
-        # 2. Get list of category_ids that are explicitly linked in annual matrix
-        linked_category_ids = {r.category_id for r in existing_rows if r.category_id}
+        # 2. Get list of category_ids that are already represented in annual matrix
+        rows_by_category = {r.category_id: r for r in existing_rows if r.category_id}
+        linked_category_ids = set(rows_by_category.keys())
 
         try:
             target_month_idx = int(target_month.split('-')[1]) - 1 if target_month else None
@@ -158,47 +158,70 @@ class AnnualExpenseService:
             # 4. Real spending sync
             items = self.expense_repo.get_all(tenant_id, month_str)
             for item in items:
+                if not item.category_id:
+                    continue
+                    
                 sub = Decimal(str(item.subtotal or 0.0))
                 is_card = item.payment_method == "credit" or (card_channel_id and item.channel_id == card_channel_id)
                 
-                # Determine where to aggregate: specific category row or section row
-                if item.category_id and item.category_id in linked_category_ids:
-                    # Aggregate to Category logic
-                    target = per_category_gen.setdefault(item.category_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
-                    if item.status == "Bought":
-                        target[mk]['total'] += sub
-                        if is_card: target[mk]['card'] += sub
-                    elif item.status == "Planned":
-                        target[mk]['plan'] += sub
-                elif item.section_id:
-                    # Aggregate to Section logic (legacy/generic)
-                    sec_id = item.section_id
-                    target = per_section_gen.setdefault(sec_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
-                    if item.status == "Bought":
-                        target[mk]['total'] += sub
-                        if is_card: target[mk]['card'] += sub
-                    elif item.status == "Planned":
-                        target[mk]['plan'] += sub
+                target = per_category_tracker.setdefault(item.category_id, {
+                    m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} 
+                    for m in MONTHS
+                })
+                
+                if item.status == "Bought":
+                    target[mk]['total'] += sub
+                    if is_card: target[mk]['card'] += sub
+                elif item.status == "Planned":
+                    target[mk]['plan'] += sub
 
             # 5. Apply Budget values to targets
             for c_id, b_val in cat_budget_map.items():
-                target = per_category_gen.setdefault(c_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
+                target = per_category_tracker.setdefault(c_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
                 target[mk]['budget'] = Decimal(str(b_val))
             for s_id, b_val in sec_budget_map.items():
-                target = per_section_gen.setdefault(s_id, {m: {'total': Decimal('0.0'), 'card': Decimal('0.0'), 'budget': Decimal('0.0'), 'plan': Decimal('0.0')} for m in MONTHS})
-                target[mk]['budget'] = Decimal(str(b_val))
+                # We no longer aggregate section budgets to a single row. 
+                # Instead, we skip or handle them. For now, since budgets are per-category in the DB, 
+                # those that aren't 'linked' in annual matrix won't have a specific target here unless they have items.
+                pass
 
         affected_count = 0
         trace_differences = []
 
-        # 6. Update category-linked rows
-        for c_id, month_totals in per_category_gen.items():
-            row = next((r for r in existing_rows if r.category_id == c_id), None)
+        # 6. Apply updates to the matrix
+        for c_id, month_totals in per_category_tracker.items():
+            row = rows_by_category.get(c_id)
+            
+            if not row:
+                # Create a new automatic row for this specific category
+                cat_name = cat_map.get(c_id, "Unknown")
+                sec_id = cat_to_sec.get(c_id)
+                if not sec_id: continue
+                
+                description = f"{REGISTRY_DESCRIPTION_PREFIX}{cat_name.upper()}"
+                
+                # Check for existing automatic rows by description to avoid duplicates before creation
+                existing_match = next((r for r in existing_rows if r.description == description and r.section_id == sec_id), None)
+                if existing_match:
+                    row = existing_match
+                    # Retroactively link the category_id if it was missing but description matches
+                    if not row.category_id and not dry_run:
+                        self.annual_repo.set_values(row.id, {"category_id": c_id})
+                else:
+                    dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, category_id=c_id, description=description, sort_order=900, is_automatic=True)
+                    if not dry_run:
+                        row = self.annual_repo.create(tenant_id, dto)
+                        # Re-fetch or add to our tracking
+                        rows_by_category[c_id] = row
+                    else:
+                        row = AnnualExpenseEntity(id=888000 + c_id, tenant_id=tenant_id, year=year, description=description, section_id=sec_id, category_id=c_id)
+
             if row:
                 updates = {}
                 for mk, data in month_totals.items():
                     if target_month_idx is not None and mk != MONTHS[target_month_idx]:
                         continue
+                    # Value for Plan/Budget: use Budget if exists, else Registry Plan
                     val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
                     updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
                     updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
@@ -206,56 +229,32 @@ class AnnualExpenseService:
                 
                 clean_updates = {}
                 for k,v in updates.items():
-                    old_v = snapshot_before[row.id].get(k)
-                    if AnnualExpenseService._is_semantic_diff(old_v, v):
+                    old_v = snapshot_before.get(row.id, {}).get(k)
+                    if row.id > 888000 and old_v is None: old_v = "Simulation-New"
+                    
+                    if old_v == "Simulation-New" or AnnualExpenseService._is_semantic_diff(old_v, v):
                         clean_updates[k] = v
                         trace_differences.append(f"Row {row.id} ({row.description}) | Field '{k}' changed logically from {old_v} to {v}")
                 
                 if clean_updates:
                     affected_count += 1
-                    if not dry_run:
+                    if not dry_run and row.id < 888000:
                         self.annual_repo.set_values(row.id, clean_updates)
-
-        # 7. Update generic "Registry" rows per section
-        for sec_id, month_totals in per_section_gen.items():
-            sec_name = "Various"
-            any_row = next((r for r in existing_rows if r.section_id == sec_id), None)
-            if any_row: sec_name = any_row.section_name
             
-            description = f"{REGISTRY_DESCRIPTION_PREFIX}{sec_name}"
-            generic_rows = [r for r in existing_rows if r.section_id == sec_id and r.description.startswith(REGISTRY_DESCRIPTION_PREFIX)]
-            row = generic_rows[0] if generic_rows else None
-
-            if not row:
-                dto = AnnualExpenseCreateDto(year=year, section_id=sec_id, description=description, sort_order=999, is_automatic=True)
-                if not dry_run:
-                    row = self.annual_repo.create(tenant_id, dto)
-                else:
-                    row = AnnualExpenseEntity(id=999999 + sec_id, description=description, section_id=sec_id)
-            
-            updates = {}
-            for mk, data in month_totals.items():
-                if target_month_idx is not None and mk != MONTHS[target_month_idx]:
-                    continue
-                val_budget_or_plan = data['budget'] if data['budget'] > Decimal('0.0') else data['plan']
-                updates[mk] = float(val_budget_or_plan.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-                updates[f"actual_{mk}"] = float(data['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-                updates[f"actual_card_{mk}"] = float(data['card'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-            
-            
-            clean_updates = {}
-            for k,v in updates.items():
-                old_v = snapshot_before.get(row.id, {}).get(k)
-                # In Generic row we might not even have snapshot_before recorded if it was newly created
-                if old_v is None and row.id > 999999: old_v = "New"
-                if old_v == "New" or AnnualExpenseService._is_semantic_diff(old_v, v):
-                    clean_updates[k] = v
-                    trace_differences.append(f"Row {row.id} ({row.description}) | Field '{k}' changed logically from {old_v} to {v}")
-
-            if clean_updates:
-                affected_count += 1
-                if not dry_run and row.id < 999999:
-                    self.annual_repo.set_values(row.id, clean_updates)
+        # 7. Zero out legacy generic rows that no longer aggregate data
+        # This ensures that old 'Registry: Various' rows don't keep stale values.
+        if not dry_run:
+            legacy_found = [r for r in existing_rows if r.is_automatic and not r.category_id and r.description.startswith(REGISTRY_DESCRIPTION_PREFIX)]
+            for leg in legacy_found:
+                zeros = {m: 0.0 for m in MONTHS}
+                zeros.update({f"actual_{m}": 0.0 for m in MONTHS})
+                zeros.update({f"actual_card_{m}": 0.0 for m in MONTHS})
+                # Check if it actually needs zeroing
+                current_values = {k: snapshot_before.get(leg.id, {}).get(k) for k in zeros.keys()}
+                if any(v != 0.0 for v in current_values.values()):
+                    self.annual_repo.set_values(leg.id, zeros)
+                    affected_count += 1
+                    trace_differences.append(f"Row {leg.id} ({leg.description}) | Zeroed out legacy generic row to ensure granularity.")
             
         logger.info(f"[RECONCILE] Matrix synchronized for tenant {tenant_id}, year {year}. Dry run: {dry_run}")
         

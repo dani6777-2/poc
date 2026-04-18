@@ -42,7 +42,7 @@ export default function Settings() {
     if (activeTenant?.role !== 'owner') return
     try {
       const data = await tenantService.getInviteCode()
-      setInviteCode(data.invite_code)
+      setInviteCode(data.code)
     } catch (e) {}
   }
 
@@ -208,7 +208,7 @@ export default function Settings() {
     try {
       setLoading(true)
       const data = await tenantService.getInviteCode()
-      setInviteCode(data.invite_code)
+      setInviteCode(data.code)
       addToast("Invite code sequence updated", "success")
     } catch (e) {
       addToast("Failed to refresh code", "danger")
@@ -301,7 +301,7 @@ export default function Settings() {
                   </div>
                 </div>
                 <Button variant="ghost" className="uppercase font-black text-[10px] tracking-widest" onClick={handleRefreshCode}>
-                  🔄 Regerate Code
+                  🔄 Regenerate Code
                 </Button>
               </div>
             ) : (

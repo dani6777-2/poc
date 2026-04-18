@@ -9,6 +9,7 @@ class Tenant(Base):
     name = Column(String, nullable=False, unique=True)
     invite_code = Column(String, unique=True, nullable=True)
 
+
 class TenantAccess(Base):
     __tablename__ = "tenant_access"
     id = Column(Integer, primary_key=True, index=True)

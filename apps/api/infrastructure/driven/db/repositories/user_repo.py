@@ -78,6 +78,8 @@ class SQLTenantRepository(TenantRepositoryPort):
             m.invite_code = code
             self.db.commit()
 
+
+
     def get_user_access_list(self, user_id: int) -> list:
         # Returns list of {id, name, role}
         accesses = self.db.query(models.TenantAccess, models.Tenant)\
