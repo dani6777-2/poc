@@ -121,8 +121,8 @@ const InventoryEditorModal = ({
                 value={form.status}
                 onChange={handleChange}
                 options={[
-                  { id: "Planned", name: "📋 Planned" },
-                  { id: "Bought", name: "✅ Bought" },
+                  { value: "Planned", label: "📋 Planned" },
+                  { value: "Bought", label: "✅ Bought" },
                 ]}
               />
             </InventoryField>

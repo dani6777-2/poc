@@ -12,11 +12,16 @@ export default function Select({ label, error, options = [], className = '', ...
       `}
       {...props}
     >
-      {options.map(opt => (
-        <option key={opt.value || opt} value={opt.value || opt} className="bg-secondary">
-          {opt.label || opt}
-        </option>
-      ))}
+      {options.map((opt, i) => {
+        const val = opt.value ?? opt.id ?? opt;
+        const lbl = opt.label ?? opt.name ?? (typeof opt === 'object' ? `Option ${i}` : opt);
+        
+        return (
+          <option key={`${val}-${i}`} value={val} className="bg-secondary">
+            {lbl}
+          </option>
+        );
+      })}
     </select>
   );
 
