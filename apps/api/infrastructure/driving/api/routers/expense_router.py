@@ -28,6 +28,8 @@ def update_expense(item_id: int, item: ItemUpdateDto, expense_service: ExpenseSe
         return expense_service.update_expense(current_user.tenant_id, item_id, item)
     except DomainException as e:
         status = 404 if "not found" in str(e.message).lower() else 400
+        if "CONFLICT_409" in str(e.message):
+            status = 409
         raise HTTPException(status_code=status, detail=str(e.message))
 
 @router.delete("/{item_id}")
@@ -37,4 +39,6 @@ def delete_expense(item_id: int, expense_service: ExpenseService = Depends(get_e
         return {"ok": True}
     except DomainException as e:
         status = 404 if "not found" in str(e.message).lower() else 400
+        if "CONFLICT_409" in str(e.message):
+            status = 409
         raise HTTPException(status_code=status, detail=str(e.message))

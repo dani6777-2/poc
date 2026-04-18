@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from core.entities.annual_expense import AnnualExpenseEntity, AnnualExpenseCreateDto
 from application.services.annual_expense_service import AnnualExpenseService
@@ -8,6 +8,7 @@ from infrastructure.config.dependencies import get_annual_expense_service, get_r
 from application.services.expense_service import ExpenseService
 from sqlalchemy.orm import Session
 from infrastructure.driven.db import models
+from core.exceptions import DomainException
 from infrastructure.driving.api.auth import get_current_user
 
 router = APIRouter(prefix="/expense-details", tags=["expense-details"])
@@ -27,7 +28,13 @@ def create_expense(data: AnnualExpenseCreateDto, service: AnnualExpenseService =
 
 @router.put("/{expense_id}", response_model=AnnualExpenseEntity)
 def update_expense(expense_id: int, data: AnnualExpenseCreateDto, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):
-    return service.update_annual_expense(current_user.tenant_id, expense_id, data)
+    try:
+        return service.update_annual_expense(current_user.tenant_id, expense_id, data)
+    except DomainException as e:
+        status = 404 if "not found" in str(e.message).lower() else 400
+        if "CONFLICT_409" in str(e.message):
+            status = 409
+        raise HTTPException(status_code=status, detail=str(e.message))
 
 @router.delete("/{expense_id}")
 def delete_expense(expense_id: int, service: AnnualExpenseService = Depends(get_annual_expense_service), current_user: models.User = Depends(get_current_user)):

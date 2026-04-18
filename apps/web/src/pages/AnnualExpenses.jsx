@@ -71,7 +71,7 @@ export default function AnnualExpenses() {
     if (!current) return
     const payload = { ...current }
     for (const key in payload) {
-        if (key === 'id' || key === 'tenant_id' || key === 'section_name') continue;
+        if (key === 'id' || key === 'tenant_id' || key === 'section_name' || key === 'category_name') continue;
         if (typeof payload[key] === 'string' && payload[key] === '' && key !== 'description') payload[key] = 0
         else if (typeof payload[key] === 'string' && !isNaN(payload[key]) && key !== 'description' && key !== 'section') {
             payload[key] = parseFloat(payload[key]) || 0
@@ -82,8 +82,13 @@ export default function AnnualExpenses() {
       await expenseService.updateExpenseDetail(id, payload)
       addToast('Saved successfully', 'success')
       fetchData(true)
-    } catch {
-      addToast('Error synchronizing cell', 'danger')
+    } catch (err) {
+      if (err.status === 409) {
+        addToast('⚠️ CONFLICT: The matrix was updated by someone else. Refreshing...', 'warning')
+        fetchData(true)
+      } else {
+        addToast('Error synchronizing cell', 'danger')
+      }
     } finally {
       setSaving(s => ({ ...s, [id]: false }))
     }
@@ -222,6 +227,9 @@ export default function AnnualExpenses() {
               Reconciliation Audit Trace {traceModal.IS_DRY_RUN && <span className="text-warning text-sm bg-warning/10 px-3 py-1 rounded-full">[SIMULATION]</span>}
             </h3>
             <p className="text-tx-muted text-sm mb-6 uppercase tracking-widest font-black opacity-50">Affected matrix vectors: <span className="text-warning">{traceModal.affected_records}</span></p>
+            {traceModal.affected_records_ids && (
+                <p className="text-tx-muted text-[10px] mb-6 uppercase tracking-widest font-black opacity-30">Affected Keys: <span className="text-tx-primary select-all">{traceModal.affected_records_ids}</span></p>
+            )}
             <div className="bg-primary/50 rounded-2xl p-4 font-mono text-[10px] sm:text-[12px] text-tx-secondary space-y-2">
               {traceModal.differences?.map((diff, i) => (
                 <div key={i} className="border-b border-border-base/10 pb-2 mb-2 last:border-0">{diff}</div>

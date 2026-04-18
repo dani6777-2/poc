@@ -27,6 +27,7 @@ class ItemEntity(BaseModel):
     status: str
     source: Optional[str]
     payment_method: str = "debit"
+    version_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -65,6 +66,7 @@ class ItemUpdateDto(BaseModel):
     status: str
     source: Optional[str] = None
     payment_method: str = "debit"
+    version_id: Optional[int] = None
 
     @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
     @classmethod

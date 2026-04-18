@@ -13,6 +13,7 @@ class AnnualExpenseEntity(BaseModel):
     description: str
     sort_order: Optional[int] = 0
     is_automatic: bool = False
+    version_id: Optional[int] = None
     
     # Budget
     jan: float = 0.0
@@ -70,6 +71,7 @@ class AnnualExpenseCreateDto(BaseModel):
     description: str
     sort_order: Optional[int] = 0
     is_automatic: bool = False
+    version_id: Optional[int] = None
     jan: float = 0.0
     feb: float = 0.0
     mar: float = 0.0

@@ -15,7 +15,8 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         )
         if for_update:
             try:
-                q = q.with_for_update()
+                # Use 'of' to target only the primary table, avoiding locking nullable sides of outer joins
+                q = q.with_for_update(of=models.ExpenseDetail)
             except:
                 pass # Fallback for non-supporting dialects
                 

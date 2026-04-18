@@ -143,9 +143,14 @@ export default function Registry() {
       );
       fetchData();
     } catch (err) {
-      if (err.response?.status === 409) {
-        setDuplicateWarning(true);
-        addToast("Posible registro duplicado detectado.", "warning");
+      if (err.status === 409) {
+        if (typeof err.message === 'string' && err.message.includes("DUPLICATE_409")) {
+          setDuplicateWarning(true);
+          addToast("Posible registro duplicado detectado.", "warning");
+        } else {
+          addToast("⚠️ CONFLICTO: El registro fue modificado por otra sesión. Recargando...", "warning");
+          fetchData();
+        }
       } else {
         addToast("Failed to save registry", "danger");
       }
@@ -176,8 +181,13 @@ export default function Registry() {
       await expenseService.updateExpense(item.id, { ...item, status: newStatus });
       addToast(`Status updated to ${newStatus}`, "success");
       fetchData();
-    } catch {
-      addToast("Failed to update status", "danger");
+    } catch (err) {
+      if (err.status === 409) {
+        addToast("⚠️ CONFLICTO: Estado desincronizado. Recargando...", "warning");
+        fetchData();
+      } else {
+        addToast("Failed to update status", "danger");
+      }
     }
   };
 
