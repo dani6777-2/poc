@@ -2,10 +2,6 @@
  * Finance-related utility functions.
  */
 
-export const REGISTRY_DESCRIPTION_PREFIX = "📝 Registry: ";
-export const AUTO_PREFIXES = [REGISTRY_DESCRIPTION_PREFIX, '💳 Card:', '🛒 Supermarket'];
-
-export const isAutoSync = (description, is_automatic) => is_automatic || AUTO_PREFIXES.some(p => description?.startsWith(p));
 
 export const isAutoExpense = (item) => item.source && (item.source.startsWith('BA:') || item.source.startsWith('BB:'));
 

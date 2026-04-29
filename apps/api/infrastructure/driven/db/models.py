@@ -198,9 +198,16 @@ class ExpenseDetail(Base):
     tenant_id  = Column(Integer, ForeignKey("tenants.id"), index=True)
     year       = Column(Integer, nullable=False)
     section_id = Column(Integer, ForeignKey("taxonomy_sections.id"), nullable=False, index=True)
+    category_id = Column(Integer, ForeignKey("taxonomy_categories.id"), nullable=True, index=True)
     description   = Column(String, nullable=False)
     sort_order      = Column(Integer, nullable=True, default=0)
     is_automatic = Column(Boolean, default=False)
+    
+    # New structural keys & Auditability
+    concept_key    = Column(String(100), nullable=True, index=True)
+    concept_label  = Column(String(255), nullable=True) # Human readable normalized name
+    concept_origin = Column(String(50),  nullable=False, default="manual") # 'registry' or 'manual'
+    is_active      = Column(Boolean,     nullable=False, default=True) # Soft status for discontinued concepts
     
     jan = Column(Float, nullable=True, default=0)
     feb = Column(Float, nullable=True, default=0)
@@ -243,7 +250,6 @@ class ExpenseDetail(Base):
 
     section = relationship("TaxonomySection")
     category = relationship("TaxonomyCategory")
-    category_id = Column(Integer, ForeignKey("taxonomy_categories.id"), nullable=True, index=True)
     version_id = Column(Integer, nullable=False, default=1)
 
     __mapper_args__ = {
@@ -302,12 +308,12 @@ class SystemHealthLog(Base):
 
 class ReconciliationSnapshot(Base):
     __tablename__ = "reconciliation_snapshots"
-    id = Column(Integer, primary_key=True, index=True)
-    tenant_id = Column(Integer, index=True)
-    year = Column(Integer)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    affected_records = Column(Integer)
+    id               = Column(Integer, primary_key=True, index=True)
+    tenant_id        = Column(Integer, index=True, nullable=False)
+    year             = Column(Integer, index=True, nullable=False)
+    timestamp        = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    affected_records = Column(Integer, default=0)
     affected_records_ids = Column(String, nullable=True) # CSV of row IDs
-    before_state_json = Column(String)  # Serialized payload
-    after_state_json = Column(String)   # Serialized payload
+    before_state_json = Column(String, nullable=True)  # Serialized payload
+    after_state_json  = Column(String, nullable=True)   # Serialized payload
 

@@ -9,6 +9,13 @@ export default function Badge({ children, className = '', variant = 'info', glow
     purple: 'bg-purple/10 text-purple border-purple/20',
     muted: 'bg-tx-primary/5 text-tx-muted border-border-base'
   }
+
+  const sizes = {
+    xs: 'px-1.5 py-0.5 text-[7px]',
+    sm: 'px-2 py-1 text-[8px]',
+    md: 'px-2.5 py-1 text-[9px]',
+    lg: 'px-3 py-1.5 text-[10px]'
+  }
   
   const glowStyle = glow ? `shadow-glow-${variant}` : ''
 
@@ -16,8 +23,8 @@ export default function Badge({ children, className = '', variant = 'info', glow
     <span 
       {...props}
       className={`
-      inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border leading-none
-      ${variants[variant]} ${glowStyle} ${className}
+      inline-flex items-center justify-center gap-1.5 rounded-full font-black uppercase tracking-widest border leading-none transition-all
+      ${variants[variant]} ${sizes[size] || sizes.md} ${glowStyle} ${className}
     `}>
       {children}
     </span>

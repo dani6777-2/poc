@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { DashboardTemplate } from '../components/templates'
 import { useFinance } from '../context/FinanceContext'
 import { useAuth } from '../context/AuthContext'
@@ -27,38 +27,44 @@ export default function Settings() {
   const [catForm, setCatForm] = useState({ id: null, name: '', section_id: '', sort_order: 0, sync_annual: true })
   const [chanForm, setChanForm] = useState({ id: null, name: '' })
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     await fetchTaxonomies()
     try {
       const currentYear = new Date().getFullYear()
       const annualData = await expenseService.getAnnualExpenses(currentYear)
       setAnnualRows(annualData)
-    } catch (e) {}
+    } catch {
+      // Intentional silent fail for annual data pre-load
+    }
     setLoading(false)
-  }
+  }, [fetchTaxonomies])
 
-  const loadInviteCode = async () => {
+  const loadInviteCode = useCallback(async () => {
     if (activeTenant?.role !== 'owner') return
     try {
       const data = await tenantService.getInviteCode()
       setInviteCode(data.code)
-    } catch (e) {}
-  }
+    } catch {
+      // Intentional silent fail: invite code is restricted or unavailable
+    }
+  }, [activeTenant?.role])
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (activeTenant?.role !== 'owner') return
     try {
       const data = await tenantService.getMembers()
       setMembers(data)
-    } catch (e) {}
-  }
+    } catch {
+      // Intentional silent fail: member list restricted
+    }
+  }, [activeTenant?.role])
 
   useEffect(() => {
     loadData()
     loadInviteCode()
     loadMembers()
-  }, [activeTenant])
+  }, [loadData, loadInviteCode, loadMembers])
 
   // --- Sections CRUD ---
   const handleSaveSection = async () => {
@@ -81,8 +87,8 @@ export default function Settings() {
       }
       setSecForm({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error saving section", "danger")
+    } catch {
+      addToast("Error saving section", "danger")
     } finally {
       setLoading(false)
     }
@@ -95,8 +101,8 @@ export default function Settings() {
       await financeService.deleteSection(id)
       addToast("Section deleted", "success")
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error deleting section", "danger")
+    } catch {
+      addToast("Error deleting section", "danger")
     } finally {
       setLoading(false)
     }
@@ -134,8 +140,8 @@ export default function Settings() {
       }
       setCatForm({ id: null, name: '', section_id: '', sort_order: 0, sync_annual: true })
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error saving category", "danger")
+    } catch {
+      addToast("Error saving category", "danger")
     } finally {
       setLoading(false)
     }
@@ -148,8 +154,8 @@ export default function Settings() {
       await financeService.deleteCategory(id)
       addToast("Category deleted", "success")
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error deleting category", "danger")
+    } catch {
+      addToast("Error deleting category", "danger")
     } finally {
       setLoading(false)
     }
@@ -169,8 +175,8 @@ export default function Settings() {
       }
       setChanForm({ id: null, name: '' })
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error saving channel", "danger")
+    } catch {
+      addToast("Error saving channel", "danger")
     } finally {
       setLoading(false)
     }
@@ -183,8 +189,8 @@ export default function Settings() {
       await financeService.deleteChannel(id)
       addToast("Channel deleted", "success")
       await loadData()
-    } catch (e) {
-      addToast(e.response?.data?.detail || "Error deleting channel", "danger")
+    } catch {
+      addToast("Error deleting channel", "danger")
     } finally {
       setLoading(false)
     }
@@ -197,8 +203,8 @@ export default function Settings() {
       await tenantService.joinTenant(joinCode)
       addToast("Successfully joined home!", "success")
       setJoinCode('')
-    } catch (e) {
-      addToast(e.message || "Invalid code", "danger")
+    } catch {
+      addToast("Invalid code", "danger")
     } finally {
       setLoading(false)
     }
@@ -210,7 +216,7 @@ export default function Settings() {
       const data = await tenantService.getInviteCode()
       setInviteCode(data.code)
       addToast("Invite code sequence updated", "success")
-    } catch (e) {
+    } catch {
       addToast("Failed to refresh code", "danger")
     } finally {
       setLoading(false)
@@ -228,7 +234,7 @@ export default function Settings() {
       await tenantService.revokeAccess(userId)
       addToast("Access revoked", "success")
       await loadMembers()
-    } catch (e) {
+    } catch {
       addToast("Failed to revoke access", "danger")
     } finally {
       setLoading(false)
@@ -242,7 +248,7 @@ export default function Settings() {
       await tenantService.leaveHome()
       addToast("You have left the household", "success")
       window.location.href = "/" // Hard redirect to reset context/session
-    } catch (e) {
+    } catch {
       addToast("Failed to leave home", "danger")
     } finally {
       setLoading(false)
@@ -547,7 +553,22 @@ export default function Settings() {
                           <td className="p-5 text-right">
                               <div className="flex justify-end gap-2">
                                 <Button title={cat.tenant_id === null ? "Cannot edit global category" : "Edit category"} variant="ghost" size="sm" disabled={cat.tenant_id === null} onClick={() => setCatForm({ id: cat.id, name: cat.name, section_id: cat.section_id, sort_order: cat.sort_order || 0 })}>✏️</Button>
-                                <Button title={cat.tenant_id === null ? "Cannot delete global category" : "Delete category"} variant="ghost" size="sm" disabled={cat.tenant_id === null} onClick={() => handleDeleteCategory(cat.id)} className="text-danger hover:text-danger-light disabled:opacity-50 disabled:cursor-not-allowed">🗑️</Button>
+                                {(() => {
+                                  const isLinked = annualRows.some(r => r.category_id == cat.id);
+                                  const isProtected = cat.tenant_id === null || isLinked;
+                                  return (
+                                    <Button 
+                                      title={isProtected ? (isLinked ? "Cannot delete category linked to Annual Planner" : "Cannot delete global category") : "Delete category"} 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      disabled={isProtected} 
+                                      onClick={() => handleDeleteCategory(cat.id)} 
+                                      className="text-danger hover:text-danger-light disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
+                                    >
+                                      🗑️
+                                    </Button>
+                                  );
+                                })()}
                               </div>
                           </td>
                         </tr>
