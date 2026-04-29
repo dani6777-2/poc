@@ -88,7 +88,7 @@ class Item(Base):
     prev_month_price = Column(Float, nullable=True)
     status = Column(String, nullable=True, default="Planned")
     source = Column(String, nullable=True, index=True)
-    payment_method = Column(String, nullable=True, default="debit")
+    payment_method = Column(String, nullable=True, default="cash")
     version_id = Column(Integer, nullable=False, default=1)
 
     category = relationship("TaxonomyCategory")

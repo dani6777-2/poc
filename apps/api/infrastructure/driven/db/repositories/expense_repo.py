@@ -13,7 +13,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, tenant_id: int, month: Optional[str]) -> List[ItemEntity]:
+    def get_all(self, tenant_id: int, month: Optional[str], limit: int = 100, offset: int = 0) -> List[ItemEntity]:
         q = self.db.query(models.Item).filter(models.Item.tenant_id == tenant_id)
         if month:
             q = q.filter(models.Item.month == month)
@@ -24,7 +24,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
              .outerjoin(models.TaxonomyChannel, models.Item.channel_id == models.TaxonomyChannel.id)\
              .outerjoin(models.TaxonomyUnit, models.Item.unit_id == models.TaxonomyUnit.id)
              
-        rows = q.order_by(models.Item.id).all()
+        rows = q.order_by(models.Item.id).offset(offset).limit(limit).all()
         return [self._to_entity(r) for r in rows]
 
     def get_by_id(self, tenant_id: int, item_id: int) -> Optional[ItemEntity]:
@@ -63,7 +63,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             prev_month_price=dto.prev_month_price,
             status=dto.status,
             source=dto.source,
-            payment_method=dto.payment_method or "debit",
+            payment_method=dto.payment_method or "cash",
         )
         self.db.add(row)
         self.db.commit()
@@ -86,7 +86,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             row.prev_month_price = dto.prev_month_price
             row.status = dto.status
             row.source = dto.source
-            row.payment_method = dto.payment_method or "debit"
+            row.payment_method = dto.payment_method or "cash"
             try:
                 self.db.commit()
                 return self.get_by_id(tenant_id, item_id)
@@ -162,7 +162,7 @@ class SQLExpenseRepository(ExpenseRepositoryPort):
             prev_month_price=row.prev_month_price,
             status=row.status,
             source=row.source,
-            payment_method=row.payment_method or "debit",
+            payment_method=row.payment_method or "cash",
             version_id=row.version_id
         )
 

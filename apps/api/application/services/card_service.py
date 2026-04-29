@@ -1,16 +1,11 @@
 from typing import List
 from core.entities.card import CardConfigEntity, CardBalanceEntity, CardTransactionEntity
 from core.ports.secondary.card_repository import CardRepositoryPort
+from core.utils import next_month_str
 
 class CardService:
     def __init__(self, card_repo: CardRepositoryPort):
         self.card_repo = card_repo
-
-    def _next_month_str(self, month_str: str) -> str:
-        year, month = int(month_str[:4]), int(month_str[5:7])
-        if month == 12:
-            return f"{year + 1}-01"
-        return f"{year}-{str(month + 1).zfill(2)}"
 
     def get_config(self, tenant_id: int) -> CardConfigEntity:
         return self.card_repo.get_config(tenant_id)
@@ -68,7 +63,7 @@ class CardService:
             cutoff_day=config.cutoff_day,
             payment_day=config.payment_day,
             next_closing=f"{month}-{str(config.cutoff_day).zfill(2)}",
-            next_payment=f"{self._next_month_str(month)}-{str(config.payment_day).zfill(2)}",
+            next_payment=f"{next_month_str(month)}-{str(config.payment_day).zfill(2)}",
         )
 
     def update_monthly_state(self, tenant_id: int, month: str, data: dict) -> None:
@@ -83,15 +78,18 @@ class CardService:
             n_transactions=0, transactions=[], is_configured=False,
             cutoff_day=config.cutoff_day, payment_day=config.payment_day,
             next_closing=f"{month}-{str(config.cutoff_day).zfill(2)}",
-            next_payment=f"{self._next_month_str(month)}-{str(config.payment_day).zfill(2)}"
+            next_payment=f"{next_month_str(month)}-{str(config.payment_day).zfill(2)}"
         )
 
-    def sync_to_debts(self, tenant_id: int, month: str) -> None:
+    def sync_to_debts(self, tenant_id: int, month: str) -> dict:
         balance = self.get_balance(tenant_id, month)
         if not balance.is_configured:
-            return
+            return {"status": "skipped", "reason": "not_configured"}
         
-        self.card_repo.sync_to_deudas_next_month(
+        if balance.used <= 0:
+            return {"status": "skipped", "reason": "no_debt"}
+        
+        return self.card_repo.sync_to_deudas_next_month(
             tenant_id=tenant_id,
             month=month,
             card_name=balance.name,

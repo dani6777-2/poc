@@ -8,7 +8,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all_by_year(self, tenant_id: int, year: int, section_id: Optional[int] = None, for_update: bool = False) -> List[AnnualExpenseEntity]:
+    def get_all_by_year(self, tenant_id: int, year: int, section_id: Optional[int] = None, for_update: bool = False, limit: int = 100, offset: int = 0) -> List[AnnualExpenseEntity]:
         q = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.tenant_id == tenant_id,
             models.ExpenseDetail.year == year
@@ -26,7 +26,7 @@ class SQLAnnualExpenseRepository(AnnualExpenseRepositoryPort):
         if section_id:
             q = q.filter(models.ExpenseDetail.section_id == section_id)
         
-        rows = q.order_by(models.TaxonomySection.sort_order, models.ExpenseDetail.sort_order).all()
+        rows = q.order_by(models.TaxonomySection.sort_order, models.ExpenseDetail.sort_order).offset(offset).limit(limit).all()
         return [self._to_entity(r) for r in rows]
 
     def get_by_id(self, tenant_id: int, expense_id: int) -> Optional[AnnualExpenseEntity]:

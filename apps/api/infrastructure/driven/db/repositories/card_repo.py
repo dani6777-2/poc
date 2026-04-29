@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from infrastructure.driven.db import models
 from core.entities.card import CardConfigEntity, CardTransactionEntity
 from core.ports.secondary.card_repository import CardRepositoryPort, CARD_DESCRIPTION_TEMPLATE
+from core.constants import REGISTRY_DESCRIPTION_PREFIX
+from core.utils import next_month_str
 
 MONTHS_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
@@ -12,12 +14,6 @@ class SQLCardRepository(CardRepositoryPort):
 
     def _month_key(self, month_str: str) -> str:
         return MONTHS_KEYS[int(month_str[5:7]) - 1]
-
-    def _next_month_str(self, month_str: str) -> str:
-        year, month = int(month_str[:4]), int(month_str[5:7])
-        if month == 12:
-            return f"{year + 1}-01"
-        return f"{year}-{str(month + 1).zfill(2)}"
 
     def get_config(self, tenant_id: int) -> CardConfigEntity:
         row = self.db.query(models.CardConfig).filter(models.CardConfig.tenant_id == tenant_id).first()
@@ -51,7 +47,7 @@ class SQLCardRepository(CardRepositoryPort):
             self.db.commit()
         return self.get_config(tenant_id)
 
-    def get_transactions_from_registry(self, tenant_id: int, month: str, channel_id: Optional[int]) -> List[CardTransactionEntity]:
+    def get_transactions_from_registry(self, tenant_id: int, month: str, channel_id: Optional[int], limit: int = 100, offset: int = 0) -> List[CardTransactionEntity]:
         from sqlalchemy import or_
         conditions = [
             models.Item.tenant_id == tenant_id,
@@ -67,7 +63,7 @@ class SQLCardRepository(CardRepositoryPort):
         else:
             conditions.append(models.Item.payment_method == "credit")
 
-        rows = self.db.query(models.Item).filter(*conditions).all()
+        rows = self.db.query(models.Item).filter(*conditions).offset(offset).limit(limit).all()
         return [
             CardTransactionEntity(
                 name=f"🛒 {r.name}",
@@ -77,7 +73,7 @@ class SQLCardRepository(CardRepositoryPort):
             for r in rows
         ]
 
-    def get_manual_tc_expenses_from_annual(self, tenant_id: int, month: str) -> List[CardTransactionEntity]:
+    def get_manual_tc_expenses_from_annual(self, tenant_id: int, month: str, limit: int = 100, offset: int = 0) -> List[CardTransactionEntity]:
         year = int(month[:4])
         mk   = self._month_key(month)
         actual_card_mk = f"actual_card_{mk}"
@@ -85,13 +81,13 @@ class SQLCardRepository(CardRepositoryPort):
         rows = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.tenant_id == tenant_id,
             models.ExpenseDetail.year == year
-        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id).all()
+        ).outerjoin(models.TaxonomySection, models.ExpenseDetail.section_id == models.TaxonomySection.id).offset(offset).limit(limit).all()
         
         tx_gs = []
         for r in rows:
             val = getattr(r, actual_card_mk) or 0
             if val > 0 and hasattr(r, 'description') and r.description:
-                if r.description.startswith("📝 Registry:"): # Hardcoded prefix check to avoid circular import of constants
+                if r.description.startswith(REGISTRY_DESCRIPTION_PREFIX): # Hardcoded prefix check to avoid circular import of constants
                     continue
                 
                 sec_icon = r.section.icon + " " if (r.section and r.section.icon) else "🏷️ "
@@ -103,17 +99,29 @@ class SQLCardRepository(CardRepositoryPort):
                 ))
         return tx_gs
 
-    def sync_to_deudas_next_month(self, tenant_id: int, month: str, card_name: str, total_used: float) -> None:
-        next_month_str = self._next_month_str(month)
-        next_year = int(next_month_str[:4])
-        next_mk = self._month_key(next_month_str)
+    def sync_to_deudas_next_month(self, tenant_id: int, month: str, card_name: str, total_used: float) -> dict:
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        if total_used <= 0:
+            logger.debug(f"Skipping sync: no debt to carry over (used={total_used})")
+            return {"status": "skipped", "reason": "no_debt"}
+        
+        next_month_calc = next_month_str(month)
+        next_year = int(next_month_calc[:4])
+        next_mk = self._month_key(next_month_calc)
         actual_next_mk = f"actual_{next_mk}"
         description_name = CARD_DESCRIPTION_TEMPLATE.format(name=card_name)
 
         # Search for "Debts" section
         sec_debts = self.db.query(models.TaxonomySection).filter(models.TaxonomySection.name == "Debts").first()
         if not sec_debts:
-            return
+            # Auto-create "Debts" section if missing
+            sec_debts = models.TaxonomySection(name="Debts", icon="💳", sort_order=0)
+            self.db.add(sec_debts)
+            self.db.commit()
+            self.db.refresh(sec_debts)
+            logger.warning(f"Auto-created missing 'Debts' section for tenant {tenant_id}")
 
         row = self.db.query(models.ExpenseDetail).filter(
             models.ExpenseDetail.tenant_id == tenant_id,
@@ -133,9 +141,11 @@ class SQLCardRepository(CardRepositoryPort):
             self.db.add(row)
 
         val = round(total_used, 0)
-        setattr(row, next_mk, val)
         setattr(row, actual_next_mk, val)
         self.db.commit()
+        
+        logger.info(f"Synced card debt {val} from {month} to {next_month_calc} ({description_name})")
+        return {"status": "synced", "month": next_month_calc, "amount": val}
 
     def get_monthly_state(self, tenant_id: int, month: str) -> Optional[dict]:
         row = self.db.query(models.CardMonthlyState).filter_by(tenant_id=tenant_id, month=month).first()

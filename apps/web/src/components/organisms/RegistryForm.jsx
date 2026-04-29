@@ -1,10 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { Card, Button, Input, Select } from '../atoms';
-import { STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '../../constants/forms';
-
-// Section name constants — must match seed_db.py
-const SECTION_DESPENSA  = 'Comida y Despensa';
-const SECTION_SERVICIOS = 'Servicios y Gastos Fijos';
+import { STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS, SECTION_DESPENSA, SECTION_SERVICIOS } from '../../constants/forms';
 
 const RegistryForm = ({
   editId,

@@ -11,6 +11,8 @@ import {
   STATUS_OPTIONS,
   REGISTRY_FILTERS,
   PAYMENT_METHOD_OPTIONS,
+  SECTION_DESPENSA,
+  SECTION_SERVICIOS,
 } from "../constants/forms";
 import { useToast } from "../context/ToastContext";
 import { useFinance } from "../context/FinanceContext";
@@ -21,10 +23,6 @@ import RegistryTable from "../components/organisms/RegistryTable";
 import ConfirmModal from "../components/molecules/ConfirmModal";
 import OCRScanner from "../components/organisms/OCRScanner";
 import { Button } from "../components/atoms";
-
-// Must match seed_db.py section names
-const SECTION_DESPENSA  = "Comida y Despensa";
-const SECTION_SERVICIOS = "Servicios y Gastos Fijos";
 
 export default function Registry() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -243,7 +241,7 @@ export default function Registry() {
           category_id: categories.find(c => c.section_id === section_id)?.id || categories[0]?.id,
           section_id,
           date: today,
-          payment_method: 'Cash',
+          payment_method: 'cash',
           status: 'Bought',
           month
         });

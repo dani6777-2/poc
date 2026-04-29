@@ -9,12 +9,6 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/tenants", tags=["Tenants"])
 
-
-
-
-
-
-
 @router.get("/access", response_model=List[TenantAccessEntity])
 def get_user_tenants(
     user_context = Depends(get_current_user),

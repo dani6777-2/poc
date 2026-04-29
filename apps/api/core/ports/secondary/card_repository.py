@@ -23,7 +23,7 @@ class CardRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def sync_to_deudas_next_month(self, tenant_id: int, month: str, card_name: str, total_used: float) -> None:
+    def sync_to_deudas_next_month(self, tenant_id: int, month: str, card_name: str, total_used: float) -> dict:
         pass
 
     @abstractmethod

@@ -26,7 +26,7 @@ class ItemEntity(BaseModel):
     prev_month_price: Optional[float]
     status: str
     source: Optional[str]
-    payment_method: str = "debit"
+    payment_method: str = "cash"
     version_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -43,7 +43,7 @@ class ItemCreateDto(BaseModel):
     prev_month_price: Optional[float] = None
     status: str = "Planned"
     source: Optional[str] = None
-    payment_method: str = "debit"
+    payment_method: str = "cash"
     override_duplicate: Optional[bool] = False
 
     @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)
@@ -65,7 +65,7 @@ class ItemUpdateDto(BaseModel):
     prev_month_price: Optional[float] = None
     status: str
     source: Optional[str] = None
-    payment_method: str = "debit"
+    payment_method: str = "cash"
     version_id: Optional[int] = None
 
     @field_validator("quantity", "unit_price", "prev_month_price", mode="before", check_fields=False)

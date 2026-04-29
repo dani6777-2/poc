@@ -171,7 +171,6 @@ class AnnualExpenseService:
 
             # 4. Registry Items (Concept Context)
             items = self.expense_repo.get_all(tenant_id, month_str)
-            print(f"DEBUG: Found {len(items)} items in registry for {month_str}")
             for item in items:
                 if not item.category_id: continue
                 s_id = cat_to_sec.get(item.category_id)
@@ -193,11 +192,6 @@ class AnnualExpenseService:
                     if is_card: target['data'][mk]['card'] += sub
                 elif item.status == "Planned":
                     target['data'][mk]['plan'] += sub
-            
-            print(f"DEBUG: per_concept_tracker keys after {month_str}: {list(per_concept_tracker.keys())}")
-            if per_concept_tracker:
-                 first_key = list(per_concept_tracker.keys())[0]
-                 print(f"DEBUG: first key Jan totals: {per_concept_tracker[first_key]['data']['jan']}")
 
         affected_count = 0
         trace_differences = []
@@ -258,13 +252,10 @@ class AnnualExpenseService:
                 
                 if clean_updates:
                     affected_count += 1
-                    print(f"DEBUG: Updating row {row.id} ({row.description}) with {len(clean_updates)} changes")
                     if not dry_run and row.id < 999000:
                         self.annual_repo.set_values(row.id, clean_updates)
                         for k,v in clean_updates.items():
                             trace_differences.append(f"CONCEPT_SYNC [{label}] {k}: {snapshot_before.get(row.id, {}).get(k)} -> {v}")
-                else:
-                    print(f"DEBUG: No changes detected for row {row.id} ({row.description})")
 
         # 6. Lifecycle: Zero out missing concepts but keep them active if they had history
         if not dry_run:
@@ -347,6 +338,13 @@ class AnnualExpenseService:
                 logger.critical(f"[DRIFT_CRITICAL] Auto-correction performed for {tenant_id}. Compressed Diff Snapshot recorded.")
 
         status = "CHANGES_DETECTED" if affected_count > 0 else "NO_CHANGES_DETECTED"
+        
+        if affected_count > 0 and not target_month:
+            logger.info(f"Auto-triggering card debt sync due to {affected_count} expense changes")
+            for month_key in MONTHS:
+                month_to_sync = f"{year}-{month_key}"
+                self.sync_card_to_debts_for_month(tenant_id, month_to_sync)
+        
         return {
             "status": status,
             "affected_records": affected_count,
@@ -354,7 +352,34 @@ class AnnualExpenseService:
         }
 
     def sync_card_to_debts_for_month(self, tenant_id: int, month_str: str) -> None:
-        pass
+        if not month_str or len(month_str) != 7:
+            logger.warning(f"Invalid month format: {month_str}, expected YYYY-MM")
+            return
+        
+        config = self.card_repo.get_config(tenant_id)
+        
+        year = int(month_str[:4])
+        mk = month_str[5:7]
+        if mk not in [str(i).zfill(2) for i in range(1, 13)]:
+            logger.warning(f"Invalid month value: {mk}")
+            return
+        
+        used = 0.0
+        channel_id = config.channel_id if config else None
+        transactions_annual = self.card_repo.get_manual_tc_expenses_from_annual(tenant_id, month_str)
+        transactions_registry = self.card_repo.get_transactions_from_registry(tenant_id, month_str, channel_id)
+        all_transactions = transactions_annual + transactions_registry
+        used = sum(t.subtotal for t in all_transactions)
+        
+        if used > 0:
+            card_name = config.name if config and config.name else "Credit Card"
+            self.card_repo.sync_to_deudas_next_month(
+                tenant_id=tenant_id,
+                month=month_str,
+                card_name=card_name,
+                total_used=used
+            )
+            logger.info(f"Synced card debt {used} from {month_str} to next month for tenant {tenant_id}")
 
     def get_summary(self, tenant_id: int, year: int) -> Dict:
         self.sync_registry_to_expenses(tenant_id, year)

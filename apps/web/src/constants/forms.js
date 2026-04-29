@@ -2,6 +2,12 @@
  * Default states and static options for application forms.
  */
 
+// --- Section names ---
+export const SECTION_DESPENSA = "Comida y Despensa";
+export const SECTION_SERVICIOS = "Servicios y Gastos Fijos";
+export const SECTION_DEUDAS = "Pago de Deudas";
+export const SECTION_AHORRO = "Ahorro e Inversión";
+
 // --- Legacy (generic) blank state ---
 export const REGISTRY_BLANK_STATE = { 
   name: '', 

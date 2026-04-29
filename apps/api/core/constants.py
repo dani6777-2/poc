@@ -13,3 +13,15 @@ CARD_DESCRIPTION_PREFIX = "💳 Card:"
 
 # Prefixes used by auto-generated rows — manual rows must NOT start with these
 AUTO_PREFIXES = (REGISTRY_DESCRIPTION_PREFIX, CARD_DESCRIPTION_PREFIX)
+
+# Expense status constants
+STATUS_PLANNED = "Planned"
+STATUS_BOUGHT = "Bought"
+
+# Payment method constants
+PAYMENT_CASH = "cash"
+PAYMENT_CREDIT = "credit"
+
+# Inventory sources
+INVENTORY_BLOCK_A = "BA:"
+INVENTORY_BLOCK_B = "BB:"

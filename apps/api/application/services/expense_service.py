@@ -50,14 +50,17 @@ class ExpenseService:
         Auto-detect CC payments:
         - If channel_id matches the configured CC channel → 'credit'
         - If user explicitly declared 'credit' → 'credit'
-        - Otherwise → 'debit'
+        - If user explicitly declared 'cash' → 'cash'
+        - Otherwise → 'cash' (default per audit: cash/credit semantics)
         """
         if declared == "credit":
             return "credit"
+        if declared == "cash":
+            return "cash"
         cc_channel = self._get_cc_channel_id(tenant_id)
         if cc_channel and channel_id and channel_id == cc_channel:
             return "credit"
-        return declared or "debit"
+        return "cash"
 
     def get_expenses(self, tenant_id: int, month: Optional[str] = None) -> List[ItemEntity]:
         return self.expense_repo.get_all(tenant_id, month)
