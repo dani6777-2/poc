@@ -11,6 +11,11 @@ export const financeService = {
     return data
   },
 
+  getBudgetTotals: async (month) => {
+    const { data } = await api.get(`budgets/${month}/totals`)
+    return data
+  },
+
   updateBudget: async (id, payload) => {
     const { data } = await api.put(`budgets/${id}`, payload)
     return data

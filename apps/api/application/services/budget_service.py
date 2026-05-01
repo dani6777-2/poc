@@ -56,3 +56,17 @@ class BudgetService:
                         budget=e.budget,
                         actual_spending=mapped_actual
                     ))
+
+    def get_totals(self, tenant_id: int, month: str) -> Dict:
+        """Compute aggregated totals for the given month."""
+        self.sync_real_spending(tenant_id, month)
+        rows = self.budget_repo.get_all(tenant_id, month)
+        
+        total_budget = sum(r.budget or 0.0 for r in rows)
+        total_actual = sum(r.actual_spending or 0.0 for r in rows)
+        
+        return {
+            "total_budget": total_budget,
+            "total_actual": total_actual,
+            "count": len(rows)
+        }

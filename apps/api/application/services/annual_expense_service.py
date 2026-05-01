@@ -73,9 +73,8 @@ class AnnualExpenseService:
         return v1.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) != v2.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     def get_annual_expenses(self, tenant_id: int, year: int, section_id: Optional[int] = None) -> List[AnnualExpenseEntity]:
-        self.sync_registry_to_expenses(tenant_id, year)
+        self.synchronize_ledger_to_summary(tenant_id, year)
         rows = self.annual_repo.get_all_by_year(tenant_id, year, section_id)
-        # Filter is_active=True to only show current concepts in the UI
         return [self._enrich(r) for r in rows if r.is_active]
 
     def create_annual_expense(self, tenant_id: int, data: AnnualExpenseCreateDto) -> AnnualExpenseEntity:
@@ -112,7 +111,7 @@ class AnnualExpenseService:
              
         self.annual_repo.delete(tenant_id, expense_id)
 
-    def sync_registry_to_expenses(self, tenant_id: int, year: int, dry_run: bool = False, target_month: str = None) -> Dict[str, any]:
+    def synchronize_ledger_to_summary(self, tenant_id: int, year: int, dry_run: bool = False, target_month: str = None) -> Dict[str, any]:
         if hasattr(self.annual_repo, 'db') and self.annual_repo.db.bind.dialect.name == 'postgresql':
             lock_id = tenant_id + (year * 100000)
             from sqlalchemy import text
@@ -339,11 +338,14 @@ class AnnualExpenseService:
 
         status = "CHANGES_DETECTED" if affected_count > 0 else "NO_CHANGES_DETECTED"
         
-        if affected_count > 0 and not target_month:
+        if affected_count > 0:
             logger.info(f"Auto-triggering card debt sync due to {affected_count} expense changes")
-            for month_key in MONTHS:
-                month_to_sync = f"{year}-{month_key}"
-                self.sync_card_to_debts_for_month(tenant_id, month_to_sync)
+            if not target_month:
+                for i, month_key in enumerate(MONTHS):
+                    month_to_sync = f"{year}-{str(i+1).zfill(2)}"
+                    self.sync_card_to_debts_for_month(tenant_id, month_to_sync)
+            else:
+                self.sync_card_to_debts_for_month(tenant_id, target_month)
         
         return {
             "status": status,
@@ -371,18 +373,18 @@ class AnnualExpenseService:
         all_transactions = transactions_annual + transactions_registry
         used = sum(t.subtotal for t in all_transactions)
         
+        card_name = config.name if config and config.name else "Credit Card"
+        self.card_repo.sync_to_deudas_next_month(
+            tenant_id=tenant_id,
+            month=month_str,
+            card_name=card_name,
+            total_used=used
+        )
         if used > 0:
-            card_name = config.name if config and config.name else "Credit Card"
-            self.card_repo.sync_to_deudas_next_month(
-                tenant_id=tenant_id,
-                month=month_str,
-                card_name=card_name,
-                total_used=used
-            )
             logger.info(f"Synced card debt {used} from {month_str} to next month for tenant {tenant_id}")
 
     def get_summary(self, tenant_id: int, year: int) -> Dict:
-        self.sync_registry_to_expenses(tenant_id, year)
+        self.synchronize_ledger_to_summary(tenant_id, year)
         rows = self.annual_repo.get_all_by_year(tenant_id, year)
         per_month = {m: sum(getattr(r, m) or 0 for r in rows) for m in MONTHS}
         per_month_actual = {m: sum(getattr(r, f"actual_{m}") or 0 for r in rows) for m in MONTHS}
@@ -405,7 +407,7 @@ class AnnualExpenseService:
         }
 
     def get_net_summary(self, tenant_id: int, year: int, income_summary_func) -> List[Dict]:
-        self.sync_registry_to_expenses(tenant_id, year)
+        self.synchronize_ledger_to_summary(tenant_id, year)
         income_data = income_summary_func(tenant_id, year)
         income_by_month = income_data["per_month"]
         expenses = self.annual_repo.get_all_by_year(tenant_id, year)
@@ -431,3 +433,37 @@ class AnnualExpenseService:
                 "net": net, "accumulated": accumulated,
             })
         return result
+
+    def get_stats(self, tenant_id: int, year: int, month_idx: int, income_summary_func) -> Dict:
+        """Compute aggregated stats for a specific month index (0-11)."""
+        from core.constants import MONTHS, ACTUAL_MONTHS, CARD_MONTHS
+        m = MONTHS[month_idx]
+        r_m = ACTUAL_MONTHS[month_idx]
+        c_m = CARD_MONTHS[month_idx]
+        
+        income_data = income_summary_func(tenant_id, year)
+        month_rev = income_data["per_month"].get(m, 0.0)
+        
+        rows = self.annual_repo.get_all_by_year(tenant_id, year)
+        
+        month_plan = sum(getattr(r, m) or 0.0 for r in rows)
+        month_actual = sum(getattr(r, r_m) or 0.0 for r in rows)
+        month_card = sum(getattr(r, c_m) or 0.0 for r in rows)
+        month_exec = month_actual + month_card
+        
+        annual_plan = sum(getattr(r, m2) or 0.0 for r in rows for m2 in MONTHS)
+        annual_exec = sum(
+            sum(getattr(r, m2) or 0.0 for m2 in ACTUAL_MONTHS) +
+            sum(getattr(r, m2) or 0.0 for m2 in CARD_MONTHS)
+            for r in rows
+        )
+        
+        return {
+            "month_rev": month_rev,
+            "month_plan": month_plan,
+            "month_exec": month_exec,
+            "month_delta": round(month_plan - month_exec, 2),
+            "month_net": round(month_rev - month_actual, 2),
+            "annual_plan": round(annual_plan, 2),
+            "annual_exec": round(annual_exec, 2),
+        }

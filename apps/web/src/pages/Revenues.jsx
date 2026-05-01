@@ -21,6 +21,7 @@ const totalRow = (row) =>
 export default function Revenues() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [rows, setRows] = useState([]);
+  const [summary, setSummary] = useState({ per_month: {}, annual_total: 0 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
   const [modal, setModal] = useState(false);
@@ -38,8 +39,12 @@ export default function Revenues() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await revenueService.getRevenues(year);
-      setRows(data);
+      const [rowsData, summaryData] = await Promise.all([
+        revenueService.getRevenues(year),
+        revenueService.getRevenueSummary(year)
+      ]);
+      setRows(rowsData);
+      setSummary(summaryData);
     } catch (e) {
       console.error(e);
       addToast("Error connecting to revenue vault", "danger");
@@ -113,10 +118,8 @@ export default function Revenues() {
     }
   };
 
-  const totalsByMonth = MONTH_KEYS.map((m) =>
-    rows.reduce((s, r) => s + (parseFloat(r[m]) || 0), 0),
-  );
-  const totalAnnual = totalsByMonth.reduce((a, b) => a + b, 0);
+  const totalsByMonth = MONTH_KEYS.map((m) => summary.per_month?.[m] || 0);
+  const totalAnnual = summary.annual_total || 0;
 
   return (
     <DashboardTemplate

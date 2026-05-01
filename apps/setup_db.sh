@@ -30,5 +30,10 @@ cd apps/api
 echo "Poblando base de datos con usuario por defecto..."
 ./venv/bin/python seed_db.py
 
+# 6. Ejecutar job de verificación de consistencia (genera alertas iniciales)
+echo "Ejecutando verificación de consistencia inicial..."
+source venv/bin/activate
+python job_consistency_check.py
+
 echo "--- Configuración de producción completada con éxito ---"
 echo "Ahora puedes iniciar la API normalmente con: python main.py"

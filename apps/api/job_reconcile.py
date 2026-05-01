@@ -33,7 +33,7 @@ def run_job(tenant_id: int, year: int, dry_run: bool = False):
         
         mode_str = "[DRY-RUN ANALYSIS]" if dry_run else "[EXECUTION]"
         logger.info(f"Starting {mode_str} background reconciliation job for Tenant {tenant_id}, Year {year}")
-        trace = service.sync_registry_to_expenses(tenant_id, year, dry_run=dry_run)
+        trace = service.synchronize_ledger_to_summary(tenant_id, year, dry_run=dry_run)
         
         logger.info(f"Reconciliation completed. Affected matrix clusters: {trace.get('affected_records')}")
         if trace.get('differences'):

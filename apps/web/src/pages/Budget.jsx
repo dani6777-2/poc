@@ -29,15 +29,19 @@ export default function Budget() {
   const [refSection, setRefSection] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  const [totals, setTotals] = useState({ total_budget: 0, total_actual: 0, count: 0 });
 
   const fetchData = useCallback(async () => {
     if (!taxonomiesLoaded) return;
     setLoading(true);
     try {
-      const [presData, anlData] = await Promise.all([
+      const [presData, anlData, totalsData] = await Promise.all([
         financeService.getBudgets(month),
         analysisService.getAnalysis(month),
+        financeService.getBudgetTotals(month).catch(() => ({ total_budget: 0, total_actual: 0, count: 0 }))
       ]);
+
+      setTotals(totalsData);
 
       const catExpense = {};
       (anlData.category_chart || []).forEach((c) => {
@@ -103,14 +107,8 @@ export default function Budget() {
     }
   };
 
-  const totalBudget = useMemo(
-    () => rows.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0),
-    [rows],
-  );
-  const totalActual = useMemo(
-    () => rows.reduce((s, r) => s + (parseFloat(r.actual_spending) || 0), 0),
-    [rows],
-  );
+  const totalBudget = totals.total_budget || 0;
+  const totalActual = totals.total_actual || 0;
   const totalRevenue = kpis.total_revenue || 0;
   const balance =
     totalRevenue > 0 ? totalRevenue - totalActual : totalBudget - totalActual;

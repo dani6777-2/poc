@@ -103,20 +103,14 @@ class SQLCardRepository(CardRepositoryPort):
         import logging
         logger = logging.getLogger(__name__)
         
-        if total_used <= 0:
-            logger.debug(f"Skipping sync: no debt to carry over (used={total_used})")
-            return {"status": "skipped", "reason": "no_debt"}
-        
         next_month_calc = next_month_str(month)
         next_year = int(next_month_calc[:4])
         next_mk = self._month_key(next_month_calc)
         actual_next_mk = f"actual_{next_mk}"
         description_name = CARD_DESCRIPTION_TEMPLATE.format(name=card_name)
 
-        # Search for "Debts" section
         sec_debts = self.db.query(models.TaxonomySection).filter(models.TaxonomySection.name == "Debts").first()
         if not sec_debts:
-            # Auto-create "Debts" section if missing
             sec_debts = models.TaxonomySection(name="Debts", icon="💳", sort_order=0)
             self.db.add(sec_debts)
             self.db.commit()
@@ -130,6 +124,15 @@ class SQLCardRepository(CardRepositoryPort):
             models.ExpenseDetail.description == description_name
         ).first()
 
+        if total_used <= 0:
+            if row:
+                self.db.delete(row)
+                self.db.commit()
+                logger.info(f"Deleted card debt for {next_month_calc} as total_used is {total_used}")
+                return {"status": "cleared", "reason": "deleted", "month": next_month_calc}
+            logger.debug(f"Skipping sync: no debt to carry over (used={total_used})")
+            return {"status": "skipped", "reason": "no_debt"}
+        
         if not row:
             row = models.ExpenseDetail(
                 tenant_id=tenant_id,

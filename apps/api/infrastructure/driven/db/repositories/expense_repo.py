@@ -178,9 +178,9 @@ class LegacyExpenseSyncAdapter(ExpenseSyncPort):
         if prev_month and prev_month != month:
             prev_year = int(prev_month[:4])
             if prev_status == "Bought":
-                self.annual_service.sync_registry_to_expenses(tenant_id, prev_year, dry_run=False, target_month=prev_month)
+                self.annual_service.synchronize_ledger_to_summary(tenant_id, prev_year, dry_run=False, target_month=prev_month)
                 self.annual_service.sync_card_to_debts_for_month(tenant_id, prev_month)
                 
         if new_status == "Bought" or prev_status == "Bought":
-            self.annual_service.sync_registry_to_expenses(tenant_id, year, dry_run=False, target_month=month)
+            self.annual_service.synchronize_ledger_to_summary(tenant_id, year, dry_run=False, target_month=month)
             self.annual_service.sync_card_to_debts_for_month(tenant_id, month)

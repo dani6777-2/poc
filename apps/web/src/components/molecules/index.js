@@ -22,3 +22,6 @@ export { default as ScoreGauge } from './ScoreGauge';
 export { default as SectionHealthCard } from './SectionHealthCard';
 export { default as VarBadge } from './VarBadge';
 export { default as NewConceptModal } from './NewConceptModal';
+export { DriftIndicator, DriftTimelineModal } from './DriftIndicator';
+export { AlertPanel, ConflictResolutionModal, SyncPreviewModal, SimulationModal } from './FeatureModals';
+export { FilterPanel, FilterBadge } from './FilterPanel';

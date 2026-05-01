@@ -48,7 +48,7 @@ class OCRAppService:
         for m in months_to_sync:
             if m:
                 year = int(m[:4])
-                self.annual_service.sync_registry_to_expenses(tenant_id, year)
+                self.annual_service.synchronize_ledger_to_summary(tenant_id, year)
                 self.annual_service.sync_card_to_debts_for_month(tenant_id, m)
                 
         return added_count

@@ -317,3 +317,74 @@ class ReconciliationSnapshot(Base):
     before_state_json = Column(String, nullable=True)  # Serialized payload
     after_state_json  = Column(String, nullable=True)   # Serialized payload
 
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_keys"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True, nullable=False)
+    key = Column(String(255), unique=True, index=True, nullable=False)
+    endpoint = Column(String(100), nullable=False)
+    payload_hash = Column(String(64), nullable=False)
+    response_data = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+
+
+class BudgetAlert(Base):
+    __tablename__ = "budget_alerts"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True, nullable=False)
+    category_id = Column(Integer, nullable=False, index=True)
+    month = Column(String, nullable=False)
+    budget_amount = Column(Float, nullable=False)
+    actual_amount = Column(Float, nullable=False)
+    threshold_pct = Column(Integer, nullable=False, default=80)
+    triggered_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    acknowledged = Column(Boolean, default=False)
+    acknowledged_at = Column(DateTime, nullable=True)
+    acknowledged_by = Column(String, nullable=True)
+
+
+class EditLock(Base):
+    __tablename__ = "edit_locks"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, nullable=False)
+    resource_type = Column(String(50), nullable=False)  # "item" | "expense_detail"
+    resource_id = Column(Integer, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('resource_type', 'resource_id', name='uix_resource_lock'),
+    )
+
+
+class DriftEvent(Base):
+    __tablename__ = "drift_events"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True, nullable=False)
+    year = Column(Integer, nullable=False)
+    concept_key = Column(String(100), nullable=False)
+    concept_label = Column(String(255), nullable=True)
+    month = Column(String, nullable=False)
+    detected_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    resolved_at = Column(DateTime, nullable=True)
+    delta_before = Column(Float, nullable=True)
+    delta_after = Column(Float, nullable=True)
+    is_resolved = Column(Boolean, default=False)
+
+
+class AuditEntry(Base):
+    __tablename__ = "audit_entries"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, nullable=True)
+    action = Column(String(50), nullable=False)  # CREATE, UPDATE, DELETE, SYNC
+    resource_type = Column(String(50), nullable=False)
+    resource_id = Column(Integer, nullable=False)
+    old_values = Column(String, nullable=True)
+    new_values = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    ip_address = Column(String(50), nullable=True)
+

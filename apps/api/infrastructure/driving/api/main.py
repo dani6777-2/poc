@@ -2,6 +2,8 @@ import logging
 import os
 import time
 import uuid
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, ORJSONResponse
@@ -28,6 +30,38 @@ from infrastructure.driving.api.routers import ai_router as ai
 from infrastructure.driving.api.routers import ocr_router as ocr
 from infrastructure.driving.api.routers import tenant_router as tenants
 from infrastructure.driving.api.routers.inventory_router import router_a as block_a, router_b as block_b
+
+
+class RateLimiter:
+    def __init__(self, requests_per_minute: int = 100):
+        self.requests_per_minute = requests_per_minute
+        self.tenant_requests = defaultdict(list)
+    
+    def is_allowed(self, tenant_id: int) -> bool:
+        now = datetime.utcnow()
+        minute_ago = now - timedelta(minutes=1)
+        
+        self.tenant_requests[tenant_id] = [
+            ts for ts in self.tenant_requests[tenant_id] if ts > minute_ago
+        ]
+        
+        if len(self.tenant_requests[tenant_id]) >= self.requests_per_minute:
+            return False
+        
+        self.tenant_requests[tenant_id].append(now)
+        return True
+    
+    def cleanup(self):
+        now = datetime.utcnow()
+        minute_ago = now - timedelta(minutes=1)
+        for tenant_id in list(self.tenant_requests.keys()):
+            self.tenant_requests[tenant_id] = [
+                ts for ts in self.tenant_requests[tenant_id] if ts > minute_ago
+            ]
+            if not self.tenant_requests[tenant_id]:
+                del self.tenant_requests[tenant_id]
+
+rate_limiter = RateLimiter(requests_per_minute=100)
 
 
 def _parse_origins(raw: str) -> list[str]:
@@ -133,6 +167,29 @@ async def request_log_middleware(request: Request, call_next):
         response.status_code,
         duration_ms,
     )
+    return response
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    tenant_id = request.headers.get("X-Tenant-Id")
+    
+    if tenant_id and request.url.path.startswith("/api/") and request.method in ["POST", "PUT", "DELETE"]:
+        try:
+            tenant_id_int = int(tenant_id)
+            if not rate_limiter.is_allowed(tenant_id_int):
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Please try again later.", "code": "RATE_LIMIT_EXCEEDED"},
+                )
+        except (ValueError, TypeError):
+            pass
+    
+    response = await call_next(request)
+    
+    if os.getenv("RATE_LIMIT_CLEANUP", "false").lower() == "true":
+        rate_limiter.cleanup()
+    
     return response
 
 

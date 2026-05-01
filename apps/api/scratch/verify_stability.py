@@ -83,7 +83,7 @@ def verify():
     service = AnnualExpenseService(annual_repo, expense_repo, card_repo, taxonomy_service=taxonomy_svc)
     
     print("Running sync...")
-    service.sync_registry_to_expenses(tenant_id, year)
+    service.synchronize_ledger_to_summary(tenant_id, year)
 
     # 5. Verify Results
     rows = db.query(ExpenseDetail).filter(
