@@ -9,3 +9,4 @@ alembic==1.13.1
 PyJWT>=2.8.0
 passlib[bcrypt]>=1.7.4
 orjson>=3.10.0
+reportlab>=4.0.0

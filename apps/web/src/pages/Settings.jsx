@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { DashboardTemplate } from '../components/templates'
 import { useFinance } from '../context/FinanceContext'
 import { useAuth } from '../context/AuthContext'
@@ -21,6 +21,9 @@ export default function Settings() {
   const [members, setMembers] = useState([])
   const { user } = useAuth() // Get current user for safety checks
   const isGuest = activeTenant?.role === 'guest'
+  
+  // expanded sections in categories list
+  const [expandedSections, setExpandedSections] = useState({})
 
   // Forms
   const [secForm, setSecForm] = useState({ id: null, name: '', icon: '', color_bg: 'bg-primary-soft', color_accent: 'text-primary', sort_order: 0 })
@@ -257,6 +260,41 @@ export default function Settings() {
 
   const sectionOptions = sections.map(s => ({ value: s.id, label: `${s.icon} ${s.name}` }))
 
+  // Group categories by section for grouped display
+  const categoriesBySection = useMemo(() => {
+    const grouped = {}
+    sections.forEach(sec => {
+      grouped[sec.id] = {
+        section: sec,
+        categories: categories.filter(c => c.section_id === sec.id).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      }
+    })
+    return grouped
+  }, [sections, categories])
+
+  // Categories existing in the selected section (for preview in form)
+  const categoriesInSelectedSection = useMemo(() => {
+    if (!catForm.section_id) return []
+    return categories.filter(c => c.section_id === Number(catForm.section_id))
+  }, [categories, catForm.section_id])
+
+  // Toggle section expansion in grouped list
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }))
+  }
+
+  // Expand all sections with categories
+  const expandAllSections = () => {
+    const allExpanded = {}
+    sections.forEach(sec => { allExpanded[sec.id] = true })
+    setExpandedSections(allExpanded)
+  }
+
+  // Collapse all
+  const collapseAllSections = () => {
+    setExpandedSections({})
+  }
+
   return (
     <DashboardTemplate
       title={<>System <span className="text-accent italic font-light">Settings</span></>}
@@ -485,6 +523,31 @@ export default function Settings() {
                       options={[{value:'', label:'- Select Section -'}, ...sectionOptions]} 
                     />
                   </div>
+                  
+                  {/* Preview of categories in selected section */}
+                  {catForm.section_id && categoriesInSelectedSection.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-secondary/30 border border-border-base/40">
+                      <div className="text-[10px] font-black text-tx-muted uppercase tracking-widest mb-2">
+                        Existing categories in this section:
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {categoriesInSelectedSection.map(cat => (
+                          <Badge key={cat.id} variant="info" size="sm" className="text-[9px]">
+                            {cat.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {catForm.section_id && categoriesInSelectedSection.length === 0 && (
+                    <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10">
+                      <div className="text-[10px] font-black text-accent uppercase tracking-widest">
+                        No categories yet in this section
+                      </div>
+                    </div>
+                  )}
+                  
                   <div>
                     <label className="text-[10px] font-black text-tx-muted uppercase tracking-[0.2em] mb-2 block">Sort Order</label>
                     <Input type="number" value={catForm.sort_order} onChange={e => setCatForm({ ...catForm, sort_order: e.target.value })} />
@@ -513,69 +576,114 @@ export default function Settings() {
           )}
 
           <div className="lg:col-span-2">
+            {/* Controls */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-black text-tx-primary uppercase tracking-widest">
+                Categories ({categories.length})
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={expandAllSections} className="text-[10px] uppercase">Expand All</Button>
+                <Button variant="ghost" size="sm" onClick={collapseAllSections} className="text-[10px] uppercase">Collapse All</Button>
+              </div>
+            </div>
+            
+            {/* Grouped Categories List */}
             <Card className="overflow-hidden border-none shadow-premium">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-border-base/50 text-[10px] font-black text-tx-muted uppercase tracking-[0.3em]">
-                      <th className="p-5">Name</th>
-                      <th className="p-5">Section</th>
-                      <th className="p-5">Scope</th>
-                      <th className="p-5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-base/30">
-                    {categories.map(cat => {
-                      const sec = sections.find(s => s.id === cat.section_id)
-                      return (
-                        <tr key={cat.id} className="hover:bg-tx-primary/[0.02] transition-colors group">
-                          <td className="p-5 font-bold">{cat.name}</td>
-                          <td className="p-5">
-                            {sec ? <Badge variant="secondary" size="sm">{sec.icon} {sec.name}</Badge> : '—'}
-                          </td>
-                          <td className="p-5">
-                            {cat.tenant_id === null ? (
-                              <Badge variant="warning" size="sm">Global</Badge>
-                            ) : (
-                              <Badge variant="success" size="sm">Custom</Badge>
-                            )}
-                          </td>
-                          <td className="p-5">
-                            {(() => {
-                              const isLinked = annualRows.some(r => r.category_id === cat.id);
-                              return isLinked ? (
-                                <Badge variant="accent" size="sm" glow>SYNCED</Badge>
-                              ) : (
-                                <Badge variant="info" size="sm" className="opacity-40">READY</Badge>
-                              );
-                            })()}
-                          </td>
-                          <td className="p-5 text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button title={cat.tenant_id === null ? "Cannot edit global category" : "Edit category"} variant="ghost" size="sm" disabled={cat.tenant_id === null} onClick={() => setCatForm({ id: cat.id, name: cat.name, section_id: cat.section_id, sort_order: cat.sort_order || 0 })}>✏️</Button>
-                                {(() => {
-                                  const isLinked = annualRows.some(r => r.category_id == cat.id);
-                                  const isProtected = cat.tenant_id === null || isLinked;
+              <div className="divide-y divide-border-base/30">
+                {Object.values(categoriesBySection).map(({ section: sec, categories: secCats }) => {
+                  const isExpanded = expandedSections[sec.id] !== false
+                  const catCount = secCats.length
+                  
+                  return (
+                    <div key={sec.id} className="group">
+                      {/* Section Header - Collapsible */}
+                      <div 
+                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-tx-primary/[0.02] transition-colors"
+                        onClick={() => toggleSection(sec.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl transform transition-transform duration-200 group-hover:scale-110">
+                            {isExpanded ? '▼' : '▶'}
+                          </span>
+                          <span className="text-lg">{sec.icon}</span>
+                          <span className="font-bold text-tx-primary">{sec.name}</span>
+                          <Badge variant="secondary" size="sm" className="ml-2">{catCount}</Badge>
+                        </div>
+                      </div>
+                      
+                      {/* Categories in this section - Collapsible */}
+                      {isExpanded && (
+                        <div className="bg-tx-primary/[0.01] border-t border-b border-border-base/20">
+                          {secCats.length === 0 ? (
+                            <div className="p-6 text-center text-[10px] text-tx-muted uppercase tracking-widest opacity-40">
+                              No categories in this section
+                            </div>
+                          ) : (
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="text-[9px] font-black text-tx-muted uppercase tracking-[0.3em]">
+                                  <th className="p-3 pl-10 w-1/3">Name</th>
+                                  <th className="p-3 w-24">Scope</th>
+                                  <th className="p-3 w-24">Status</th>
+                                  <th className="p-3 text-right pr-6">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border-base/20">
+                                {secCats.map(cat => {
+                                  const isLinked = annualRows.some(r => r.category_id === cat.id)
+                                  const isProtected = cat.tenant_id === null || isLinked
+                                  
                                   return (
-                                    <Button 
-                                      title={isProtected ? (isLinked ? "Cannot delete category linked to Annual Planner" : "Cannot delete global category") : "Delete category"} 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      disabled={isProtected} 
-                                      onClick={() => handleDeleteCategory(cat.id)} 
-                                      className="text-danger hover:text-danger-light disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
-                                    >
-                                      🗑️
-                                    </Button>
-                                  );
-                                })()}
-                              </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                                    <tr key={cat.id} className="hover:bg-tx-primary/[0.02] transition-colors group/row">
+                                      <td className="p-3 pl-10 font-bold">{cat.name}</td>
+                                      <td className="p-3">
+                                        {cat.tenant_id === null ? (
+                                          <Badge variant="warning" size="sm">Global</Badge>
+                                        ) : (
+                                          <Badge variant="success" size="sm">Custom</Badge>
+                                        )}
+                                      </td>
+                                      <td className="p-3">
+                                        {isLinked ? (
+                                          <Badge variant="accent" size="sm" glow>SYNCED</Badge>
+                                        ) : (
+                                          <Badge variant="info" size="sm" className="opacity-40">READY</Badge>
+                                        )}
+                                      </td>
+                                      <td className="p-3 text-right pr-6">
+                                        <div className="flex justify-end gap-1">
+                                          <Button 
+                                            title={cat.tenant_id === null ? "Cannot edit global category" : "Edit category"} 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            disabled={cat.tenant_id === null} 
+                                            onClick={(e) => { e.stopPropagation(); setCatForm({ id: cat.id, name: cat.name, section_id: cat.section_id, sort_order: cat.sort_order || 0 })}}
+                                          >
+                                            ✏️
+                                          </Button>
+                                          <Button 
+                                            title={isProtected ? (isLinked ? "Cannot delete category linked to Annual Planner" : "Cannot delete global category") : "Delete category"} 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            disabled={isProtected} 
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id)}} 
+                                            className="text-danger hover:text-danger-light disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
+                                          >
+                                            🗑️
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </Card>
           </div>

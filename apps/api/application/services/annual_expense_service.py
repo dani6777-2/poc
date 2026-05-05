@@ -449,12 +449,11 @@ class AnnualExpenseService:
         month_plan = sum(getattr(r, m) or 0.0 for r in rows)
         month_actual = sum(getattr(r, r_m) or 0.0 for r in rows)
         month_card = sum(getattr(r, c_m) or 0.0 for r in rows)
-        month_exec = month_actual + month_card
+        month_exec = month_actual
         
         annual_plan = sum(getattr(r, m2) or 0.0 for r in rows for m2 in MONTHS)
         annual_exec = sum(
-            sum(getattr(r, m2) or 0.0 for m2 in ACTUAL_MONTHS) +
-            sum(getattr(r, m2) or 0.0 for m2 in CARD_MONTHS)
+            sum(getattr(r, m2) or 0.0 for m2 in ACTUAL_MONTHS)
             for r in rows
         )
         

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { expenseService, analysisService, ocrService } from "../services";
+import { expenseService, analysisService, ocrService, reportService } from "../services";
 import { RECENT_MONTHS } from "../constants/time";
 import { fmt } from "../utils/formatters";
 import { isAutoExpense, getSourceLabel } from "../utils/finance";
@@ -26,14 +26,67 @@ import { Button } from "../components/atoms";
 
 export default function Registry() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const filter = searchParams.get("category_id") || "all";
   
-  const setFilter = (val) => {
+  // Parse filters from URL params
+  const statusFilter = searchParams.get("status") || "all";
+  const sectionFilter = searchParams.get("section") || "";
+  const categoryFilter = searchParams.get("category") || "";
+  const channelFilter = searchParams.get("channel") || "";
+  const search = searchParams.get("search") || "";
+  
+  // Set filter helpers - updates URL and triggers re-render
+  const setStatusFilter = (val) => {
     if (val === "all") {
-      searchParams.delete("category_id");
+      searchParams.delete("status");
     } else {
-      searchParams.set("category_id", val);
+      searchParams.set("status", val);
     }
+    setSearchParams(searchParams);
+  };
+  
+  const setSectionFilterUrl = (val) => {
+    if (!val) {
+      searchParams.delete("section");
+    } else {
+      searchParams.set("section", val);
+    }
+    searchParams.delete("category"); // Reset category when section changes
+    setSearchParams(searchParams);
+  };
+  
+  const setCategoryFilterUrl = (val) => {
+    if (!val) {
+      searchParams.delete("category");
+    } else {
+      searchParams.set("category", val);
+    }
+    setSearchParams(searchParams);
+  };
+  
+  const setChannelFilterUrl = (val) => {
+    if (!val) {
+      searchParams.delete("channel");
+    } else {
+      searchParams.set("channel", val);
+    }
+    setSearchParams(searchParams);
+  };
+  
+  const setSearchUrl = (val) => {
+    if (!val) {
+      searchParams.delete("search");
+    } else {
+      searchParams.set("search", val);
+    }
+    setSearchParams(searchParams);
+  };
+  
+  const clearAllFilters = () => {
+    searchParams.delete("status");
+    searchParams.delete("section");
+    searchParams.delete("category");
+    searchParams.delete("channel");
+    searchParams.delete("search");
     setSearchParams(searchParams);
   };
 
@@ -57,7 +110,6 @@ export default function Registry() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
-  const [search, setSearch] = useState("");
   const [confirmData, setConfirmData] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
@@ -257,18 +309,53 @@ export default function Registry() {
     }
   };
 
+  const handleExportPdf = async () => {
+    try {
+      await reportService.downloadMonthlyPdf(month);
+      addToast("Reporte PDF descargado", "success");
+    } catch {
+      addToast("Error al exportar PDF", "danger");
+    }
+  };
+
   // --------------------------------------------------------
-  // Filters and Computed Data
+  // Filters and Computed Data (multi-filter from URL)
   // --------------------------------------------------------
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesSearch = item.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesCategory = filter === "all" || item.category_id === parseInt(filter);
-      return matchesSearch && matchesCategory;
+      // 1. Search filter
+      const searchLower = search.toLowerCase();
+      const matchesSearch = !search || item.name.toLowerCase().includes(searchLower);
+      
+      // 2. Status filter (all/bought/planned/auto/manual)
+      let matchesStatus = true;
+      if (statusFilter === 'bought') {
+        matchesStatus = item.status === 'Bought';
+      } else if (statusFilter === 'planned') {
+        matchesStatus = item.status === 'Planned';
+      } else if (statusFilter === 'auto') {
+        matchesStatus = item.source === 'registry';
+      } else if (statusFilter === 'manual') {
+        matchesStatus = item.source !== 'registry';
+      }
+      
+      // 3. Section filter
+      const matchesSection = !sectionFilter || (item.category?.section_id === parseInt(sectionFilter));
+      
+      // 4. Category filter
+      const matchesCategory = !categoryFilter || item.category_id === parseInt(categoryFilter);
+      
+      // 5. Channel/Payment filter
+      let matchesChannel = true;
+      if (channelFilter === 'cash') {
+        matchesChannel = item.payment_method === 'cash';
+      } else if (channelFilter === 'credit') {
+        matchesChannel = item.payment_method === 'credit';
+      }
+      
+      return matchesSearch && matchesStatus && matchesSection && matchesCategory && matchesChannel;
     });
-  }, [items, search, filter]);
+  }, [items, statusFilter, sectionFilter, categoryFilter, channelFilter, search]);
 
   return (
     <DashboardTemplate
@@ -288,6 +375,14 @@ export default function Registry() {
             onClick={() => setScanning(true)}
           >
             📸 AI Scan
+          </Button>
+          <Button
+            variant="accent"
+            size="sm"
+            className="h-10 px-6 gap-2 bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20"
+            onClick={handleExportPdf}
+          >
+            📄 PDF
           </Button>
           <div className="glass p-1 rounded-xl">
             <select
@@ -313,6 +408,7 @@ export default function Registry() {
             form={form}
             setForm={setForm}
             handleSave={handleSave}
+            sections={sections}
             categories={categories}
             channels={channels}
             units={units}
@@ -364,13 +460,20 @@ export default function Registry() {
 
           <RegistryTable
             items={filteredItems}
-            filter={filter}
-            setFilter={setFilter}
+            filter={statusFilter}
+            setFilter={setStatusFilter}
+            sectionFilter={sectionFilter}
+            setSectionFilter={setSectionFilterUrl}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilterUrl}
+            channelFilter={channelFilter}
+            setChannelFilter={setChannelFilterUrl}
             search={search}
-            setSearch={setSearch}
+            setSearch={setSearchUrl}
             onEdit={handleEdit}
             onDelete={setConfirmData}
             onStatus={handleStatus}
+            sections={sections}
             categories={categories}
             loading={loading}
           />

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Button, Input, Select } from '../atoms';
 import { STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS, SECTION_DESPENSA, SECTION_SERVICIOS } from '../../constants/forms';
@@ -6,7 +7,7 @@ const RegistryForm = ({
   editId,
   form,
   setForm,
-  formType,           // 'despensa' | 'servicios'
+  formType,           // 'despensa' | 'servicios' (deprecated, use sectionSelector)
   setFormType,
   sections,           // from FinanceContext
   categories,         // all categories (filtered inside here by section)
@@ -22,59 +23,94 @@ const RegistryForm = ({
   const isGuest = activeTenant?.role === 'guest';
   if (isGuest) return null;
 
-  // Determine target section name for filtering
-  const targetSectionName = formType === 'servicios' ? SECTION_SERVICIOS : SECTION_DESPENSA;
-  const targetSection = (sections || []).find(s => s.name === targetSectionName);
-
-  // Filter categories to only those belonging to this section
-  const filteredCategories = (categories || []).filter(cat => {
-    return cat.section_id === targetSection?.id;
-  });
+  // Internal state for dynamic section selection
+  const [selectedSectionId, setSelectedSectionId] = useState(null);
+  
+  // Initialize selected section based on formType or current category
+  useEffect(() => {
+    if (selectedSectionId) return;
+    
+    // Try to find section from current category
+    if (form.category_id) {
+      const currentCat = (categories || []).find(c => c.id === Number(form.category_id));
+      if (currentCat) {
+        setSelectedSectionId(currentCat.section_id);
+        return;
+      }
+    }
+    
+    // Fallback to default based on formType
+    const targetSectionName = formType === 'servicios' ? SECTION_SERVICIOS : SECTION_DESPENSA;
+    const targetSection = (sections || []).find(s => s.name === targetSectionName);
+    if (targetSection) {
+      setSelectedSectionId(targetSection.id);
+    }
+  }, [sections, categories, form.category_id, formType]);
+  
+  // Update default category when section changes
+  useEffect(() => {
+    if (!selectedSectionId || isEditing) return;
+    
+    const defaultCat = (categories || []).find(c => c.section_id === selectedSectionId);
+    if (defaultCat && defaultCat.id !== form.category_id) {
+      setForm(prev => ({ ...prev, category_id: defaultCat.id }));
+    }
+  }, [selectedSectionId]);
+  
+  // Section options
+  const sectionOptions = (sections || []).map(s => ({ value: s.id, label: `${s.icon} ${s.name}` }));
+  
+  // Filter categories by selected section
+  const filteredCategories = (categories || []).filter(cat => cat.section_id === selectedSectionId);
+  
+  // Get current section for display
+  const currentSection = (sections || []).find(s => s.id === selectedSectionId);
 
   // Determine display mode
-  const isServicio  = formType === 'servicios';
-  const isDespensa  = formType === 'despensa';
   const isEditing   = !!editId;
 
-  const TAB_CLASSES = (active) =>
-    `flex-1 py-3 px-4 text-[10px] font-black uppercase tracking-[0.25em] rounded-xl transition-all duration-300 transform active:scale-95 ${
-      active
-        ? 'bg-accent text-white shadow-xl shadow-accent/25 border border-accent/20'
-        : 'text-tx-muted hover:bg-tx-primary/5 hover:text-tx-primary'
-    }`;
-
-  const handleTabChange = (type) => {
-    if (isEditing) return; // don't switch tabs while editing
-    setFormType(type);
+  const handleSectionChange = (sectionId) => {
+    const newSectionId = Number(sectionId);
+    setSelectedSectionId(newSectionId);
+    
+    // Also update formType for backwards compatibility
+    const newSection = (sections || []).find(s => s.id === newSectionId);
+    if (newSection) {
+      if (newSection.name === SECTION_SERVICIOS) {
+        setFormType?.('servicios');
+      } else {
+        setFormType?.('despensa');
+      }
+    }
   };
 
   return (
     <Card className={`p-5 md:p-8 border border-border-base shadow-premium transition-all duration-500 ${isEditing ? 'border-accent/60 shadow-accent/10' : ''}`}>
 
-      {/* Header & Tabs */}
+      {/* Header & Dynamic Section Selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h3 className="text-sm font-black text-tx-primary tracking-[0.25em] uppercase">
-            {isEditing ? '✏️ Editar Registro' : (isDespensa ? '🛒 Despensa' : '📄 Servicios')}
+            {isEditing ? '✏️ Editar Registro' : currentSection ? `${currentSection.icon} ${currentSection.name}` : '➕ Nuevo Registro'}
           </h3>
           <p className="text-[10px] text-tx-muted mt-1 font-bold uppercase tracking-widest opacity-50">
             {isEditing
               ? 'Modificando entrada existente'
-              : isDespensa
-                ? 'Supermercado · Abarrotes · Frutas · Aseo'
-                : 'Luz · Agua · Internet · Gas · Otros'}
+              : filteredCategories.length > 0
+                ? `${filteredCategories.length} categorías disponibles`
+                : 'Selecciona una sección'}
           </p>
         </div>
 
-        {/* Tab switcher — disabled if editing */}
+        {/* Section selector dropdown — disabled if editing */}
         {!isEditing && (
-          <div className="flex bg-tx-primary/5 p-1 rounded-2xl gap-1 min-w-[260px]">
-            <button className={TAB_CLASSES(isDespensa)} onClick={() => handleTabChange('despensa')}>
-              🛒 Despensa
-            </button>
-            <button className={TAB_CLASSES(isServicio)} onClick={() => handleTabChange('servicios')}>
-              📄 Servicios
-            </button>
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedSectionId || ''}
+              onChange={e => handleSectionChange(e.target.value)}
+              options={[{value: '', label: '- Seleccionar Sección -'}, ...sectionOptions]}
+              className="min-w-[200px]"
+            />
           </div>
         )}
       </div>
@@ -102,21 +138,111 @@ const RegistryForm = ({
         </div>
       )}
 
-      {/* === DESPENSA FORM === */}
-      {isDespensa && (
+      {/* === DYNAMIC FORM (based on selected section) === */}
+      {selectedSectionId && !isEditing && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           <Input
-            label="Producto"
+            label="Producto / Servicio"
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
-            placeholder="Ej: Leche entera, Jabón…"
+            placeholder="Ej: Leche, Factura Luz…"
             className="md:col-span-2"
           />
           <Select
             label="Categoría"
             value={form.category_id}
             onChange={e => setForm({ ...form, category_id: e.target.value })}
-            options={(filteredCategories.length ? filteredCategories : (categories || [])).map(c => ({ value: c.id, label: c.name }))}
+            options={filteredCategories.map(c => ({ value: c.id, label: c.name }))}
+          />
+          <Input
+            label={currentSection?.name === SECTION_SERVICIOS ? "Fecha de Vencimiento" : "Fecha"}
+            type="date"
+            value={form.date}
+            onChange={e => setForm({ ...form, date: e.target.value })}
+          />
+          <Select
+            label="Medio de Pago"
+            value={form.payment_method}
+            onChange={e => setForm({ ...form, payment_method: e.target.value })}
+            options={PAYMENT_METHOD_OPTIONS}
+          />
+          
+          {/* Show quantity/units only for despensa sections */}
+          {currentSection?.name === SECTION_DESPENSA ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  label="Cantidad"
+                  type="number"
+                  step="0.1"
+                  value={form.quantity}
+                  onChange={e => setForm({ ...form, quantity: e.target.value })}
+                />
+                <Select
+                  label="Unidad"
+                  value={form.unit_id}
+                  onChange={e => setForm({ ...form, unit_id: e.target.value })}
+                  options={(units || []).map(u => ({ value: u.id, label: u.name }))}
+                />
+              </div>
+              <Input
+                label="Precio Unitario ($)"
+                type="number"
+                step="0.01"
+                value={form.unit_price}
+                onChange={e => setForm({ ...form, unit_price: e.target.value })}
+                className="text-success font-black"
+              />
+            </>
+          ) : (
+            <Input
+              label="Monto Total ($)"
+              type="number"
+              step="0.01"
+              value={form.unit_price}
+              onChange={e => setForm({ ...form, unit_price: e.target.value })}
+              className="text-accent font-black"
+            />
+          )}
+
+          <div className="md:col-span-2 mt-4 flex gap-3">
+            {duplicateWarning ? (
+              <Button 
+                className="flex-1 py-5 shadow-2xl bg-danger hover:bg-danger-light" 
+                onClick={(e) => handleSave(e, true)} 
+                disabled={processing}
+              >
+                ⚠️ Confirmar Duplicado
+              </Button>
+            ) : (
+              <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e)} disabled={processing}>
+                {isEditing ? '✓ Confirmar Cambios' : '+ Registrar'}
+              </Button>
+            )}
+            {isEditing && (
+              <Button variant="ghost" className="px-8" onClick={onCancel}>
+                Cancelar
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Editing mode - show unified form */}
+      {isEditing && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          <Input
+            label="Producto / Servicio"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            placeholder="Ej: Leche, Factura Luz…"
+            className="md:col-span-2"
+          />
+          <Select
+            label="Categoría"
+            value={form.category_id}
+            onChange={e => setForm({ ...form, category_id: e.target.value })}
+            options={filteredCategories.length ? filteredCategories : categories.map(c => ({ value: c.id, label: c.name }))}
           />
           <Input
             label="Fecha"
@@ -130,21 +256,13 @@ const RegistryForm = ({
             onChange={e => setForm({ ...form, payment_method: e.target.value })}
             options={PAYMENT_METHOD_OPTIONS}
           />
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              label="Cantidad"
-              type="number"
-              step="0.1"
-              value={form.quantity}
-              onChange={e => setForm({ ...form, quantity: e.target.value })}
-            />
-            <Select
-              label="Unidad"
-              value={form.unit_id}
-              onChange={e => setForm({ ...form, unit_id: e.target.value })}
-              options={(units || []).map(u => ({ value: u.id, label: u.name }))}
-            />
-          </div>
+          <Input
+            label="Cantidad"
+            type="number"
+            step="0.1"
+            value={form.quantity}
+            onChange={e => setForm({ ...form, quantity: e.target.value })}
+          />
           <Input
             label="Precio Unitario ($)"
             type="number"
@@ -165,75 +283,22 @@ const RegistryForm = ({
               </Button>
             ) : (
               <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e)} disabled={processing}>
-                {isEditing ? '✓ Confirmar Cambios' : '+ Añadir a Despensa'}
+                ✓ Confirmar Cambios
               </Button>
             )}
-            {isEditing && (
-              <Button variant="ghost" className="px-8" onClick={onCancel}>
-                Cancelar
-              </Button>
-            )}
+            <Button variant="ghost" className="px-8" onClick={onCancel}>
+              Cancelar
+            </Button>
           </div>
         </div>
       )}
 
-      {/* === SERVICIOS FORM === */}
-      {isServicio && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-          <Input
-            label="Servicio"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            placeholder="Ej: Factura Luz Mayo…"
-            className="md:col-span-2"
-          />
-          <Select
-            label="Categoría"
-            value={form.category_id}
-            onChange={e => setForm({ ...form, category_id: e.target.value })}
-            options={(filteredCategories.length ? filteredCategories : (categories || [])).map(c => ({ value: c.id, label: c.name }))}
-          />
-          <Input
-            label="Fecha de Vencimiento"
-            type="date"
-            value={form.date}
-            onChange={e => setForm({ ...form, date: e.target.value })}
-          />
-          <Select
-            label="Medio de Pago"
-            value={form.payment_method}
-            onChange={e => setForm({ ...form, payment_method: e.target.value })}
-            options={PAYMENT_METHOD_OPTIONS}
-          />
-          <Input
-            label="Monto Total ($)"
-            type="number"
-            step="0.01"
-            value={form.unit_price}
-            onChange={e => setForm({ ...form, unit_price: e.target.value })}
-            className="text-accent font-black"
-          />
-
-          <div className="md:col-span-2 mt-4 flex gap-3">
-            {duplicateWarning ? (
-               <Button 
-                 className="flex-1 py-5 shadow-2xl bg-danger hover:bg-danger-light" 
-                 onClick={(e) => handleSave(e, true)} 
-                 disabled={processing}
-               >
-                 ⚠️ Confirmar Duplicado
-               </Button>
-             ) : (
-               <Button className="flex-1 py-5 shadow-2xl" onClick={(e) => handleSave(e)} disabled={processing}>
-                 {isEditing ? '✓ Confirmar Cambios' : '+ Registrar Servicio'}
-               </Button>
-             )}
-            {isEditing && (
-              <Button variant="ghost" className="px-8" onClick={onCancel}>
-                Cancelar
-              </Button>
-            )}
-          </div>
+      {/* No section selected yet */}
+      {!selectedSectionId && !isEditing && (
+        <div className="p-8 text-center">
+          <p className="text-[10px] text-tx-muted uppercase tracking-widest opacity-50">
+            Selecciona una sección para comenzar
+          </p>
         </div>
       )}
     </Card>

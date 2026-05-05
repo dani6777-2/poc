@@ -93,3 +93,15 @@ export const REGISTRY_FILTERS = [
   { id: 'auto', label: 'Auto' },
   { id: 'manual', label: 'Manual' }
 ];
+
+// Filter options for registry table
+export const MONTH_FILTERS = [
+  { id: 'all', label: 'Todos' },
+];
+
+// Channel filter options
+export const CHANNEL_FILTERS = [
+  { id: 'all', label: 'Todos los Canales' },
+  { id: 'cash', label: '💵 Efectivo' },
+  { id: 'credit', label: '💳 Tarjeta' },
+];

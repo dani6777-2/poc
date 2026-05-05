@@ -58,8 +58,8 @@ const SectionBlock = ({
             </div>
             <div>
               <span className="text-[9px] font-black text-tx-muted uppercase tracking-widest opacity-40 block mb-0.5">ACTUAL</span>
-              <span className={`font-black tracking-tighter text-lg ${secTotals.actual + secTotals.card > secTotals.plan ? 'text-danger' : 'text-success'}`}>
-                {fmt(secTotals.actual + secTotals.card)}
+              <span className={`font-black tracking-tighter text-lg ${secTotals.actual > secTotals.plan ? 'text-danger' : 'text-success'}`}>
+                {fmt(secTotals.actual)}
               </span>
             </div>
           </div>

@@ -108,6 +108,12 @@ def get_ocr_service(db: Session = Depends(get_db)) -> OCRAppService:
     )
 
 from application.services.taxonomy_service import TaxonomyService
+from application.services.report_pdf_service import ReportPdfService
 
 def get_taxonomy_service(db: Session = Depends(get_db)) -> TaxonomyService:
     return TaxonomyService(db=db)
+
+def get_report_pdf_service(db: Session = Depends(get_db)) -> ReportPdfService:
+    expense_service = get_expense_service(db)
+    revenue_service = get_revenue_service(db)
+    return ReportPdfService(expense_service=expense_service, revenue_service=revenue_service)

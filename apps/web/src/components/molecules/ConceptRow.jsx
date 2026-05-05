@@ -22,7 +22,7 @@ const ConceptRow = ({
   const planV = parseFloat(row[monthKey]) || 0;
   const actualV = parseFloat(row[realMonthKey]) || 0;
   const cardV = parseFloat(row[cardMonthKey]) || 0;
-  const totalExec = actualV + cardV;
+  const totalExec = actualV;
   const diff = planV - totalExec;
 
   const inputClasses = "w-full h-10 bg-tx-primary/[0.02] hover:bg-tx-primary/[0.05] focus:bg-accent/5 focus:ring-2 focus:ring-accent/20 rounded-xl px-4 text-right text-sm font-bold outline-none transition-all tabular-nums";
@@ -62,24 +62,6 @@ const ConceptRow = ({
         </div>
       </td>
 
-      {/* PLAN COLUMN */}
-      <td className="p-2 w-36">
-        {isSystem ? (
-          <div className="text-right pr-4 text-sm font-bold text-warning/60 tabular-nums">
-            {planV > 0 ? fmt(planV) : "—"}
-          </div>
-        ) : (
-          <input
-            type="number"
-            value={row[monthKey] ?? ""}
-            onChange={(e) => onCellChange(row.id, monthKey, e.target.value)}
-            onBlur={() => onSave(row.id)}
-            className={`${inputClasses} text-warning`}
-            placeholder="0"
-          />
-        )}
-      </td>
-
       {/* ACTUAL COLUMN */}
       <td className="p-2 w-36">
         {isSystem ? (
@@ -114,13 +96,6 @@ const ConceptRow = ({
             placeholder="0"
           />
         )}
-      </td>
-
-      {/* DIFF COLUMN */}
-      <td className="p-2 text-right pr-6 w-32">
-        <div className={`text-xs font-black tabular-nums ${diff >= 0 ? 'text-success/70' : 'text-danger/70'}`}>
-          {fmt(diff)}
-        </div>
       </td>
 
       {/* ACTIONS */}

@@ -262,7 +262,7 @@ export default function AnnualExpenses() {
     const monthPlan = rows.reduce((s, r) => s + (parseFloat(r[mKey]) || 0), 0);
     const monthActual = rows.reduce((s, r) => s + (parseFloat(r[rKey]) || 0), 0);
     const monthCard = rows.reduce((s, r) => s + (parseFloat(r[cKey]) || 0), 0);
-    const monthExec = monthActual + monthCard;
+    const monthExec = monthActual;
 
     return {
       monthRev,
@@ -271,7 +271,7 @@ export default function AnnualExpenses() {
       monthDelta: monthPlan - monthExec,
       monthNet: monthRev - monthActual,
       annualPlan: rows.reduce((s, r) => s + MONTH_KEYS.reduce((sm, mk) => sm + (parseFloat(r[mk]) || 0), 0), 0),
-      annualExec: rows.reduce((s, r) => s + [...ACTUAL_MONTH_KEYS, ...CARD_MONTH_KEYS].reduce((sm, mk) => sm + (parseFloat(r[mk]) || 0), 0), 0),
+      annualExec: rows.reduce((s, r) => s + ACTUAL_MONTH_KEYS.reduce((sm, mk) => sm + (parseFloat(r[mk]) || 0), 0), 0),
     };
   }, [rows, revenues, monthIdx, statsData]);
 

@@ -44,8 +44,8 @@ const CategoryBlock = ({
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-6 text-[11px] font-black tabular-nums">
             <span className="text-warning/80">{fmt(totals.plan)}</span>
-            <span className={totals.actual + totals.card > totals.plan ? 'text-danger/80' : 'text-success/80'}>
-              {fmt(totals.actual + totals.card)}
+            <span className={totals.actual > totals.plan ? 'text-danger/80' : 'text-success/80'}>
+              {fmt(totals.actual)}
             </span>
           </div>
           
@@ -67,7 +67,7 @@ const CategoryBlock = ({
             {autoRows.length > 0 && (
               <>
                 <tr className="bg-tx-primary/[0.02]">
-                  <td colSpan={6} className="py-1.5 px-8 text-[7px] font-black uppercase text-tx-muted tracking-[0.4em] opacity-40 flex items-center gap-2">
+                  <td colSpan={4} className="py-1.5 px-8 text-[7px] font-black uppercase text-tx-muted tracking-[0.4em] opacity-40 flex items-center gap-2">
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                     Registry-Managed Structural Flows
                   </td>
@@ -92,7 +92,7 @@ const CategoryBlock = ({
             {manualRows.length > 0 && (
               <>
                 <tr className="bg-accent/[0.03]">
-                  <td colSpan={6} className="py-1.5 px-8 text-[7px] font-black uppercase text-accent/60 tracking-[0.4em] flex items-center gap-2">
+                  <td colSpan={4} className="py-1.5 px-8 text-[7px] font-black uppercase text-accent/60 tracking-[0.4em] flex items-center gap-2">
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                     Manual Budget Constraints
                   </td>
